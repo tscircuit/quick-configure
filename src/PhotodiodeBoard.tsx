@@ -1,6 +1,6 @@
 import { cloneElement } from "react"
-import { SmdUsbC } from "@tsci/seveibar.smd-usb-c"
 import { connectors, mcus, type ConnectorId, type McuId } from "./board-data"
+import { SmdUsbC } from "./SmdUsbC"
 
 export interface PhotodiodeBoardProps {
   connector: ConnectorId

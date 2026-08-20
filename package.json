@@ -10,9 +10,7 @@
     "resources": "bun run scripts/generate-resources.ts",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@tsci/seveibar.smd-usb-c": "^0.0.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/react": "^19.2.18",
     "altiumts": "^0.0.23",
