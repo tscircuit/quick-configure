@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "echo 'Using the verified static build'",
+  "installCommand": "echo 'No dependency installation required'",
   "outputDirectory": "public",
   "framework": null
 }

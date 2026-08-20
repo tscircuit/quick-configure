@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tscircuit Quick Configure · Photodiode Board</title>
+  <meta name="description" content="Configure and inspect 18 four-layer BPX65 photodiode acquisition boards in 3D, PCB, and schematic views." />
+  <style>
+    :root { color-scheme:light; --red:#d8232a; --red-dark:#a9151b; --red-soft:#fff1f1; --ink:#25272a; --muted:#687078; --soft:#f5f6f7; --line:#dfe2e5; --green:#168451; --shadow:0 18px 50px rgba(23,27,31,.1) }
+    * { box-sizing:border-box }
+    html,body { min-height:100% }
+    body { margin:0; color:var(--ink); background:#fff; font-family:Arial,Helvetica,sans-serif; -webkit-font-smoothing:antialiased }
+    button,select { font:inherit }
+    .utility-bar { min-height:31px; padding:7px 20px; color:#fff; background:#33383d; text-align:center; font-size:12px; letter-spacing:.015em }
+    .site-header { border-bottom:1px solid var(--line); background:#fff }
+    .header-inner,.page-shell,.spec-inner,.footer-inner { width:min(1220px,calc(100% - 40px)); margin:0 auto }
+    .header-inner { display:flex; align-items:center; justify-content:space-between; min-height:78px; gap:24px }
+    .brand { display:inline-flex; align-items:center; gap:12px; color:var(--ink); text-decoration:none }
+    .brand-mark { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; color:#fff; background:var(--red); box-shadow:inset 0 0 0 5px rgba(255,255,255,.18) }
+    .brand-mark svg { width:24px; height:24px }
+    .brand-copy strong { display:block; font-size:19px; letter-spacing:-.025em }
+    .brand-copy span { display:block; margin-top:1px; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase }
+    .header-note { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:#28a568; box-shadow:0 0 0 4px rgba(40,165,104,.12) }
+    .page-shell { padding:22px 0 46px }
+    .breadcrumb { margin:0 0 20px; color:#7b8288; font-size:12px }
+    .breadcrumb b { color:#454a4f; font-weight:600 }
+    .product-layout { display:grid; grid-template-columns:minmax(310px,.72fr) minmax(0,1.55fr); gap:34px; align-items:start }
+    .gallery { min-width:0; border:1px solid var(--line); border-radius:8px; background:#fff; box-shadow:var(--shadow); overflow:hidden }
+    .gallery { grid-column:2; grid-row:1 }
+    .view-tabs { display:flex; align-items:stretch; border-bottom:1px solid var(--line); background:#fafafa }
+    .view-tab { position:relative; min-width:105px; min-height:49px; padding:0 19px; border:0; border-right:1px solid var(--line); color:#555c62; background:transparent; font-size:13px; font-weight:700; cursor:pointer }
+    .view-tab:hover { color:var(--red); background:#fff }
+    .view-tab[aria-selected="true"] { color:var(--red); background:#fff }
+    .view-tab[aria-selected="true"]::after { content:""; position:absolute; left:17px; right:17px; bottom:-1px; height:3px; background:var(--red) }
+    .viewer-toolbar { display:flex; align-items:center; gap:6px; min-height:49px; margin-left:auto; padding:0 12px }
+    .viewer-toolbar[hidden] { display:none }
+    .tool-button { display:grid; place-items:center; width:31px; height:31px; border:1px solid #d5d9dc; border-radius:4px; color:#50565c; background:#fff; font-weight:700; cursor:pointer }
+    .tool-button:hover { color:var(--red); border-color:#c9aaac }
+    .viewer-frame { position:relative; height:clamp(490px,60vw,680px); max-height:72vh; min-height:490px; overflow:hidden; background:radial-gradient(circle at 50% 45%,#fff 0,#f4f5f6 58%,#eceeef 100%) }
+    .view-panel { position:absolute; inset:0 }
+    .view-panel[hidden] { display:none }
+    model-viewer { width:100%; height:100%; --poster-color:transparent; --progress-bar-color:var(--red); background:transparent }
+    .orbit-help,.pan-help { position:absolute; z-index:3; left:16px; bottom:14px; padding:7px 10px; border:1px solid rgba(57,63,69,.12); border-radius:4px; color:#666d73; background:rgba(255,255,255,.88); box-shadow:0 3px 14px rgba(0,0,0,.06); font-size:11px; pointer-events:none; backdrop-filter:blur(6px) }
+    .svg-canvas { display:grid; place-items:center; width:100%; height:100%; overflow:hidden; cursor:grab; touch-action:none; user-select:none }
+    .svg-canvas.dragging { cursor:grabbing }
+    .svg-canvas img { position:absolute; left:50%; top:50%; display:block; width:94%; height:94%; max-width:none; max-height:none; object-fit:contain; pointer-events:none }
+    .asset-loading { position:absolute; z-index:5; inset:0; display:grid; place-items:center; color:#757c82; background:rgba(245,246,247,.8); font-size:13px; pointer-events:none; transition:opacity 160ms ease }
+    .asset-loading.is-ready { opacity:0 }
+    .asset-loading span::before { content:""; display:inline-block; width:12px; height:12px; margin-right:8px; border:2px solid #d1d5d8; border-top-color:var(--red); border-radius:50%; vertical-align:-2px; animation:spin 700ms linear infinite }
+    @keyframes spin { to { transform:rotate(360deg) } }
+    .gallery-caption { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:47px; padding:9px 15px; border-top:1px solid var(--line); color:#70777d; background:#fff; font-size:11px }
+    .gallery-caption b { color:#41464b }
+    .product-info { grid-column:1; grid-row:1; min-width:0; padding-top:2px }
+    .category { margin:0 0 8px; color:var(--red); font-size:12px; font-weight:800; letter-spacing:.095em; text-transform:uppercase }
+    h1 { margin:0; font-size:clamp(31px,3vw,43px); line-height:1.04; letter-spacing:-.045em }
+    .sku-line { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:13px 0 18px; color:#777e84; font-size:12px }
+    .ready { display:inline-flex; align-items:center; gap:6px; color:var(--green); font-weight:700 }
+    .ready::before { content:"✓"; display:grid; place-items:center; width:17px; height:17px; border-radius:50%; color:#fff; background:var(--green); font-size:11px }
+    .description { margin:0 0 22px; color:#555d64; font-size:14px; line-height:1.64 }
+    .config-card { padding:20px; border:1px solid var(--line); border-radius:7px; background:var(--soft) }
+    .config-card h2 { margin:0 0 16px; font-size:17px; letter-spacing:-.015em }
+    .field { margin-bottom:15px }
+    .field:last-of-type { margin-bottom:0 }
+    .field label { display:block; margin-bottom:7px; color:#4a5055; font-size:12px; font-weight:700 }
+    select { width:100%; height:43px; padding:0 38px 0 12px; border:1px solid #cfd4d8; border-radius:4px; outline:none; color:#2f3337; background:#fff; font-size:14px; cursor:pointer }
+    select:hover { border-color:#aeb5ba }
+    select:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(216,35,42,.1) }
+    .spec-band { border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:#f7f8f9 }
+    .spec-inner { display:grid; grid-template-columns:repeat(4,1fr) }
+    .spec { min-height:107px; padding:23px 25px; border-right:1px solid var(--line) }
+    .spec:first-child { border-left:1px solid var(--line) }
+    .spec small { display:block; color:#7a8187; font-size:11px; text-transform:uppercase; letter-spacing:.075em }
+    .spec strong { display:block; margin-top:7px; color:#303438; font-size:17px }
+    .spec span { display:block; margin-top:3px; color:#747b81; font-size:11px }
+    .resources { margin-top:31px; padding-top:27px; border-top:1px solid var(--line) }
+    .resources h2 { margin:0 0 13px; font-size:24px; letter-spacing:-.03em }
+    .resource-list { margin:0; padding-left:21px; color:#687078; font-size:14px; line-height:1.9 }
+    .resource-list a { color:var(--red-dark); font-weight:700; text-underline-offset:3px }
+    .resource-list a:hover { color:var(--red) }
+    footer { border-top:1px solid var(--line); background:#2f3438 }
+    .footer-inner { display:flex; justify-content:space-between; gap:20px; padding:24px 0; color:#cbd0d4; font-size:11px }
+    .footer-inner b { color:#fff }
+    @media (max-width:940px) { .product-layout{grid-template-columns:1fr}.product-info{grid-column:1;grid-row:1;padding-top:0}.gallery{grid-column:1;grid-row:2}.viewer-frame{max-height:none}.spec-inner{grid-template-columns:repeat(2,1fr)}.spec:nth-child(3){border-left:1px solid var(--line)} }
+    @media (max-width:620px) { .header-inner,.page-shell,.spec-inner,.footer-inner{width:min(100% - 24px,1220px)}.header-note{display:none}.brand-copy span{display:none}.product-layout{gap:22px}.viewer-frame{height:470px;min-height:470px}.view-tab{min-width:0;flex:1;padding:0 8px}.viewer-toolbar{position:absolute;z-index:10;top:57px;right:8px;padding:0}.gallery-caption{align-items:flex-start;flex-direction:column;gap:3px}.spec-inner{grid-template-columns:1fr}.spec,.spec:nth-child(3){border-left:1px solid var(--line)}.footer-inner{flex-direction:column} }
+  </style>
+</head>
+<body>
+  <div class="utility-bar">18 selectable designs · Four-layer construction · 3D, PCB &amp; schematic views</div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#" aria-label="tscircuit Quick Configure home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 1.8v4M12 18.2v4M1.8 12h4M18.2 12h4M4.8 4.8l2.8 2.8M16.4 16.4l2.8 2.8M19.2 4.8l-2.8 2.8M7.6 16.4l-2.8 2.8"/></svg></span>
+        <span class="brand-copy"><strong>tscircuit Quick Configure</strong><span>Configurable sensor boards</span></span>
+      </a>
+      <div class="header-note"><span class="status-dot"></span>Board family ready to configure</div>
+    </div>
+  </header>
+  <main>
+    <div class="page-shell">
+      <p class="breadcrumb">Sensors &nbsp;/&nbsp; Optical &nbsp;/&nbsp; <b>Photodiode Acquisition Boards</b></p>
+      <div class="product-layout">
+        <section class="gallery" aria-label="Board design viewer">
+          <div class="view-tabs" role="tablist" aria-label="Design views">
+            <button class="view-tab" id="tab-3d" role="tab" aria-selected="true" aria-controls="panel-3d" data-view="3d">3D View</button>
+            <button class="view-tab" id="tab-pcb" role="tab" aria-selected="false" aria-controls="panel-svg" data-view="pcb">PCB</button>
+            <button class="view-tab" id="tab-schematic" role="tab" aria-selected="false" aria-controls="panel-svg" data-view="schematic">Schematic</button>
+            <div class="viewer-toolbar" id="viewer-toolbar" aria-label="Drawing controls" hidden>
+              <button class="tool-button" id="zoom-out" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+              <button class="tool-button" id="zoom-in" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+              <button class="tool-button" id="zoom-reset" type="button" title="Reset view" aria-label="Reset view">↺</button>
+            </div>
+          </div>
+          <div class="viewer-frame">
+            <div class="view-panel" id="panel-3d" role="tabpanel" aria-labelledby="tab-3d">
+              <model-viewer id="board-model" camera-controls auto-rotate auto-rotate-delay="1400" rotation-per-second="14deg" interaction-prompt="none" shadow-intensity="1.05" shadow-softness=".7" exposure="1.08" environment-image="neutral" camera-orbit="35deg 54deg auto" min-camera-orbit="auto 8deg auto" max-camera-orbit="auto 86deg auto" alt="Interactive 3D model of the selected photodiode board"></model-viewer>
+              <div class="orbit-help">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
+              <div class="asset-loading" id="model-loading"><span>Loading 3D board</span></div>
+            </div>
+            <div class="view-panel" id="panel-svg" role="tabpanel" aria-labelledby="tab-pcb" hidden>
+              <div class="svg-canvas" id="svg-canvas"><img id="drawing" draggable="false" alt="PCB drawing" /></div>
+              <div class="pan-help">Drag to pan · Scroll to zoom</div>
+              <div class="asset-loading" id="drawing-loading"><span>Loading drawing</span></div>
+            </div>
+          </div>
+          <div class="gallery-caption"><span><b id="caption-title">USB-C · TI MSP430FR2355</b></span><span id="caption-detail">Interactive 3D board model</span></div>
+        </section>
+        <aside class="product-info">
+          <p class="category">Photodiode Front End</p>
+          <h1>BPX65 Acquisition Board</h1>
+          <div class="sku-line"><span id="sku">SKU: TQC-USBC-FR2355</span><span class="ready">Ready to inspect</span></div>
+          <p class="description">A compact BPX65 optical sensor front end built around the low-noise OPA320 transimpedance amplifier. Select the connector and controller to inspect the exact routed board, not a generic mockup.</p>
+          <section class="config-card" aria-labelledby="configure-title">
+            <h2 id="configure-title">Configure this board</h2>
+            <div class="field"><label for="connector">Connector</label><select id="connector"><option value="usb-c">USB-C</option><option value="usb-micro">USB Micro-B</option><option value="jst-sh">JST-SH 4-pin</option></select></div>
+            <div class="field"><label for="mcu">Controller</label><select id="mcu"><option value="msp430fr2355">TI MSP430FR2355 — 12-bit ADC</option><option value="msp430g2553">TI MSP430G2553 — 10-bit ADC</option><option value="msp430fr2433">TI MSP430FR2433 — 10-bit ADC</option><option value="msp430fr5994">TI MSP430FR5994 — 12-bit ADC</option><option value="msp430f5529">TI MSP430F5529 — native USB</option><option value="ch552t">WCH CH552T — native USB</option></select></div>
+            <div class="field"><label for="sensor">Sensor</label><select id="sensor"><option value="photodiode">BPX65 Photodiode</option></select></div>
+          </section>
+        </aside>
+      </div>
+      <section class="resources" aria-labelledby="resources-title">
+        <h2 id="resources-title">Resources</h2>
+        <ul class="resource-list">
+          <li><a data-resource-file="gerbers.zip" href="#" download>Gerbers (.zip)</a></li>
+          <li><a data-resource-file="schematic.pdf" href="#" download>Schematic PDF</a></li>
+          <li><a data-resource-file="kicad-project.zip" href="#" download>KiCad Project (.zip)</a></li>
+          <li><a data-resource-file="altium-project.zip" href="#" download>Altium Project (.zip)</a></li>
+        </ul>
+      </section>
+    </div>
+    <section class="spec-band" aria-label="Key specifications">
+      <div class="spec-inner"><div class="spec"><small>Construction</small><strong>4 layers</strong><span>Top / GND / 3V3 / Bottom</span></div><div class="spec"><small>Analog front end</small><strong>OPA320</strong><span>Precision low-noise TIA</span></div><div class="spec"><small>Optical sensor</small><strong>BPX65</strong><span>Silicon PIN photodiode</span></div><div class="spec"><small>Configurations</small><strong>18 boards</strong><span>3 connectors × 6 controllers</span></div></div>
+    </section>
+  </main>
+  <footer><div class="footer-inner"><span><b>tscircuit Quick Configure</b> · TI MSP430 photodiode reference platform</span><span>Designed and rendered with tscircuit</span></div></footer>
+  <script src="./assets/model-viewer-umd.min.js"></script>
+  <script>
+    const connectors={"usb-c":{label:"USB-C",sku:"USBC"},"usb-micro":{label:"USB Micro-B",sku:"MICRO"},"jst-sh":{label:"JST-SH 4-pin",sku:"JSTSH"}}
+    const controllers={ch552t:{label:"WCH CH552T",sku:"CH552T",usb:true},msp430g2553:{label:"TI MSP430G2553",sku:"G2553",usb:false},msp430fr2433:{label:"TI MSP430FR2433",sku:"FR2433",usb:false},msp430fr2355:{label:"TI MSP430FR2355",sku:"FR2355",usb:false},msp430fr5994:{label:"TI MSP430FR5994",sku:"FR5994",usb:false},msp430f5529:{label:"TI MSP430F5529",sku:"F5529",usb:true}}
+    const connectorSelect=document.querySelector("#connector"),mcuSelect=document.querySelector("#mcu"),sensorSelect=document.querySelector("#sensor"),model=document.querySelector("#board-model"),drawing=document.querySelector("#drawing"),svgCanvas=document.querySelector("#svg-canvas"),modelPanel=document.querySelector("#panel-3d"),svgPanel=document.querySelector("#panel-svg"),toolbar=document.querySelector("#viewer-toolbar"),modelLoading=document.querySelector("#model-loading"),drawingLoading=document.querySelector("#drawing-loading"),tabs=[...document.querySelectorAll(".view-tab")],resourceLinks=[...document.querySelectorAll("[data-resource-file]")]
+    let activeView="3d",transform={x:0,y:0,scale:1},drag=null
+    const boardKey=()=>`${connectorSelect.value}__${mcuSelect.value}__${sensorSelect.value}`
+    const boardPath=()=>`./viewer/${boardKey()}`
+    function applyTransform(){drawing.style.width=`${94*transform.scale}%`;drawing.style.height=`${94*transform.scale}%`;drawing.style.transform=`translate(-50%, -50%) translate(${transform.x}px, ${transform.y}px)`}
+    function resetDrawing(){transform={x:0,y:0,scale:1};applyTransform()}
+    function setZoom(scale,clientX,clientY){const nextScale=Math.min(6,Math.max(.45,scale));if(Number.isFinite(clientX)&&Number.isFinite(clientY)){const rect=svgCanvas.getBoundingClientRect(),cursorX=clientX-(rect.left+rect.width/2),cursorY=clientY-(rect.top+rect.height/2),worldX=(cursorX-transform.x)/transform.scale,worldY=(cursorY-transform.y)/transform.scale;transform.x=cursorX-worldX*nextScale;transform.y=cursorY-worldY*nextScale}transform.scale=nextScale;applyTransform()}
+    function loadDrawing(){const kind=activeView==="schematic"?"schematic":"pcb";drawingLoading.classList.remove("is-ready");drawingLoading.querySelector("span").textContent="Loading drawing";drawing.alt=`${kind} drawing for ${connectors[connectorSelect.value].label} and ${controllers[mcuSelect.value].label}`;drawing.src=`${boardPath()}/${kind}.svg`;resetDrawing()}
+    function loadBoard(){const c=connectors[connectorSelect.value],m=controllers[mcuSelect.value],base=boardPath();modelLoading.classList.remove("is-ready");modelLoading.querySelector("span").textContent="Loading 3D board";model.setAttribute("poster",`${base}/3d.png`);model.setAttribute("src",`${base}/3d.glb`);model.setAttribute("alt",`Interactive 3D model of the ${c.label} and ${m.label} photodiode board`);document.querySelector("#sku").textContent=`SKU: TQC-${c.sku}-${m.sku}`;document.querySelector("#caption-title").textContent=`${c.label} · ${m.label}`;resourceLinks.forEach(link=>{const file=link.dataset.resourceFile;link.href=`${base}/resources/${file}`;link.download=`${boardKey()}-${file}`});if(activeView!=="3d")loadDrawing()}
+    function setView(view){activeView=view;const is3d=view==="3d";tabs.forEach(tab=>tab.setAttribute("aria-selected",String(tab.dataset.view===view)));modelPanel.hidden=!is3d;svgPanel.hidden=is3d;toolbar.hidden=is3d;svgPanel.setAttribute("aria-labelledby",view==="pcb"?"tab-pcb":"tab-schematic");document.querySelector("#caption-detail").textContent=is3d?"Interactive 3D board model":view==="pcb"?"PCB SVG · scroll to zoom, drag to pan":"Schematic SVG · scroll to zoom, drag to pan";if(!is3d)loadDrawing()}
+    tabs.forEach(tab=>tab.addEventListener("click",()=>setView(tab.dataset.view)));[connectorSelect,mcuSelect,sensorSelect].forEach(select=>select.addEventListener("change",loadBoard))
+    model.addEventListener("load",()=>modelLoading.classList.add("is-ready"));model.addEventListener("error",()=>{modelLoading.querySelector("span").textContent="3D model unavailable"});drawing.addEventListener("load",()=>drawingLoading.classList.add("is-ready"));drawing.addEventListener("error",()=>{drawingLoading.querySelector("span").textContent="Drawing unavailable"})
+    document.querySelector("#zoom-in").addEventListener("click",()=>setZoom(transform.scale*1.15));document.querySelector("#zoom-out").addEventListener("click",()=>setZoom(transform.scale/1.15));document.querySelector("#zoom-reset").addEventListener("click",resetDrawing)
+    svgCanvas.addEventListener("wheel",event=>{event.preventDefault();const factor=Math.min(1.06,Math.max(.94,Math.exp(-event.deltaY*.0008)));setZoom(transform.scale*factor,event.clientX,event.clientY)},{passive:false})
+    svgCanvas.addEventListener("pointerdown",event=>{drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,originX:transform.x,originY:transform.y};svgCanvas.setPointerCapture(event.pointerId);svgCanvas.classList.add("dragging")})
+    svgCanvas.addEventListener("pointermove",event=>{if(!drag||drag.pointerId!==event.pointerId)return;transform.x=drag.originX+event.clientX-drag.x;transform.y=drag.originY+event.clientY-drag.y;applyTransform()})
+    function endDrag(event){if(!drag||drag.pointerId!==event.pointerId)return;drag=null;svgCanvas.classList.remove("dragging")}
+    svgCanvas.addEventListener("pointerup",endDrag);svgCanvas.addEventListener("pointercancel",endDrag)
+    document.addEventListener("keydown",event=>{if(activeView==="3d")return;if(event.key==="+"||event.key==="=")setZoom(transform.scale*1.15);if(event.key==="-")setZoom(transform.scale/1.15);if(event.key==="0")resetDrawing()})
+    loadBoard()
+  </script>
+</body>
+</html>
