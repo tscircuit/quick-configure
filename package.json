@@ -1,0 +1,31 @@
+{
+  "name": "quick-configure",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Selectable tscircuit board family for BPX65 photodiode sensing with CH552T and TI MSP430 MCUs",
+  "scripts": {
+    "build": "npm run build:circuits && npm run assemble-site",
+    "build:circuits": "tsci build --site --ignore-warnings --concurrency 4 --autorouter-timeout 3m --all-images --3d --glbs --pcb-svgs --schematic-svgs && bun run resources",
+    "assemble-site": "bun run scripts/assemble-site.ts",
+    "resources": "bun run scripts/generate-resources.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tsci/seveibar.smd-usb-c": "^0.0.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "altiumts": "^0.0.23",
+    "circuit-json-to-altium": "https://github.com/tscircuit/circuit-json-to-altium/archive/9156ef818d558278eacb37a9d96a326163aece75.tar.gz",
+    "circuit-json-to-gerber": "^0.0.96",
+    "circuit-json-to-kicad": "^0.0.174",
+    "jszip": "^3.10.1",
+    "tscircuit": "^0.0.2366",
+    "typescript": "^5.0.0"
+  },
+  "overrides": {
+    "circuit-json-to-altium": {
+      "altiumts": "$altiumts"
+    }
+  }
+}
