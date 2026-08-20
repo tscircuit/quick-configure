@@ -135,6 +135,7 @@ export const mcus: Record<McuId, McuDefinition> = {
     resetPin: 1,
     vccPins: [18],
     gndPins: [17],
+    supplierPartNumbers: { jlcpcb: ["C191026"] },
   },
   msp430fr2355: {
     id: "msp430fr2355",

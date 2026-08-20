@@ -1,5 +1,5 @@
-import { cloneElement } from "react"
 import { A_10118194_0001LF } from "../imports/A_10118194_0001LF/A_10118194_0001LF"
+import { MSP430FR2433IRGER } from "../imports/MSP430FR2433IRGER/MSP430FR2433IRGER"
 import { connectors, mcus, type ConnectorId, type McuId } from "./board-data"
 import { SmdUsbC } from "./SmdUsbC"
 
@@ -7,16 +7,6 @@ export interface PhotodiodeBoardProps {
   connector: ConnectorId
   mcu: McuId
 }
-
-const LeftEdgeUsbC = (props: Parameters<typeof SmdUsbC>[0]) =>
-  cloneElement(SmdUsbC(props), {
-    cadModel: {
-      objUrl:
-        "https://modelcdn.tscircuit.com/easyeda_models/download?uuid=2a4bc2358b36497d9ab2a66ab6419ba3&pn=C165948",
-      rotationOffset: { x: 0, y: 0, z: 180 },
-      positionOffset: { x: -2.5, y: 0, z: 0 },
-    },
-  })
 
 const ch552tPinLabels = mcus.ch552t.pinLabels
 
@@ -91,7 +81,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       <schematicsection name="Analog" displayName="Photodiode Analog Front End" />
 
       {connector === "usb-c" && (
-        <LeftEdgeUsbC
+        <SmdUsbC
           {...interfaceSection}
           name="J1"
           pcbX={connectorX}
@@ -212,19 +202,32 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         </>
       )}
 
-      <chip
-        {...controlSection}
-        name="U_MAIN"
-        manufacturerPartNumber={mcu.manufacturerPartNumber}
-        supplierPartNumbers={mcu.supplierPartNumbers}
-        footprint={mcu.footprint}
-        pinLabels={mcu.pinLabels}
-        pcbX={mainX}
-        pcbY={1.5}
-        pcbRotation={mcu.pinCount >= 48 ? 45 : 180}
-        schX={1}
-        schY={1}
-      />
+      {mcuId === "msp430fr2433" ? (
+        <MSP430FR2433IRGER
+          {...controlSection}
+          name="U_MAIN"
+          pinLabels={mcu.pinLabels as any}
+          pcbX={mainX}
+          pcbY={1.5}
+          pcbRotation={180}
+          schX={1}
+          schY={1}
+        />
+      ) : (
+        <chip
+          {...controlSection}
+          name="U_MAIN"
+          manufacturerPartNumber={mcu.manufacturerPartNumber}
+          supplierPartNumbers={mcu.supplierPartNumbers}
+          footprint={mcu.footprint}
+          pinLabels={mcu.pinLabels}
+          pcbX={mainX}
+          pcbY={1.5}
+          pcbRotation={mcu.pinCount >= 48 ? 45 : 180}
+          schX={1}
+          schY={1}
+        />
+      )}
 
       <capacitor {...controlSection} name="C_MAIN" capacitance="100nF" footprint="0402" pcbX={mainDecouplingX} pcbY={mainDecouplingY} pcbRotation={isLargeMcu ? 90 : 0} schX={1} schY={6.5} />
       <resistor
