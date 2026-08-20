@@ -69,9 +69,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
   const boardHeight = isLargeMcu ? 34 : 30
   const connectorX =
     connector === "usb-c"
-      ? isLargeMcu
-        ? -26.5
-        : -23
+      ? -(boardWidth / 2) + 5
       : connector === "usb-micro"
         ? -(boardWidth / 2) + 4.4
         : -(boardWidth / 2) + 3.55
