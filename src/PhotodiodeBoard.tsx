@@ -1,4 +1,5 @@
 import { cloneElement } from "react"
+import { A_10118194_0001LF } from "../imports/A_10118194_0001LF/A_10118194_0001LF"
 import { connectors, mcus, type ConnectorId, type McuId } from "./board-data"
 import { SmdUsbC } from "./SmdUsbC"
 
@@ -66,11 +67,14 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
   const resetY = isLargeMcu ? 12 : -7.2
   const boardWidth = isLargeMcu ? 62 : 56
   const boardHeight = isLargeMcu ? 34 : 30
-  const connectorX = isLargeMcu
-    ? -26.5
-    : connector === "usb-c"
-      ? -23
-      : -23.8
+  const connectorX =
+    connector === "usb-c"
+      ? isLargeMcu
+        ? -26.5
+        : -23
+      : connector === "usb-micro"
+        ? -(boardWidth / 2) + 4.4
+        : -(boardWidth / 2) + 3.55
   const boardTitle = `${connectorInfo.displayName} + ${mcu.displayName}`
 
   return (
@@ -101,21 +105,12 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       )}
 
       {connector === "usb-micro" && (
-        <chip
+        <A_10118194_0001LF
           {...interfaceSection}
           name="J1"
-          manufacturerPartNumber="10118194-0001LF"
-          footprint="kicad:Connector_USB/USB_Micro-B_Amphenol_10118194-0001LF_Horizontal"
-          pinLabels={{
-            pin1: "VBUS",
-            pin2: "USB_DM",
-            pin3: "USB_DP",
-            pin4: "ID",
-            pin5: "GND",
-          }}
           pcbX={connectorX}
           pcbY={0}
-          pcbRotation={90}
+          pcbRotation={-90}
           schX={-14}
           schY={5}
         />
@@ -135,7 +130,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           }}
           pcbX={connectorX}
           pcbY={0}
-          pcbRotation={90}
+          pcbRotation={-90}
           schX={-14}
           schY={5}
         />

@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { convertCircuitJsonToAltiumZip } from "circuit-json-to-altium"
 import {
@@ -92,10 +92,20 @@ async function writeSchematicPdf(svgPath: string, outputPath: string) {
   }
 }
 
-const boardDirectories = (await readdir(distDir, { withFileTypes: true }))
+const directoryNames = (await readdir(distDir, { withFileTypes: true }))
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
   .sort()
+
+const boardDirectories: string[] = []
+for (const directoryName of directoryNames) {
+  try {
+    await access(join(distDir, directoryName, "circuit.json"))
+    boardDirectories.push(directoryName)
+  } catch {
+    // Ignore CLI diagnostic/cache directories that are not generated boards.
+  }
+}
 
 let completed = 0
 for (const boardDirectory of boardDirectories) {

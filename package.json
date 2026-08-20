@@ -5,7 +5,7 @@
   "description": "Selectable tscircuit board family for BPX65 photodiode sensing with CH552T and TI MSP430 MCUs",
   "scripts": {
     "build": "npm run build:circuits && npm run assemble-site",
-    "build:circuits": "tsci build --site --ignore-warnings --concurrency 4 --autorouter-timeout 3m --all-images --3d --glbs --pcb-svgs --schematic-svgs && bun run resources",
+    "build:circuits": "tsci build --site --ignore-warnings --concurrency 4 --autorouter-timeout 8m --all-images --3d --glbs --pcb-svgs --schematic-svgs && bun run resources",
     "assemble-site": "bun run scripts/assemble-site.ts",
     "resources": "bun run scripts/generate-resources.ts",
     "typecheck": "tsc --noEmit"
