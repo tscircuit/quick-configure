@@ -15,6 +15,10 @@ const pinLabels = {
   14: ["VBUS2", "B4"],
   15: ["GND1", "A12"],
   16: ["GND2", "B1"],
+  17: ["SHIELD1", "alt_0"],
+  18: ["SHIELD2", "alt_1"],
+  19: ["SHIELD3", "alt_2"],
+  20: ["SHIELD4", "alt_3"],
 } as const
 
 const signalPads = [
@@ -67,7 +71,7 @@ export const SmdUsbC = (props: any) => (
         direction: "top-to-bottom",
       },
       bottomSide: {
-        pins: ["GND1", "GND2"],
+        pins: ["GND1", "GND2", "SHIELD1", "SHIELD2", "SHIELD3", "SHIELD4"],
         direction: "left-to-right",
       },
     }}

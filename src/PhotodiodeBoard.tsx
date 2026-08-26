@@ -326,6 +326,9 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           <trace from=".J1 > .pin2" to="net.GND" thickness="0.5mm" />
           <trace from=".J1 > .pin15" to="net.GND" thickness="0.5mm" />
           <trace from=".J1 > .pin16" to="net.GND" thickness="0.5mm" />
+          {[17, 18, 19, 20].map((pin) => (
+            <trace key={`usb-shield-${pin}`} from={`.J1 > .pin${pin}`} to="net.GND" thickness="0.5mm" />
+          ))}
           <trace from=".J1 > .pin6" to="net.USB_CC1" />
           <trace from=".R_CC1 > .pin1" to="net.USB_CC1" />
           <trace from=".R_CC1 > .pin2" to="net.GND" />
@@ -408,11 +411,23 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       ))}
       <trace from=".C_MAIN > .pin1" to="net.VCC_3V3" />
       <trace from=".C_MAIN > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", mcu.resetPin)} to="net.MAIN_RESET" />
+      <trace
+        from={p("U_MAIN", mcu.resetPin)}
+        to="net.MAIN_RESET"
+        thickness="0.12mm"
+      />
       <trace from=".R_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".R_RESET > .pin2" to={mcuId === "ch552t" ? "net.GND" : "net.VCC_3V3"} />
-      <trace from={p("U_MAIN", mcu.uartTxPin)} to="net.UART_MAIN_TX" />
-      <trace from={p("U_MAIN", mcu.uartRxPin)} to="net.UART_MAIN_RX" />
+      <trace
+        from={p("U_MAIN", mcu.uartTxPin)}
+        to="net.UART_MAIN_TX"
+        thickness="0.12mm"
+      />
+      <trace
+        from={p("U_MAIN", mcu.uartRxPin)}
+        to="net.UART_MAIN_RX"
+        thickness="0.12mm"
+      />
 
       {mcuId === "ch552t" && (
         <>
@@ -424,19 +439,19 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
 
       {mcuId === "msp430f5529" && (
         <>
-          <trace from=".U_MAIN > .pin39" to="net.MSP_VCORE" />
+          <trace from=".U_MAIN > .pin20" to="net.MSP_VCORE" />
           <trace from=".C_VCORE > .pin1" to="net.MSP_VCORE" />
           <trace from=".C_VCORE > .pin2" to="net.GND" />
-          <trace from=".U_MAIN > .pin74" to="net.MSP_V18" />
+          <trace from=".U_MAIN > .pin67" to="net.MSP_V18" />
           <trace from=".C_V18 > .pin1" to="net.MSP_V18" />
           <trace from=".C_V18 > .pin2" to="net.GND" />
-          <trace from=".U_MAIN > .pin75" to="net.MSP_VUSB" />
+          <trace from=".U_MAIN > .pin66" to="net.MSP_VUSB" />
           <trace from=".C_VUSB > .pin1" to="net.MSP_VUSB" />
           <trace from=".C_VUSB > .pin2" to="net.GND" />
-          <trace from=".U_MAIN > .pin78" to="net.MSP_USB_PUR" />
+          <trace from=".U_MAIN > .pin63" to="net.MSP_USB_PUR" />
           <trace from=".R_USB_PULLUP > .pin1" to="net.MSP_USB_PUR" />
           <trace from=".R_USB_PULLUP > .pin2" to="net.USB_DP_MCU" />
-          {isUsb && <trace from=".U_MAIN > .pin76" to="net.VBUS5" />}
+          {isUsb && <trace from=".U_MAIN > .pin65" to="net.VBUS5" />}
         </>
       )}
 
@@ -464,7 +479,11 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       <trace from=".R_ADC > .pin2" to="net.ADC_IN" />
       <trace from=".C_ADC > .pin1" to="net.ADC_IN" />
       <trace from=".C_ADC > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", mcu.adcPin)} to="net.ADC_IN" />
+      <trace
+        from={p("U_MAIN", mcu.adcPin)}
+        to="net.ADC_IN"
+        thickness="0.12mm"
+      />
 
       <trace from=".J_DEBUG > .pin1" to="net.VCC_3V3" />
       <trace from=".J_DEBUG > .pin2" to="net.GND" />

@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import { access, mkdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { convertCircuitJsonToAltiumZip } from "circuit-json-to-altium"
 import {
@@ -13,6 +13,7 @@ import {
   CircuitJsonToKicadSchConverter,
 } from "circuit-json-to-kicad"
 import JSZip from "jszip"
+import { expectedConfigurationIds } from "./configuration-ids"
 
 const distDir = join(import.meta.dir, "..", "dist")
 
@@ -92,23 +93,14 @@ async function writeSchematicPdf(svgPath: string, outputPath: string) {
   }
 }
 
-const directoryNames = (await readdir(distDir, { withFileTypes: true }))
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .sort()
-
-const boardDirectories: string[] = []
-for (const directoryName of directoryNames) {
-  try {
-    await access(join(distDir, directoryName, "circuit.json"))
-    boardDirectories.push(directoryName)
-  } catch {
-    // Ignore CLI diagnostic/cache directories that are not generated boards.
-  }
-}
+await Promise.all(
+  expectedConfigurationIds.map((boardId) =>
+    access(join(distDir, boardId, "circuit.json")),
+  ),
+)
 
 let completed = 0
-for (const boardDirectory of boardDirectories) {
+for (const boardDirectory of expectedConfigurationIds) {
   const boardPath = join(distDir, boardDirectory)
   const circuitJsonPath = join(boardPath, "circuit.json")
   const circuitJson = JSON.parse(await readFile(circuitJsonPath, "utf8"))
@@ -133,7 +125,9 @@ for (const boardDirectory of boardDirectories) {
   ])
 
   completed += 1
-  console.log(`Resources ${completed}/${boardDirectories.length}: ${boardDirectory}`)
+  console.log(
+    `Resources ${completed}/${expectedConfigurationIds.length}: ${boardDirectory}`,
+  )
 }
 
 console.log(`Created fabrication and EDA resources for ${completed} boards.`)
