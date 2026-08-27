@@ -30,10 +30,22 @@ const backlightMosfetPins = {
   pin3: "DRAIN",
 } as const
 
+const epaperMosfetPins = {
+  pin1: "GATE",
+  pin2: "SOURCE",
+  pin3: "DRAIN",
+} as const
+
+const epaperSchottkyPins = {
+  pin1: "CATHODE",
+  pin2: "ANODE",
+} as const
+
 const f5529 = {
   vcore: 20,
   backlightPwm: 23,
   displayTe: 24,
+  displayBusy: 24,
   spiMosi: 37,
   spiMiso: 38,
   spiClock: 39,
@@ -123,12 +135,160 @@ const Tft028Support = () => (
   </>
 )
 
+const EpaperSupport = () => (
+  <>
+    <inductor
+      {...displaySection}
+      name="L_EPD_BOOST"
+      manufacturerPartNumber="FTC252012S100MBCA"
+      supplierPartNumbers={{ jlcpcb: ["C5832376"] }}
+      inductance="10uH"
+      maxCurrentRating="1.2A"
+      footprint="kicad:Inductor_SMD/L_1008_2520Metric"
+      pcbX={17}
+      pcbY={13}
+      pcbRotation={0}
+      schX={5}
+      schY={5}
+    />
+    <chip
+      {...displaySection}
+      name="Q_EPD_BOOST"
+      manufacturerPartNumber="SI1308EDL-T1-GE3"
+      supplierPartNumbers={{ jlcpcb: ["C469327"] }}
+      footprint="kicad:Package_TO_SOT_SMD/SOT-323_SC-70"
+      pinLabels={epaperMosfetPins}
+      pcbX={22}
+      pcbY={13}
+      pcbRotation={90}
+      schX={8}
+      schY={4}
+    />
+    <resistor
+      {...displaySection}
+      name="R_EPD_SENSE"
+      manufacturerPartNumber="FRL1206FR470TS"
+      supplierPartNumbers={{ jlcpcb: ["C2907355"] }}
+      resistance="0.47"
+      footprint="1206"
+      pcbX={26}
+      pcbY={13}
+      pcbRotation={90}
+      schX={10}
+      schY={3}
+    />
+    <resistor
+      {...displaySection}
+      name="R_EPD_GATE_PD"
+      resistance="10k"
+      footprint="0402"
+      pcbX={22}
+      pcbY={16}
+      pcbRotation={0}
+      schX={9}
+      schY={2}
+    />
+
+    {[1, 2, 3].map((index) => (
+      <chip
+        {...displaySection}
+        key={`D_EPD_${index}`}
+        name={`D_EPD_${index}`}
+        manufacturerPartNumber="MBR0530T1G"
+        supplierPartNumbers={{ jlcpcb: ["C82046"] }}
+        footprint="kicad:Diode_SMD/D_SOD-123"
+        pinLabels={epaperSchottkyPins}
+        pcbX={30 - index * 5}
+        pcbY={7}
+        pcbRotation={index === 3 ? 180 : 0}
+        schX={6 + (index - 1) * 2}
+        schY={0}
+      />
+    ))}
+
+    <capacitor
+      {...displaySection}
+      name="C_EPD_FLY"
+      manufacturerPartNumber="CL31B475KAHNNNE"
+      supplierPartNumbers={{ jlcpcb: ["C1872"] }}
+      capacitance="4.7uF"
+      maxVoltageRating="25V"
+      maxDecouplingTraceLength="12mm"
+      footprint="1206"
+      pcbX={18.5}
+      pcbY={10.5}
+      pcbRotation={0}
+      schX={12}
+      schY={1}
+    />
+    <capacitor
+      {...displaySection}
+      name="C_EPD_BOOST_IN"
+      manufacturerPartNumber="CL31B475KAHNNNE"
+      supplierPartNumbers={{ jlcpcb: ["C1872"] }}
+      capacitance="4.7uF"
+      maxVoltageRating="25V"
+      maxDecouplingTraceLength="12mm"
+      footprint="1206"
+      pcbX={10}
+      pcbY={16}
+      pcbRotation={0}
+      schX={3}
+      schY={5}
+    />
+
+    {[
+      ["C_EPD_VDHR", 29.75, 7, 12, 6],
+      ["C_EPD_VDDD", 29, -3, 12, 4],
+      ["C_EPD_VSH", 29, -6, 12, 2],
+      ["C_EPD_VSL", 29, -8, 12, 0],
+      ["C_EPD_VCOM", 29, -11, 12, -2],
+      ["C_EPD_VDD", 32.3, -1, 7, 7],
+      ["C_EPD_VGH", 29, 1, 8, -3],
+      ["C_EPD_VGL", 25, -3, 6, -3],
+    ].map(([name, pcbX, pcbY, schX, schY]) => (
+      <capacitor
+        {...displaySection}
+        key={name}
+        name={name as string}
+        manufacturerPartNumber="CL21B105KBFNNNE"
+        supplierPartNumbers={{ jlcpcb: ["C28323"] }}
+        capacitance="1uF"
+        maxVoltageRating="50V"
+        maxDecouplingTraceLength="12mm"
+        footprint="0805"
+        pcbX={pcbX as number}
+        pcbY={pcbY as number}
+        pcbRotation={180}
+        schX={schX as number}
+        schY={schY as number}
+      />
+    ))}
+    <capacitor
+      {...displaySection}
+      name="C_EPD_VDD_HF"
+      manufacturerPartNumber="CC0603KRX7R9BB104"
+      supplierPartNumbers={{ jlcpcb: ["C14663"] }}
+      capacitance="100nF"
+      maxVoltageRating="50V"
+      maxDecouplingTraceLength="12mm"
+      footprint="0603"
+      pcbX={32.5}
+      pcbY={1.5}
+      pcbRotation={180}
+      schX={9}
+      schY={7}
+    />
+  </>
+)
+
 export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
   const screen = screens[screenId]
   const mcu = mcus.msp430f5529
   const isOled = screenId === "er-oled096-1-3w"
   const isTft020 = screenId === "er-tft020-3"
   const isTft028 = screenId === "er-tft028a2-4"
+  const isEpaper = screenId === "er-epd0213-2b"
   const boardWidth = 82
   const boardHeight = 52
   const boardTitle = `USB-C + MSP430F5529 + ${screen.displayName}`
@@ -290,6 +450,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         footprint={screen.connector.footprint}
         cadModel={{ glbUrl: screen.connector.modelUrl }}
         pinLabels={screen.connector.pinLabels}
+        noConnect={isEpaper ? ["NC", "NC_2", "TSCL", "TSDA", "VPP"] : undefined}
         schPortArrangement={displayPortArrangement}
         pcbX={35}
         pcbY={0}
@@ -301,6 +462,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       {isOled && <OledSupport />}
       {isTft020 && <Tft020Support />}
       {isTft028 && <Tft028Support />}
+      {isEpaper && <EpaperSupport />}
 
       <pinheader
         {...controlSection}
@@ -309,8 +471,8 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pitch="2.54mm"
         gender="unpopulated"
         doNotPlace
-        pinLabels={["VCC_3V3", "GND", "RESET", "TEST", "UART_TX", "UART_RX", "SPI_CLK", "SPI_MOSI", "SPI_MISO", "TE"]}
-        pcbPinLabels={{ pin1: "3V3", pin2: "G", pin3: "RST", pin4: "TST", pin5: "TX", pin6: "RX", pin7: "CLK", pin8: "MO", pin9: "MI", pin10: "TE" }}
+        pinLabels={["VCC_3V3", "GND", "RESET", "TEST", "UART_TX", "UART_RX", "SPI_CLK", "SPI_MOSI", "SPI_MISO", isEpaper ? "BUSY_N" : "TE"]}
+        pcbPinLabels={{ pin1: "3V3", pin2: "G", pin3: "RST", pin4: "TST", pin5: "TX", pin6: "RX", pin7: "CLK", pin8: "MO", pin9: "MI", pin10: isEpaper ? "BSY" : "TE" }}
         showSilkscreenPinLabels
         pcbX={-6}
         pcbY={-20}
@@ -427,7 +589,11 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from={p("U_MAIN", f5529.displayCs)} to="net.DISPLAY_CS_N" thickness="0.12mm" />
       <trace from={p("U_MAIN", f5529.displayDc)} to="net.DISPLAY_DC" thickness="0.12mm" />
       <trace from={p("U_MAIN", f5529.displayReset)} to="net.DISPLAY_RESET_N" thickness="0.12mm" />
-      <trace from={p("U_MAIN", f5529.displayTe)} to="net.DISPLAY_TE" thickness="0.12mm" />
+      <trace
+        from={p("U_MAIN", isEpaper ? f5529.displayBusy : f5529.displayTe)}
+        to={isEpaper ? "net.DISPLAY_BUSY_N" : "net.DISPLAY_TE"}
+        thickness="0.12mm"
+      />
       <trace from=".R_DISPLAY_CS > .pin1" to="net.DISPLAY_CS_N" />
       <trace from=".R_DISPLAY_CS > .pin2" to="net.VCC_3V3" />
       <trace from=".R_DISPLAY_RESET > .pin1" to="net.DISPLAY_RESET_N" />
@@ -527,6 +693,69 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         </>
       )}
 
+      {isEpaper && (
+        <>
+          {/* UC8251 datasheet page 53 booster. Panel pins 1, 4, 6, 7, and 19
+              stay open: two NCs, the unused external temperature bus, and VPP. */}
+          <trace from=".J_DISPLAY > .pin2" to="net.EPD_GDR" />
+          <trace from=".Q_EPD_BOOST > .pin1" to="net.EPD_GDR" />
+          <trace from=".R_EPD_GATE_PD > .pin1" to="net.EPD_GDR" />
+          <trace from=".R_EPD_GATE_PD > .pin2" to="net.GND" />
+          <trace from=".J_DISPLAY > .pin3" to="net.EPD_RESE" />
+          <trace from=".Q_EPD_BOOST > .pin2" to="net.EPD_RESE" thickness="0.35mm" />
+          <trace from=".R_EPD_SENSE > .pin1" to="net.EPD_RESE" thickness="0.35mm" />
+          <trace from=".R_EPD_SENSE > .pin2" to="net.GND" thickness="0.35mm" />
+
+          <trace from=".L_EPD_BOOST > .pin1" to="net.VCC_3V3" thickness="0.45mm" />
+          <trace from=".C_EPD_BOOST_IN > .pin1" to="net.VCC_3V3" thickness="0.45mm" />
+          <trace from=".C_EPD_BOOST_IN > .pin2" to="net.GND" thickness="0.45mm" />
+          <trace from=".L_EPD_BOOST > .pin2" to="net.EPD_SWITCH" thickness="0.45mm" />
+          <trace from=".Q_EPD_BOOST > .pin3" to="net.EPD_SWITCH" thickness="0.45mm" />
+          <trace from=".D_EPD_1 > .pin2" to="net.EPD_SWITCH" thickness="0.35mm" />
+          <trace from=".C_EPD_FLY > .pin1" to="net.EPD_SWITCH" thickness="0.35mm" />
+
+          <trace from=".D_EPD_1 > .pin1" to="net.EPD_VGH" thickness="0.35mm" />
+          <trace from=".J_DISPLAY > .pin21" to="net.EPD_VGH" />
+          <trace from=".C_EPD_VGH > .pin1" to="net.EPD_VGH" />
+          <trace from=".C_EPD_VGH > .pin2" to="net.GND" />
+
+          <trace from=".C_EPD_FLY > .pin2" to="net.EPD_PUMP" thickness="0.35mm" />
+          <trace from=".D_EPD_2 > .pin2" to="net.EPD_PUMP" thickness="0.35mm" />
+          <trace from=".D_EPD_2 > .pin1" to="net.GND" thickness="0.35mm" />
+          <trace from=".D_EPD_3 > .pin1" to="net.EPD_PUMP" thickness="0.35mm" />
+          <trace from=".D_EPD_3 > .pin2" to="net.EPD_VGL" thickness="0.35mm" />
+          <trace from=".J_DISPLAY > .pin23" to="net.EPD_VGL" />
+          <trace from=".C_EPD_VGL > .pin1" to="net.EPD_VGL" />
+          <trace from=".C_EPD_VGL > .pin2" to="net.GND" />
+
+          <trace from=".J_DISPLAY > .pin5" to=".C_EPD_VDHR > .pin1" />
+          <trace from=".C_EPD_VDHR > .pin2" to="net.GND" />
+          <trace from=".J_DISPLAY > .pin8" to="net.GND" />
+          <trace from=".J_DISPLAY > .pin9" to="net.DISPLAY_BUSY_N" />
+          <trace from=".J_DISPLAY > .pin10" to="net.DISPLAY_RESET_N" />
+          <trace from=".J_DISPLAY > .pin11" to="net.DISPLAY_DC" />
+          <trace from=".J_DISPLAY > .pin12" to="net.DISPLAY_CS_N" />
+          <trace from=".J_DISPLAY > .pin13" to="net.DISPLAY_SCLK" />
+          <trace from=".J_DISPLAY > .pin14" to="net.DISPLAY_MOSI" />
+          {[15, 16].map((pin) => (
+            <trace key={`epd-vcc-${pin}`} from={p("J_DISPLAY", pin)} to="net.VCC_3V3" thickness="0.35mm" />
+          ))}
+          <trace from=".J_DISPLAY > .pin17" to="net.GND" thickness="0.35mm" />
+          <trace from=".J_DISPLAY > .pin18" to=".C_EPD_VDDD > .pin1" />
+          <trace from=".C_EPD_VDDD > .pin2" to="net.GND" />
+          <trace from=".J_DISPLAY > .pin20" to=".C_EPD_VSH > .pin1" />
+          <trace from=".C_EPD_VSH > .pin2" to="net.GND" />
+          <trace from=".J_DISPLAY > .pin22" to=".C_EPD_VSL > .pin1" />
+          <trace from=".C_EPD_VSL > .pin2" to="net.GND" />
+          <trace from=".J_DISPLAY > .pin24" to=".C_EPD_VCOM > .pin1" />
+          <trace from=".C_EPD_VCOM > .pin2" to="net.GND" />
+          <trace from=".C_EPD_VDD > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_EPD_VDD > .pin2" to="net.GND" />
+          <trace from=".C_EPD_VDD_HF > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_EPD_VDD_HF > .pin2" to="net.GND" />
+        </>
+      )}
+
       {(isTft020 || isTft028) && (
         <>
           <trace from=".U_MAIN > .pin23" to="net.BACKLIGHT_PWM" />
@@ -549,7 +778,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from=".J_DEBUG > .pin7" to="net.DISPLAY_SCLK" />
       <trace from=".J_DEBUG > .pin8" to="net.DISPLAY_MOSI" />
       <trace from=".J_DEBUG > .pin9" to="net.DISPLAY_MISO" />
-      <trace from=".J_DEBUG > .pin10" to="net.DISPLAY_TE" />
+      <trace from=".J_DEBUG > .pin10" to={isEpaper ? "net.DISPLAY_BUSY_N" : "net.DISPLAY_TE"} />
 
       <copperpour
         name="BOTTOM_GND_POUR"

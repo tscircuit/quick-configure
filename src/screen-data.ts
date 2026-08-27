@@ -1,4 +1,5 @@
 import erOled096ModelUrl from "./models/er-oled096-1-3w.glb"
+import erEpd0213ModelUrl from "./models/er-epd0213-2b.glb"
 import erTft020ModelUrl from "./models/er-tft020-3.glb"
 import erTft028ModelUrl from "./models/er-tft028a2-4.glb"
 import {
@@ -13,8 +14,8 @@ export interface ScreenDefinition {
   displayName: string
   productName: string
   sku: string
-  technology: "OLED" | "IPS TFT"
-  controller: "SSD1306" | "ST7789" | "ILI9341"
+  technology: "OLED" | "IPS TFT" | "E-Paper"
+  controller: "SSD1306" | "ST7789" | "ILI9341" | "UC8251"
   interface: "4-wire SPI"
   resolution: `${number}×${number}`
   description: string
@@ -22,7 +23,7 @@ export interface ScreenDefinition {
   datasheetUrl: string
   connector: {
     mpn: string
-    positionCount: 14 | 30 | 50
+    positionCount: 14 | 24 | 30 | 50
     pitch: "0.5 mm"
     contactSide: "top" | "bottom"
     mounting: "horizontal SMT"
@@ -65,6 +66,35 @@ const oledPinLabels = {
   pin30: "NC_GND_2",
   pin31: "MP1",
   pin32: "MP2",
+} as const
+
+const epd0213PinLabels = {
+  pin1: "NC",
+  pin2: "GDR",
+  pin3: "RESE",
+  pin4: "NC_2",
+  pin5: "VDHR",
+  pin6: "TSCL",
+  pin7: "TSDA",
+  pin8: "BS",
+  pin9: "BUSY_N",
+  pin10: "RESET_N",
+  pin11: "DC",
+  pin12: "CS_N",
+  pin13: "SCLK",
+  pin14: "MOSI",
+  pin15: "VDDIO",
+  pin16: "VDD",
+  pin17: "GND",
+  pin18: "VDDD",
+  pin19: "VPP",
+  pin20: "VSH",
+  pin21: "VGH",
+  pin22: "VSL",
+  pin23: "VGL",
+  pin24: "VCOM",
+  pin25: "MP1",
+  pin26: "MP2",
 } as const
 
 const tft020PinLabels = {
@@ -125,12 +155,39 @@ const tft028PinLabels = Object.fromEntries([
 ].map((label, index) => [`pin${index + 1}`, label]))
 
 const modelUrls: Record<ScreenId, string> = {
+  "er-epd0213-2b": erEpd0213ModelUrl,
   "er-oled096-1-3w": erOled096ModelUrl,
   "er-tft020-3": erTft020ModelUrl,
   "er-tft028a2-4": erTft028ModelUrl,
 }
 
 export const screens: Record<ScreenId, ScreenDefinition> = {
+  "er-epd0213-2b": {
+    id: "er-epd0213-2b",
+    displayName: '2.13″ E-Paper · ER-EPD0213-2B',
+    productName: "ER-EPD0213-2B E-Paper Board",
+    sku: "EPD0213",
+    technology: "E-Paper",
+    controller: "UC8251",
+    interface: "4-wire SPI",
+    resolution: "122×250",
+    description:
+      "A budget 2.13-inch black-on-white e-paper panel with its UC8251 booster support circuit and matching 24-position top-contact ZIF connector.",
+    productUrl:
+      "https://www.buydisplay.com/graphic-2-13-inch-122x250-electronic-paper-display-manufacturers",
+    datasheetUrl:
+      "https://www.buydisplay.com/download/manual/ER-EPD0213-2_Datasheet.pdf",
+    connector: {
+      mpn: "ER-CON24HT-1",
+      positionCount: 24,
+      pitch: "0.5 mm",
+      contactSide: "top",
+      mounting: "horizontal SMT",
+      footprint: screenModelSpecs["er-epd0213-2b"].connectorModel,
+      modelUrl: modelUrls["er-epd0213-2b"],
+      pinLabels: epd0213PinLabels,
+    },
+  },
   "er-oled096-1-3w": {
     id: "er-oled096-1-3w",
     displayName: '0.96″ OLED · ER-OLED0.96-1.3W',

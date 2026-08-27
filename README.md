@@ -25,18 +25,19 @@ shared debug header.
 | MPU-6050 | 3-axis acceleration, 3-axis angular rate | TDK InvenSense MPU-6050 / QFN-24-EP 4×4 mm (JLCPCB C24112) | `0x68` |
 | MLX90640 | 32×24-pixel far-infrared thermal image | Melexis MLX90640ESF-BAA-000-TU / TO-39-4 (JLCPCB C17380659) | `0x33` |
 
-Three display reference designs add USB-C power/data and an MSP430F5529 with
+Four display reference designs add USB-C power/data and an MSP430F5529 with
 four-wire SPI on a two-layer board with a bottom-side ground pour. Each uses the
 panel manufacturer's exact recommended mating FPC connector.
 
 | Panel | Controller / resolution | Exact connector | Selection rationale |
 | --- | --- | --- | --- |
+| [ER-EPD0213-2B](https://www.buydisplay.com/graphic-2-13-inch-122x250-electronic-paper-display-manufacturers) | UC8251, 122×250 black/white e-paper | [ER-CON24HT-1](https://www.buydisplay.com/24-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 24-pin 0.5 mm top contact | Budget reflective option with image retention at zero display power |
 | [ER-OLED0.96-1.3W](https://www.buydisplay.com/128x64-oled-i2c-0-96-display-white-color-connector-fpc-ssd1306) | SSD1306, 128×64 OLED | [ER-CON30HT-1](https://www.buydisplay.com/30-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 30-pin 0.5 mm top contact | Ultra-budget monochrome option with established buyer reviews |
 | [ER-TFT020-3](https://www.buydisplay.com/2-inch-240x320-ips-tft-lcd-display-with-connector-fpc) | ST7789, 240×320 IPS | [ER-CON14HB-1](https://www.buydisplay.com/download/connector/ER-CON14HB-1.pdf), 14-pin 0.5 mm **bottom contact** | Lowest-cost compact color/SPI option in the launch set |
 | [ER-TFT028A2-4](https://www.buydisplay.com/2-8-inch-240x320-ips-tft-lcd-display-panel-optional-touch-panel-wide-view) | ILI9341, 240×320 IPS | [ER-CON50HT-1](https://www.buydisplay.com/50-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 50-pin 0.5 mm top contact | Strongest popularity signal and an OEM mechanical model |
 
-This yields **24 selectable configurations**. The three digital sensors and
-three display choices intentionally use one implemented host/controller pairing
+This yields **25 selectable configurations**. The three digital sensors and
+four display choices intentionally use one implemented host/controller pairing
 rather than multiplying partially validated circuits across the full
 connector/MCU matrix.
 
@@ -53,6 +54,17 @@ connector/MCU matrix.
   address `0x76`; the MPU-6050 uses address `0x68` and exposes its interrupt;
   the wide-angle MLX90640 BAA variant uses its fixed `0x33` address.
 
+The e-paper panel already integrates its UC8251 timing controller and
+high-voltage display driver in chip-on-glass form. Its board still implements
+the manufacturer's external booster network, including the switching MOSFET,
+inductor, Schottky diodes, current-sense resistor, and high-voltage capacitors;
+it does not need a second display-controller IC.
+
+E-paper firmware must put the UC8251 into deep sleep or otherwise disable its
+high-voltage rails after each refresh. The panel datasheet warns that leaving
+the charge pumps active can cause image sticking and permanently damage the
+display.
+
 ## Display implementation
 
 - `src/screen-data.ts` is the hard-coded panel catalog, including complete FPC
@@ -66,7 +78,8 @@ connector/MCU matrix.
 - `scripts/generate-screen-models.ts` combines the matching connector and a
   `flexscreen_...` jscad-electronics model into a GLB whose origin matches the
   connector footprint. The rendered screen therefore appears inserted into its
-  board-mounted ZIF connector.
+  board-mounted ZIF connector. The e-paper model uses a warm off-white active
+  surface to distinguish its reflective appearance from the emissive displays.
 
 The display bodies are dimensioned visualization models, not
 manufacturer-authoritative mechanical CAD. `connector.contactSide` in
@@ -80,7 +93,7 @@ current `@tscircuit/core` version does not resolve string-valued
 asset and passes `cadModel={{ glbUrl }}`. The 2.8-inch panel also has an
 [OEM Parasolid model](https://www.buydisplay.com/download/3D/ER-TFT028-4.2.zip),
 which is a good future higher-fidelity replacement; the procedural approach is
-used for all three today so the build stays reproducible and uniform.
+used for all four today so the build stays reproducible and uniform.
 
 ## Build and verify
 
@@ -94,7 +107,7 @@ npm run typecheck
 npm run build
 ```
 
-`npm run models` can be used to regenerate only the three source GLBs. The full
+`npm run models` can be used to regenerate only the four source GLBs. The full
 build writes circuit JSON, binary glTF (`3d.glb`), 3D posters, PCB SVGs,
 schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 `dist/`, then assembles the deployable selector in `public/`.
@@ -102,6 +115,9 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 ## References
 
 - [ER-OLED0.96-1 series datasheet](https://www.buydisplay.com/download/manual/ER-OLED0.96-1_Series_Datasheet.pdf)
+- [ER-EPD0213-2 datasheet](https://www.buydisplay.com/download/manual/ER-EPD0213-2_Datasheet.pdf)
+- [UC8251 controller datasheet](https://www.buydisplay.com/download/ic/UC8251.pdf)
+- [ER-CON24HT-1 connector](https://www.buydisplay.com/24-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector)
 - [ER-TFT020-3 datasheet](https://www.buydisplay.com/download/manual/ER-TFT020-3_Datasheet.pdf)
 - [ER-TFT028A2-4 datasheet](https://www.buydisplay.com/download/manual/ER-TFT028A2-4_Datasheet.pdf)
 - [MSP430F5529 datasheet](https://www.ti.com/lit/ds/symlink/msp430f5529.pdf)
@@ -111,5 +127,6 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 
 This is a reference/design artifact. Verify sensor revision and orientation,
 connector orientation, display revision, backlight current, signal integrity,
-USB compliance, EMC, thermal behavior, and manufacturability before
-fabrication.
+USB compliance, EMC, thermal behavior, e-paper booster layout and capacitor
+voltage ratings, and
+manufacturability before fabrication.
