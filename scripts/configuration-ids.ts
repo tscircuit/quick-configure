@@ -1,5 +1,6 @@
 import { connectors, mcus } from "../src/board-data"
 import { screenModelSpecs } from "../src/screen-model-specs"
+import { sensors } from "../src/sensor-data"
 
 export const expectedConfigurationIds = [
   ...Object.keys(connectors).flatMap((connector) =>
@@ -7,6 +8,9 @@ export const expectedConfigurationIds = [
   ),
   ...Object.keys(screenModelSpecs).map(
     (screen) => `usb-c__msp430f5529__${screen}`,
+  ),
+  ...Object.keys(sensors).map(
+    (sensor) => `usb-c__msp430f5529__${sensor}`,
   ),
 ].sort()
 

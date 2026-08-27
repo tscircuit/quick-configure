@@ -61,13 +61,13 @@ describe("screen catalog", () => {
 })
 
 describe("generated assets and variants", () => {
-  test("the source manifest contains exactly the 21 selectable circuits", async () => {
+  test("the source manifest contains exactly the 24 selectable circuits", async () => {
     const rootCircuits = (await readdir(projectRoot))
       .filter((filename) => filename.endsWith(".circuit.tsx"))
       .map((filename) => filename.replace(".circuit.tsx", ""))
       .sort()
 
-    expect(expectedConfigurationIds).toHaveLength(21)
+    expect(expectedConfigurationIds).toHaveLength(24)
     expect(rootCircuits).toEqual(expectedConfigurationIds)
   })
 
@@ -117,7 +117,7 @@ describe("generated assets and variants", () => {
     for (const id of ids) {
       expect(html).toContain(`<option value="${id}">`)
     }
-    expect(html).toContain("21 selectable designs")
+    expect(html).toContain("24 selectable designs")
     expect(html).toContain("usb-c__msp430f5529__${screen}")
     expect(html).toContain("availableConfigurations")
   })

@@ -2,7 +2,7 @@
   "name": "quick-configure",
   "version": "0.1.0",
   "private": true,
-  "description": "Selectable tscircuit board family for BPX65 sensing and BuyDisplay screen control",
+  "description": "Selectable tscircuit board family for optical, environmental, motion, thermal, and display designs",
   "scripts": {
     "build": "npm run build:circuits && npm run assemble-site",
     "build:circuits": "npm run models && tsci build --site --ignore-warnings --concurrency 4 --autorouter-timeout 8m --all-images --3d --glbs --pcb-svgs --schematic-svgs && bun run resources",
