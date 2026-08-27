@@ -1,9 +1,9 @@
 # tscircuit Quick Configure — Sensor & Display Boards
 
-A local selector and pre-generated tscircuit board family for BPX65 photodiode
-acquisition and raw BuyDisplay panels. Every configuration includes an
-interactive 3D model, routed PCB, schematic, and downloadable fabrication/EDA
-resources.
+A local selector and pre-generated tscircuit board family for photodiode,
+environmental, motion, and thermal sensing plus raw BuyDisplay panels. Every
+configuration includes an interactive 3D model, routed PCB, schematic, and
+downloadable fabrication/EDA resources.
 
 ## Configuration catalog
 
@@ -15,6 +15,16 @@ The original photodiode matrix remains intact:
 - Sensor: BPX65 photodiode with OPA320 transimpedance amplifier
 - Photodiode configurations: 18
 
+Three I²C sensor reference designs use USB-C and an MSP430F5529, exact imported
+component footprints and 3D models, address straps, local decoupling, and a
+shared debug header.
+
+| Sensor | Measurements | Exact part / package | I²C address |
+| --- | --- | --- | --- |
+| BME280 | Relative humidity, temperature, barometric pressure | Bosch BME280 / LGA-8 2.5×2.5 mm (JLCPCB C92489) | `0x76` |
+| MPU-6050 | 3-axis acceleration, 3-axis angular rate | TDK InvenSense MPU-6050 / QFN-24-EP 4×4 mm (JLCPCB C24112) | `0x68` |
+| MLX90640 | 32×24-pixel far-infrared thermal image | Melexis MLX90640ESF-BAA-000-TU / TO-39-4 (JLCPCB C17380659) | `0x33` |
+
 Three display reference designs add USB-C power/data and an MSP430F5529 with
 four-wire SPI on a two-layer board with a bottom-side ground pour. Each uses the
 panel manufacturer's exact recommended mating FPC connector.
@@ -25,9 +35,23 @@ panel manufacturer's exact recommended mating FPC connector.
 | [ER-TFT020-3](https://www.buydisplay.com/2-inch-240x320-ips-tft-lcd-display-with-connector-fpc) | ST7789, 240×320 IPS | [ER-CON14HB-1](https://www.buydisplay.com/download/connector/ER-CON14HB-1.pdf), 14-pin 0.5 mm **bottom contact** | Lowest-cost compact color/SPI option in the launch set |
 | [ER-TFT028A2-4](https://www.buydisplay.com/2-8-inch-240x320-ips-tft-lcd-display-panel-optional-touch-panel-wide-view) | ILI9341, 240×320 IPS | [ER-CON50HT-1](https://www.buydisplay.com/50-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 50-pin 0.5 mm top contact | Strongest popularity signal and an OEM mechanical model |
 
-This yields **21 selectable configurations**. Display choices intentionally use
-one implemented host/controller pairing rather than multiplying partially
-validated screen circuits across the full connector/MCU matrix.
+This yields **24 selectable configurations**. The three digital sensors and
+three display choices intentionally use one implemented host/controller pairing
+rather than multiplying partially validated circuits across the full
+connector/MCU matrix.
+
+## Sensor implementation
+
+- `src/sensor-data.ts` is the typed catalog for capabilities, exact manufacturer
+  and supplier part numbers, I²C addresses, and manufacturer references.
+- `src/SensorBoard.tsx` contains the shared USB-C/MSP430F5529 reference design,
+  datasheet-selected I²C pull-ups, exposed debug/test points, and
+  sensor-specific support circuits.
+- `imports/BME280`, `imports/MPU_6050`, and
+  `imports/MLX90640ESF_BAA_000_TU` contain exact EasyEDA-derived footprints and
+  locally downloaded component models. The BME280 is strapped for I²C and
+  address `0x76`; the MPU-6050 uses address `0x68` and exposes its interrupt;
+  the wide-angle MLX90640 BAA variant uses its fixed `0x33` address.
 
 ## Display implementation
 
@@ -81,7 +105,11 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 - [ER-TFT020-3 datasheet](https://www.buydisplay.com/download/manual/ER-TFT020-3_Datasheet.pdf)
 - [ER-TFT028A2-4 datasheet](https://www.buydisplay.com/download/manual/ER-TFT028A2-4_Datasheet.pdf)
 - [MSP430F5529 datasheet](https://www.ti.com/lit/ds/symlink/msp430f5529.pdf)
+- [BME280 datasheet](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf)
+- [MPU-6000/MPU-6050 datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet.pdf)
+- [MLX90640 datasheet](https://media.melexis.com/-/media/files/documents/datasheets/mlx90640-datasheet-melexis.pdf)
 
-This is a reference/design artifact. Verify connector orientation, display
-revision, backlight current, signal integrity, USB compliance, EMC, thermal
-behavior, and manufacturability before fabrication.
+This is a reference/design artifact. Verify sensor revision and orientation,
+connector orientation, display revision, backlight current, signal integrity,
+USB compliance, EMC, thermal behavior, and manufacturability before
+fabrication.
