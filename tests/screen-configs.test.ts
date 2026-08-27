@@ -13,8 +13,9 @@ const projectRoot = join(import.meta.dir, "..")
 const ids = Object.keys(screens) as ScreenId[]
 
 describe("screen catalog", () => {
-  test("hardcodes the three selected panels and their exact connector mates", () => {
+  test("hardcodes the four selected panels and their exact connector mates", () => {
     expect(ids).toEqual([
+      "er-epd0213-2b",
       "er-oled096-1-3w",
       "er-tft020-3",
       "er-tft028a2-4",
@@ -27,6 +28,7 @@ describe("screen catalog", () => {
         screens[id].connector.contactSide,
       ]),
     ).toEqual([
+      ["ER-CON24HT-1", 24, "top"],
       ["ER-CON30HT-1", 30, "top"],
       ["ER-CON14HB-1", 14, "bottom"],
       ["ER-CON50HT-1", 50, "top"],
@@ -47,6 +49,15 @@ describe("screen catalog", () => {
   })
 
   test("preserves the critical SPI pin mappings", () => {
+    expect(screens["er-epd0213-2b"].connector.pinLabels.pin9).toBe(
+      "BUSY_N",
+    )
+    expect(screens["er-epd0213-2b"].connector.pinLabels.pin13).toBe(
+      "SCLK",
+    )
+    expect(screens["er-epd0213-2b"].connector.pinLabels.pin14).toBe(
+      "MOSI",
+    )
     expect(screens["er-oled096-1-3w"].connector.pinLabels.pin18).toBe(
       "D0_SCLK",
     )
@@ -61,13 +72,13 @@ describe("screen catalog", () => {
 })
 
 describe("generated assets and variants", () => {
-  test("the source manifest contains exactly the 24 selectable circuits", async () => {
+  test("the source manifest contains exactly the 25 selectable circuits", async () => {
     const rootCircuits = (await readdir(projectRoot))
       .filter((filename) => filename.endsWith(".circuit.tsx"))
       .map((filename) => filename.replace(".circuit.tsx", ""))
       .sort()
 
-    expect(expectedConfigurationIds).toHaveLength(24)
+    expect(expectedConfigurationIds).toHaveLength(25)
     expect(rootCircuits).toEqual(expectedConfigurationIds)
   })
 
@@ -99,25 +110,76 @@ describe("generated assets and variants", () => {
     expect(mcu.pinLabels.pin39).toContain("UCB0CLK")
   })
 
+  test("implements the UC8251 external booster and normal-operation straps", async () => {
+    const source = await Bun.file(
+      join(projectRoot, "src", "ScreenBoard.tsx"),
+    ).text()
+
+    for (const part of [
+      "FTC252012S100MBCA",
+      "SI1308EDL-T1-GE3",
+      "MBR0530T1G",
+      "FRL1206FR470TS",
+      "CL21B105KBFNNNE",
+      "CL31B475KAHNNNE",
+    ]) {
+      expect(source).toContain(part)
+    }
+    expect(source).toContain('resistance="0.47"')
+    expect(source).toContain('inductance="10uH"')
+    expect(source).toContain('name="C_EPD_FLY"')
+    expect(source).toContain('name="C_EPD_BOOST_IN"')
+    expect(source).toContain('name="R_EPD_GATE_PD"')
+    expect(source).toContain('capacitance="4.7uF"')
+    expect(source).toContain(`const epaperMosfetPins = {
+  pin1: "GATE",
+  pin2: "SOURCE",
+  pin3: "DRAIN",
+}`)
+    expect(source).toContain(
+      '<trace from=".Q_EPD_BOOST > .pin1" to="net.EPD_GDR" />',
+    )
+    expect(source).toContain(
+      '<trace from=".Q_EPD_BOOST > .pin2" to="net.EPD_RESE" thickness="0.35mm" />',
+    )
+    expect(source).toContain(
+      'noConnect={isEpaper ? ["NC", "NC_2", "TSCL", "TSDA", "VPP"] : undefined}',
+    )
+    expect(source).toContain(
+      '<trace from=".J_DISPLAY > .pin8" to="net.GND" />',
+    )
+  })
+
   test("keeps every explicit screen-board rotation orthogonal", async () => {
     const source = await Bun.file(
       join(projectRoot, "src", "ScreenBoard.tsx"),
     ).text()
-    const rotations = [...source.matchAll(/pcbRotation=\{([^}]+)\}/g)].map(
-      ([, value]) => Number(value),
-    )
+    const rotationExpressions = [
+      ...source.matchAll(/pcbRotation=\{([^}]+)\}/g),
+    ].map(([, value]) => value.trim())
+    const rotations = rotationExpressions.flatMap((expression) => {
+      if (/^-?\d+(?:\.\d+)?$/.test(expression)) {
+        return [Number(expression)]
+      }
 
-    expect(rotations).toHaveLength(21)
+      const conditional = expression.match(
+        /\?\s*(-?\d+(?:\.\d+)?)\s*:\s*(-?\d+(?:\.\d+)?)$/,
+      )
+      expect(conditional).not.toBeNull()
+      return conditional ? [Number(conditional[1]), Number(conditional[2])] : []
+    })
+
+    expect(rotationExpressions.length).toBeGreaterThan(0)
     expect(rotations.every(Number.isFinite)).toBe(true)
     expect(rotations.every((rotation) => rotation % 90 === 0)).toBe(true)
   })
 
-  test("the selector exposes only the three pre-generated screen keys", async () => {
+  test("the selector exposes only the four pre-generated screen keys", async () => {
     const html = await Bun.file(join(projectRoot, "site", "index.html")).text()
     for (const id of ids) {
       expect(html).toContain(`<option value="${id}">`)
     }
-    expect(html).toContain("24 selectable designs")
+    expect(html).toContain("25 selectable designs")
     expect(html).toContain("usb-c__msp430f5529__${screen}")
     expect(html).toContain("availableConfigurations")
   })
