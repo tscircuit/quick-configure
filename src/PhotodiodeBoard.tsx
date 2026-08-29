@@ -498,6 +498,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         name="INNER1_GND_PLANE"
         layer="inner1"
         connectsTo="net.GND"
+        unbroken
         padMargin="0.25mm"
         traceMargin="0.2mm"
         boardEdgeMargin="0.3mm"
@@ -507,6 +508,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         name="INNER2_3V3_PLANE"
         layer="inner2"
         connectsTo="net.VCC_3V3"
+        unbroken
         padMargin="0.25mm"
         traceMargin="0.2mm"
         boardEdgeMargin="0.3mm"
