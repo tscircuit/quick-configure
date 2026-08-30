@@ -13,6 +13,22 @@ const section = (source: string, start: string, end: string) => {
 };
 
 describe("MSPM0 sensor board source", () => {
+  test("keeps the existing red solder mask across every board family", async () => {
+    for (const filename of [
+      "PhotodiodeBoard.tsx",
+      "SensorBoard.tsx",
+      "ScreenBoard.tsx",
+      "Mspm0SensorBoard.tsx",
+    ]) {
+      const source = await Bun.file(join(projectRoot, "src", filename)).text();
+      const solderMaskColors = [
+        ...source.matchAll(/solderMaskColor="([^"]+)"/g),
+      ].map(([, color]) => color);
+
+      expect(solderMaskColors).toEqual(["red"]);
+    }
+  });
+
   test("uses the stocked MSPM0G3507 package and complete common support chain", async () => {
     const source = await Bun.file(
       join(projectRoot, "src", "Mspm0SensorBoard.tsx"),

@@ -1204,7 +1204,7 @@ export const Mspm0SensorBoard = ({
       width={92}
       height={60}
       layers={2}
-      solderMaskColor="black"
+      solderMaskColor="red"
       schSheetName="Main"
     >
       <schematicsheet
