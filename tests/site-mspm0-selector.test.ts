@@ -16,7 +16,7 @@ describe("MSPM0 sensor selector", () => {
     });
 
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
-    expect(html).toContain("35 selectable designs");
+    expect(html).toContain("38 selectable designs");
     expect(html).toContain("BNO085 MSPM0 Orientation Sensor Board");
     expect(html).toContain(
       "This pre-generated sensor configuration uses USB-C, TI MSPM0G3507",
@@ -73,7 +73,7 @@ describe("MSPM0 sensor documentation", () => {
     expect(readme).toContain("### Additional MSPM0 sensor boards");
     expect(readme).toContain("MSPM0G3507SPMR");
     expect(readme).toContain("C22389960");
-    expect(readme).toContain("**35 selectable configurations**");
+    expect(readme).toContain("**38 selectable configurations**");
     for (const id of mspm0SensorIds) {
       expect(readme).toContain(mspm0Sensors[id].sensorPartNumber);
       expect(readme).toContain(mspm0Sensors[id].datasheetUrl);
