@@ -50,13 +50,14 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
   const usbDpPin = needsUsbBridge ? 14 : mcu.nativeUsb?.dpPin
   const usbDmPin = needsUsbBridge ? 15 : mcu.nativeUsb?.dmPin
   const mainX = needsUsbBridge ? 0 : -4
+  const isMspm33 = mcuId === "mspm33c321a"
   const isLargeMcu = mcuId === "msp430f5529"
-  const mainDecouplingX = isLargeMcu ? -11.5 : mainX
-  const mainDecouplingY = isLargeMcu ? 12 : -7.2
-  const resetX = isLargeMcu ? -8.5 : mainX + 3
-  const resetY = isLargeMcu ? 12 : -7.2
-  const boardWidth = isLargeMcu ? 62 : 56
-  const boardHeight = isLargeMcu ? 34 : 30
+  const mainDecouplingX = isLargeMcu ? -11.5 : isMspm33 ? -2.5 : mainX
+  const mainDecouplingY = isLargeMcu ? 12 : isMspm33 ? -4.2 : -7.2
+  const resetX = isLargeMcu ? -8.5 : isMspm33 ? -5.8 : mainX + 3
+  const resetY = isLargeMcu ? 12 : isMspm33 ? -3 : -7.2
+  const boardWidth = isLargeMcu ? 62 : isMspm33 ? 60 : 56
+  const boardHeight = isLargeMcu || isMspm33 ? 34 : 30
   const connectorX =
     connector === "usb-c"
       ? -(boardWidth / 2) + 5
@@ -237,9 +238,22 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         footprint="0402"
         pcbX={resetX}
         pcbY={resetY}
+        pcbRotation={isMspm33 ? 90 : 0}
         schX={3.5}
         schY={6.5}
       />
+
+      {isMspm33 && (
+        <>
+          <capacitor {...controlSection} name="C_MAIN_2" capacitance="100nF" footprint="0402" pcbX={mainX + 5.25} pcbY={5} pcbRotation={90} schX={-1} schY={8} />
+          <capacitor {...controlSection} name="C_MSPM33_VDD_BULK" capacitance="10uF" footprint="0603" pcbX={mainX} pcbY={8.4} schX={1.5} schY={8} />
+          <capacitor {...controlSection} name="C_MSPM33_VBAT" capacitance="1uF" footprint="0603" pcbX={mainX - 5.4} pcbY={-0.4} pcbRotation={90} schX={4} schY={8} />
+          <capacitor {...controlSection} name="C_MSPM33_VCORE" capacitance="2.2uF" footprint="0603" pcbX={mainX - 5.4} pcbY={2.2} pcbRotation={90} schX={6.5} schY={8} />
+          <capacitor {...controlSection} name="C_MSPM33_RESET" capacitance="10nF" footprint="0402" pcbX={mainX - 5} pcbY={-4.6} schX={5.5} schY={6.5} />
+          <resistor {...controlSection} name="R_MSPM33_BSL" resistance="47k" footprint="0402" pcbX={mainX + 2.8} pcbY={7} schX={9} schY={8} />
+          <capacitor {...controlSection} name="C_MSPM33_VREF" capacitance="1uF" footprint="0603" pcbX={mainX - 3} pcbY={6.9} schX={11.5} schY={8} />
+        </>
+      )}
 
       {mcuId === "ch552t" && (
         <capacitor {...controlSection} name="C_MAIN_V33" capacitance="100nF" footprint="0402" pcbX={mainX - 3} pcbY={-7.2} schX={-1.5} schY={6.5} />
@@ -299,8 +313,16 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         pitch="2.54mm"
         gender="unpopulated"
         doNotPlace
-        pinLabels={["VCC_3V3", "GND", "RESET", "ADC_IN", "UART_TX", "UART_RX"]}
-        pcbPinLabels={{ pin1: "3V3", pin2: "G", pin3: "RST", pin4: "ADC", pin5: "TX", pin6: "RX" }}
+        pinLabels={
+          isMspm33
+            ? ["VCC_3V3", "GND", "RESET", "ADC_IN", "SWDIO", "SWCLK"]
+            : ["VCC_3V3", "GND", "RESET", "ADC_IN", "UART_TX", "UART_RX"]
+        }
+        pcbPinLabels={
+          isMspm33
+            ? { pin1: "3V3", pin2: "G", pin3: "RST", pin4: "ADC", pin5: "DIO", pin6: "CLK" }
+            : { pin1: "3V3", pin2: "G", pin3: "RST", pin4: "ADC", pin5: "TX", pin6: "RX" }
+        }
         showSilkscreenPinLabels
         pcbX={0}
         pcbY={-12}
@@ -315,6 +337,51 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       <hole name="H2" diameter="2.4mm" pcbX={boardWidth / 2 - 3} pcbY={-(boardHeight / 2 - 3)} />
       <hole name="H3" diameter="2.4mm" pcbX={boardWidth / 2 - 3} pcbY={boardHeight / 2 - 3} />
       <hole name="H4" diameter="2.4mm" pcbX={-(boardWidth / 2 - 3)} pcbY={-(boardHeight / 2 - 3)} />
+
+      {isMspm33 && (
+        <>
+          <via
+            name="V_MSPM33_EP_1"
+            pcbX={mainX - 0.9}
+            pcbY={0.6}
+            fromLayer="top"
+            toLayer="bottom"
+            holeDiameter="0.2mm"
+            outerDiameter="0.45mm"
+            connectsTo="net.GND"
+          />
+          <via
+            name="V_MSPM33_EP_2"
+            pcbX={mainX + 0.9}
+            pcbY={0.6}
+            fromLayer="top"
+            toLayer="bottom"
+            holeDiameter="0.2mm"
+            outerDiameter="0.45mm"
+            connectsTo="net.GND"
+          />
+          <via
+            name="V_MSPM33_EP_3"
+            pcbX={mainX - 0.9}
+            pcbY={2.4}
+            fromLayer="top"
+            toLayer="bottom"
+            holeDiameter="0.2mm"
+            outerDiameter="0.45mm"
+            connectsTo="net.GND"
+          />
+          <via
+            name="V_MSPM33_EP_4"
+            pcbX={mainX + 0.9}
+            pcbY={2.4}
+            fromLayer="top"
+            toLayer="bottom"
+            holeDiameter="0.2mm"
+            outerDiameter="0.45mm"
+            connectsTo="net.GND"
+          />
+        </>
+      )}
 
       {connector === "usb-c" && (
         <>
@@ -455,6 +522,34 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         </>
       )}
 
+      {isMspm33 &&
+        mcu.vbatPin &&
+        mcu.vcorePin &&
+        mcu.vrefPins &&
+        mcu.bslInvokePin && (
+          <>
+            <trace from={p("U_MAIN", mcu.vbatPin)} to="net.VCC_3V3" thickness="0.35mm" />
+            <trace from=".C_MAIN_2 > .pin1" to="net.VCC_3V3" />
+            <trace from=".C_MAIN_2 > .pin2" to="net.GND" />
+            <trace from=".C_MSPM33_VDD_BULK > .pin1" to="net.VCC_3V3" />
+            <trace from=".C_MSPM33_VDD_BULK > .pin2" to="net.GND" />
+            <trace from=".C_MSPM33_VBAT > .pin1" to="net.VCC_3V3" />
+            <trace from=".C_MSPM33_VBAT > .pin2" to="net.GND" />
+            <trace from={p("U_MAIN", mcu.vcorePin)} to="net.MSPM33_VCORE" />
+            <trace from=".C_MSPM33_VCORE > .pin1" to="net.MSPM33_VCORE" />
+            <trace from=".C_MSPM33_VCORE > .pin2" to="net.GND" />
+            <trace from={p("U_MAIN", mcu.vrefPins.positivePin)} to="net.VCC_3V3" />
+            <trace from={p("U_MAIN", mcu.vrefPins.negativePin)} to="net.GND" />
+            <trace from=".C_MSPM33_VREF > .pin1" to="net.VCC_3V3" />
+            <trace from=".C_MSPM33_VREF > .pin2" to="net.GND" />
+            <trace from=".C_MSPM33_RESET > .pin1" to="net.MAIN_RESET" />
+            <trace from=".C_MSPM33_RESET > .pin2" to="net.GND" />
+            <trace from={p("U_MAIN", mcu.bslInvokePin)} to="net.MSPM33_BSL_INVOKE" />
+            <trace from=".R_MSPM33_BSL > .pin1" to="net.MSPM33_BSL_INVOKE" />
+            <trace from=".R_MSPM33_BSL > .pin2" to="net.GND" />
+          </>
+        )}
+
       <trace from=".U_OPA > .pin5" to="net.VCC_3V3" />
       <trace from=".U_OPA > .pin2" to="net.GND" />
       <trace from=".C_OPA > .pin1" to="net.VCC_3V3" />
@@ -489,8 +584,19 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       <trace from=".J_DEBUG > .pin2" to="net.GND" />
       <trace from=".J_DEBUG > .pin3" to="net.MAIN_RESET" />
       <trace from=".J_DEBUG > .pin4" to="net.ADC_IN" />
-      <trace from=".J_DEBUG > .pin5" to="net.UART_MAIN_TX" />
-      <trace from=".J_DEBUG > .pin6" to="net.UART_MAIN_RX" />
+      {isMspm33 && mcu.swdPins ? (
+        <>
+          <trace from=".J_DEBUG > .pin5" to="net.MSPM33_SWDIO" />
+          <trace from={p("U_MAIN", mcu.swdPins.dataPin)} to="net.MSPM33_SWDIO" />
+          <trace from=".J_DEBUG > .pin6" to="net.MSPM33_SWCLK" />
+          <trace from={p("U_MAIN", mcu.swdPins.clockPin)} to="net.MSPM33_SWCLK" />
+        </>
+      ) : (
+        <>
+          <trace from=".J_DEBUG > .pin5" to="net.UART_MAIN_TX" />
+          <trace from=".J_DEBUG > .pin6" to="net.UART_MAIN_RX" />
+        </>
+      )}
       <trace from=".TP_VREF > .pin1" to="net.VREF_0V5" />
       <trace from=".TP_TIA > .pin1" to="net.TIA_OUT" />
 

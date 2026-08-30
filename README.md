@@ -7,13 +7,21 @@ downloadable fabrication/EDA resources.
 
 ## Configuration catalog
 
-The original photodiode matrix remains intact:
+The photodiode matrix supports:
 
 - Host connectors: USB-C, USB Micro-B, and JST-SH 4-pin
 - Controllers: CH552T, MSP430G2553, MSP430FR2433, MSP430FR2355,
-  MSP430FR5994, and MSP430F5529
+  MSP430FR5994, MSP430F5529, and MSPM33C321A
 - Sensor: BPX65 photodiode with OPA320 transimpedance amplifier
-- Photodiode configurations: 18
+- Photodiode configurations: 21
+
+The MSPM33 target uses the 48-pin RGZ variant of the MSPM33C321A, pairing its
+160 MHz Arm Cortex-M33 core with the photodiode front end through ADC0 channel
+0. Its three connector variants include TI's recommended VDD, VBAT, VCORE,
+external ADC-reference, reset, and bootloader-invoke support circuits, and
+expose SWD on the debug header. The exposed pad is stitched to the inner ground
+plane with four 0.2 mm thermal vias. This RGZ device is currently a
+product-preview part; confirm availability before fabrication.
 
 Three I²C sensor reference designs use USB-C and an MSP430F5529, exact imported
 component footprints and 3D models, address straps, local decoupling, and a
@@ -36,7 +44,7 @@ panel manufacturer's exact recommended mating FPC connector.
 | [ER-TFT020-3](https://www.buydisplay.com/2-inch-240x320-ips-tft-lcd-display-with-connector-fpc) | ST7789, 240×320 IPS | [ER-CON14HB-1](https://www.buydisplay.com/download/connector/ER-CON14HB-1.pdf), 14-pin 0.5 mm **bottom contact** | Lowest-cost compact color/SPI option in the launch set |
 | [ER-TFT028A2-4](https://www.buydisplay.com/2-8-inch-240x320-ips-tft-lcd-display-panel-optional-touch-panel-wide-view) | ILI9341, 240×320 IPS | [ER-CON50HT-1](https://www.buydisplay.com/50-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 50-pin 0.5 mm top contact | Strongest popularity signal and an OEM mechanical model |
 
-This yields **25 selectable configurations**. The three digital sensors and
+This yields **28 selectable configurations**. The three digital sensors and
 four display choices intentionally use one implemented host/controller pairing
 rather than multiplying partially validated circuits across the full
 connector/MCU matrix.
@@ -121,6 +129,8 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 - [ER-TFT020-3 datasheet](https://www.buydisplay.com/download/manual/ER-TFT020-3_Datasheet.pdf)
 - [ER-TFT028A2-4 datasheet](https://www.buydisplay.com/download/manual/ER-TFT028A2-4_Datasheet.pdf)
 - [MSP430F5529 datasheet](https://www.ti.com/lit/ds/symlink/msp430f5529.pdf)
+- [MSPM33C321A datasheet](https://www.ti.com/lit/ds/symlink/mspm33c321a.pdf)
+- [MSPM33 C-Series hardware development guide](https://www.ti.com/lit/an/sdaa132/sdaa132.pdf)
 - [BME280 datasheet](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf)
 - [MPU-6000/MPU-6050 datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet.pdf)
 - [MLX90640 datasheet](https://media.melexis.com/-/media/files/documents/datasheets/mlx90640-datasheet-melexis.pdf)
@@ -128,5 +138,5 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 This is a reference/design artifact. Verify sensor revision and orientation,
 connector orientation, display revision, backlight current, signal integrity,
 USB compliance, EMC, thermal behavior, e-paper booster layout and capacitor
-voltage ratings, and
-manufacturability before fabrication.
+voltage ratings, MSPM33 package availability, under-pad via filling or tenting,
+and manufacturability before fabrication.

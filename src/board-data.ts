@@ -7,6 +7,7 @@ export type McuId =
   | "msp430fr2355"
   | "msp430fr5994"
   | "msp430f5529"
+  | "mspm33c321a"
 
 export interface McuDefinition {
   id: McuId
@@ -26,6 +27,17 @@ export interface McuDefinition {
     dpPin: number
     dmPin: number
   }
+  swdPins?: {
+    dataPin: number
+    clockPin: number
+  }
+  vbatPin?: number
+  vcorePin?: number
+  vrefPins?: {
+    positivePin: number
+    negativePin: number
+  }
+  bslInvokePin?: number
   supplierPartNumbers?: { jlcpcb: string[] }
 }
 
@@ -227,5 +239,41 @@ export const mcus: Record<McuId, McuDefinition> = {
     gndPins: [14, 19, 49, 61, 68],
     nativeUsb: { dpPin: 62, dmPin: 64 },
     supplierPartNumbers: { jlcpcb: ["C80938"] },
+  },
+  mspm33c321a: {
+    id: "mspm33c321a",
+    displayName: "TI MSPM33C321A",
+    familyNote: "160 MHz Cortex-M33, 12-bit ADC",
+    manufacturerPartNumber: "MSPM33C321ASRGZR",
+    footprint:
+      "kicad:Package_DFN_QFN/VQFN-48-1EP_7x7mm_P0.5mm_EP4.1x4.1mm",
+    pinCount: 49,
+    pinLabels: makePinLabels(49, {
+      4: "NRST",
+      5: "VBAT",
+      6: "VDD1",
+      18: "PA10_UC1_0_SDA_TX_UC12_TX_BSL_UART_TX",
+      19: "PA11_UC1_0_SCL_RX_UC12_RX_BSL_UART_RX",
+      31: "VDD2",
+      33: "PA18_BSL_INVOKE",
+      34: "SWDIO",
+      35: "SWCLK",
+      39: "PA21_VREF_NEG",
+      43: "PA23_VREF_POS",
+      47: "PA27_ADC0_0",
+      48: "VCORE",
+      49: "VSS_EXPOSED_PAD",
+    }),
+    adcPin: 47,
+    uartTxPin: 18,
+    uartRxPin: 19,
+    resetPin: 4,
+    vccPins: [6, 31],
+    gndPins: [49],
+    swdPins: { dataPin: 34, clockPin: 35 },
+    vbatPin: 5,
+    vcorePin: 48,
+    vrefPins: { positivePin: 43, negativePin: 39 },
+    bslInvokePin: 33,
   },
 }
