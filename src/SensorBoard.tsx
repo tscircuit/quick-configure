@@ -1,13 +1,13 @@
-import { Fragment } from "react"
-import { BME280 } from "../imports/BME280/BME280"
-import { MLX90640ESF_BAA_000_TU } from "../imports/MLX90640ESF_BAA_000_TU/MLX90640ESF_BAA_000_TU"
-import { MPU_6050 } from "../imports/MPU_6050/MPU_6050"
-import { mcus } from "./board-data"
-import { sensors, type SensorId } from "./sensor-data"
-import { SmdUsbC } from "./SmdUsbC"
+import { Fragment } from "react";
+import { BME280 } from "../imports/BME280/BME280";
+import { MLX90640ESF_BAA_000_TU } from "../imports/MLX90640ESF_BAA_000_TU/MLX90640ESF_BAA_000_TU";
+import { MPU_6050 } from "../imports/MPU_6050/MPU_6050";
+import { mcus } from "./board-data";
+import { sensors, type SensorId } from "./sensor-data";
+import { SmdUsbC } from "./SmdUsbC";
 
 export interface SensorBoardProps {
-  sensor: SensorId
+  sensor: SensorId;
 }
 
 const usbEsdPins = {
@@ -17,7 +17,7 @@ const usbEsdPins = {
   pin4: "DM_MCU",
   pin5: "VBUS",
   pin6: "DP_MCU",
-} as const
+} as const;
 
 const ldoPins = {
   pin1: "IN",
@@ -25,7 +25,7 @@ const ldoPins = {
   pin3: "EN",
   pin4: "NC",
   pin5: "OUT",
-} as const
+} as const;
 
 const f5529 = {
   vcore: 20,
@@ -44,13 +44,14 @@ const f5529 = {
   xt2Out: 70,
   test: 71,
   reset: 76,
-} as const
+} as const;
 
-const p = (component: string, pin: number) => `.${component} > .pin${pin}`
+const p = (component: string, pin: number) => `.${component} > .pin${pin}`;
 
-const interfaceSection = { schSectionName: "Interface" } as const
-const controlSection = { schSectionName: "Control" } as const
-const sensorSection = { schSectionName: "Sensor" } as const
+const interfaceSection = { schSectionName: "Interface" } as const;
+const controlSection = { schSectionName: "Control" } as const;
+const sensorSection = { schSectionName: "Sensor" } as const;
+const verticalCapacitor = { schOrientation: "vertical" } as const;
 
 const Bme280Circuit = () => (
   <>
@@ -64,6 +65,7 @@ const Bme280Circuit = () => (
       schY={1}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_VDD"
       capacitance="100nF"
@@ -74,6 +76,7 @@ const Bme280Circuit = () => (
       schY={6}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_VDDIO"
       capacitance="100nF"
@@ -97,7 +100,7 @@ const Bme280Circuit = () => (
     <trace from=".C_SENSOR_VDDIO > .pin1" to="net.VCC_3V3" />
     <trace from=".C_SENSOR_VDDIO > .pin2" to="net.GND" />
   </>
-)
+);
 
 const Mpu6050Circuit = () => (
   <>
@@ -109,8 +112,10 @@ const Mpu6050Circuit = () => (
       pcbRotation={0}
       schX={12}
       schY={1}
+      schHeight={2.6}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_VDD"
       capacitance="100nF"
@@ -121,6 +126,7 @@ const Mpu6050Circuit = () => (
       schY={6}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_VLOGIC"
       capacitance="10nF"
@@ -131,6 +137,7 @@ const Mpu6050Circuit = () => (
       schY={6}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_REGOUT"
       capacitance="100nF"
@@ -141,6 +148,7 @@ const Mpu6050Circuit = () => (
       schY={-5}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_CPOUT"
       capacitance="2.2nF"
@@ -172,7 +180,7 @@ const Mpu6050Circuit = () => (
     <trace from=".C_SENSOR_VLOGIC > .pin1" to="net.VCC_3V3" />
     <trace from=".C_SENSOR_VLOGIC > .pin2" to="net.GND" />
   </>
-)
+);
 
 const Mlx90640Circuit = () => (
   <>
@@ -186,6 +194,7 @@ const Mlx90640Circuit = () => (
       schY={1}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_VDD"
       capacitance="100nF"
@@ -196,6 +205,7 @@ const Mlx90640Circuit = () => (
       schY={6}
     />
     <capacitor
+      {...verticalCapacitor}
       {...sensorSection}
       name="C_SENSOR_BULK"
       capacitance="10uF"
@@ -215,15 +225,15 @@ const Mlx90640Circuit = () => (
     <trace from=".C_SENSOR_BULK > .pin1" to="net.VCC_3V3" />
     <trace from=".C_SENSOR_BULK > .pin2" to="net.GND" />
   </>
-)
+);
 
 export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
-  const sensor = sensors[sensorId]
-  const mcu = mcus.msp430f5529
-  const i2cPullupResistance = sensorId === "mlx90640" ? "1k" : "4.7k"
-  const boardWidth = 82
-  const boardHeight = 52
-  const boardTitle = `USB-C + MSP430F5529 + ${sensor.manufacturerPartNumber}`
+  const sensor = sensors[sensorId];
+  const mcu = mcus.msp430f5529;
+  const i2cPullupResistance = sensorId === "mlx90640" ? "1k" : "4.7k";
+  const boardWidth = 82;
+  const boardHeight = 52;
+  const boardTitle = `USB-C + MSP430F5529 + ${sensor.manufacturerPartNumber}`;
 
   return (
     <board
@@ -250,6 +260,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbRotation={-90}
         schX={-16}
         schY={5}
+        schHeight={1.4}
       />
       <chip
         {...interfaceSection}
@@ -262,7 +273,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbY={0}
         pcbRotation={0}
         schX={-11}
-        schY={5}
+        schY={5.2}
       />
       <chip
         {...interfaceSection}
@@ -275,6 +286,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbRotation={90}
         schX={-11}
         schY={-4}
+        schHeight={0.6}
       />
       <resistor
         {...interfaceSection}
@@ -319,6 +331,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={8}
       />
       <capacitor
+        {...verticalCapacitor}
         {...interfaceSection}
         name="C_LDO_IN"
         capacitance="1uF"
@@ -329,6 +342,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={-7}
       />
       <capacitor
+        {...verticalCapacitor}
         {...interfaceSection}
         name="C_LDO_OUT"
         capacitance="1uF"
@@ -339,6 +353,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={-7}
       />
       <capacitor
+        {...verticalCapacitor}
         {...interfaceSection}
         name="C_3V3_BULK"
         capacitance="4.7uF"
@@ -363,6 +378,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={1}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_MCU_DVCC1"
         capacitance="100nF"
@@ -374,6 +390,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={7}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_MCU_DVCC2"
         capacitance="100nF"
@@ -385,6 +402,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={7}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_MCU_AVCC"
         capacitance="1uF"
@@ -396,6 +414,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={7}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_VCORE"
         capacitance="470nF"
@@ -403,10 +422,11 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbX={-18}
         pcbY={-6.5}
         pcbRotation={180}
-        schX={2}
+        schX={1.9}
         schY={7}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_VBUS"
         capacitance="4.7uF"
@@ -414,10 +434,11 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbX={-3.5}
         pcbY={12.5}
         pcbRotation={90}
-        schX={2}
+        schX={2.93}
         schY={8}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_V18"
         capacitance="220nF"
@@ -425,10 +446,11 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbX={-10.3}
         pcbY={12.75}
         pcbRotation={90}
-        schX={4}
+        schX={4.33}
         schY={8}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_VUSB"
         capacitance="220nF"
@@ -458,10 +480,11 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbX={-13}
         pcbY={9}
         pcbRotation={0}
-        schX={2}
+        schX={1.37}
         schY={9}
       />
       <capacitor
+        {...verticalCapacitor}
         {...controlSection}
         name="C_MCU_RESET"
         capacitance="2.2nF"
@@ -469,7 +492,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbX={-15.25}
         pcbY={9}
         pcbRotation={0}
-        schX={4}
+        schX={3.5}
         schY={9}
       />
       <resonator
@@ -591,6 +614,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pcbOrientation="horizontal"
         schX={0}
         schY={-8}
+        schWidth={1.15}
       />
 
       <testpoint
@@ -832,5 +856,5 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         fontSize="0.48mm"
       />
     </board>
-  )
-}
+  );
+};

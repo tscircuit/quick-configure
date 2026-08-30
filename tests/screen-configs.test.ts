@@ -72,13 +72,13 @@ describe("screen catalog", () => {
 })
 
 describe("generated assets and variants", () => {
-  test("the source manifest contains exactly the 28 selectable circuits", async () => {
+  test("the source manifest contains exactly the 38 selectable circuits", async () => {
     const rootCircuits = (await readdir(projectRoot))
       .filter((filename) => filename.endsWith(".circuit.tsx"))
       .map((filename) => filename.replace(".circuit.tsx", ""))
       .sort()
 
-    expect(expectedConfigurationIds).toHaveLength(28)
+    expect(expectedConfigurationIds).toHaveLength(38)
     expect(rootCircuits).toEqual(expectedConfigurationIds)
   })
 
@@ -114,6 +114,7 @@ describe("generated assets and variants", () => {
     const source = await Bun.file(
       join(projectRoot, "src", "ScreenBoard.tsx"),
     ).text()
+    const compactSource = source.replace(/\s+/g, " ")
 
     for (const part of [
       "FTC252012S100MBCA",
@@ -139,7 +140,7 @@ describe("generated assets and variants", () => {
     expect(source).toContain(
       '<trace from=".Q_EPD_BOOST > .pin1" to="net.EPD_GDR" />',
     )
-    expect(source).toContain(
+    expect(compactSource).toContain(
       '<trace from=".Q_EPD_BOOST > .pin2" to="net.EPD_RESE" thickness="0.35mm" />',
     )
     expect(source).toContain(
@@ -179,7 +180,7 @@ describe("generated assets and variants", () => {
     for (const id of ids) {
       expect(html).toContain(`<option value="${id}">`)
     }
-    expect(html).toContain("28 selectable designs")
+    expect(html).toContain("38 selectable designs")
     expect(html).toContain("usb-c__msp430f5529__${screen}")
     expect(html).toContain("availableConfigurations")
   })

@@ -16,6 +16,18 @@ import JSZip from "jszip"
 import { expectedConfigurationIds } from "./configuration-ids"
 
 const distDir = join(import.meta.dir, "..", "dist")
+const requestedBoardIds = process.argv.slice(2)
+const boardIds =
+  requestedBoardIds.length > 0
+    ? requestedBoardIds
+    : expectedConfigurationIds
+
+const unknownBoardIds = boardIds.filter(
+  (boardId) => !expectedConfigurationIds.includes(boardId),
+)
+if (unknownBoardIds.length > 0) {
+  throw new Error(`Unknown configuration IDs: ${unknownBoardIds.join(", ")}`)
+}
 
 async function writeGerbers(circuitJson: any[], outputPath: string) {
   const zip = new JSZip()
@@ -94,13 +106,13 @@ async function writeSchematicPdf(svgPath: string, outputPath: string) {
 }
 
 await Promise.all(
-  expectedConfigurationIds.map((boardId) =>
+  boardIds.map((boardId) =>
     access(join(distDir, boardId, "circuit.json")),
   ),
 )
 
 let completed = 0
-for (const boardDirectory of expectedConfigurationIds) {
+for (const boardDirectory of boardIds) {
   const boardPath = join(distDir, boardDirectory)
   const circuitJsonPath = join(boardPath, "circuit.json")
   const circuitJson = JSON.parse(await readFile(circuitJsonPath, "utf8"))
@@ -126,7 +138,7 @@ for (const boardDirectory of expectedConfigurationIds) {
 
   completed += 1
   console.log(
-    `Resources ${completed}/${expectedConfigurationIds.length}: ${boardDirectory}`,
+    `Resources ${completed}/${boardIds.length}: ${boardDirectory}`,
   )
 }
 

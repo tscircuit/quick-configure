@@ -1,14 +1,14 @@
-import { A_10118194_0001LF } from "../imports/A_10118194_0001LF/A_10118194_0001LF"
-import { MSP430FR2433IRGER } from "../imports/MSP430FR2433IRGER/MSP430FR2433IRGER"
-import { connectors, mcus, type ConnectorId, type McuId } from "./board-data"
-import { SmdUsbC } from "./SmdUsbC"
+import { A_10118194_0001LF } from "../imports/A_10118194_0001LF/A_10118194_0001LF";
+import { MSP430FR2433IRGER } from "../imports/MSP430FR2433IRGER/MSP430FR2433IRGER";
+import { connectors, mcus, type ConnectorId, type McuId } from "./board-data";
+import { SmdUsbC } from "./SmdUsbC";
 
 export interface PhotodiodeBoardProps {
-  connector: ConnectorId
-  mcu: McuId
+  connector: ConnectorId;
+  mcu: McuId;
 }
 
-const ch552tPinLabels = mcus.ch552t.pinLabels
+const ch552tPinLabels = mcus.ch552t.pinLabels;
 
 const opa320Pins = {
   pin1: "OUT",
@@ -16,7 +16,7 @@ const opa320Pins = {
   pin3: "NONINV",
   pin4: "INV",
   pin5: "VPOS",
-} as const
+} as const;
 
 const usblc6Pins = {
   pin1: "DP_PORT",
@@ -25,7 +25,7 @@ const usblc6Pins = {
   pin4: "DM_MCU",
   pin5: "VBUS",
   pin6: "DP_MCU",
-} as const
+} as const;
 
 const ldoPins = {
   pin1: "IN",
@@ -33,38 +33,58 @@ const ldoPins = {
   pin3: "EN",
   pin4: "NC",
   pin5: "OUT",
-} as const
+} as const;
 
-const p = (component: string, pin: number) => `.${component} > .pin${pin}`
+const p = (component: string, pin: number) => `.${component} > .pin${pin}`;
 
-const interfaceSection = { schSectionName: "Interface" } as const
-const controlSection = { schSectionName: "Control" } as const
-const analogSection = { schSectionName: "Analog" } as const
+const interfaceSection = { schSectionName: "Interface" } as const;
+const controlSection = { schSectionName: "Control" } as const;
+const analogSection = { schSectionName: "Analog" } as const;
+const verticalSchematic = { schOrientation: "vertical" } as const;
 
-export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps) => {
-  const mcu = mcus[mcuId]
-  const connectorInfo = connectors[connector]
-  const isUsb = connector !== "jst-sh"
-  const needsUsbBridge = isUsb && !mcu.nativeUsb
-  const usbController = needsUsbBridge ? "U_USB" : "U_MAIN"
-  const usbDpPin = needsUsbBridge ? 14 : mcu.nativeUsb?.dpPin
-  const usbDmPin = needsUsbBridge ? 15 : mcu.nativeUsb?.dmPin
-  const mainX = needsUsbBridge ? 0 : -4
-  const isMspm33 = mcuId === "mspm33c321a"
-  const isLargeMcu = mcuId === "msp430f5529"
-  const mainDecouplingX = isLargeMcu ? -11.5 : isMspm33 ? -2.5 : mainX
-  const mainDecouplingY = isLargeMcu ? 12 : isMspm33 ? -4.2 : -7.2
-  const resetX = isLargeMcu ? -8.5 : isMspm33 ? -5.8 : mainX + 3
-  const resetY = isLargeMcu ? 12 : isMspm33 ? -3 : -7.2
-  const boardWidth = isLargeMcu ? 62 : isMspm33 ? 60 : 56
-  const boardHeight = isLargeMcu || isMspm33 ? 34 : 30
+export const PhotodiodeBoard = ({
+  connector,
+  mcu: mcuId,
+}: PhotodiodeBoardProps) => {
+  const mcu = mcus[mcuId];
+  const connectorInfo = connectors[connector];
+  const isUsb = connector !== "jst-sh";
+  const needsUsbBridge = isUsb && !mcu.nativeUsb;
+  const usbController = needsUsbBridge ? "U_USB" : "U_MAIN";
+  const usbDpPin = needsUsbBridge ? 14 : mcu.nativeUsb?.dpPin;
+  const usbDmPin = needsUsbBridge ? 15 : mcu.nativeUsb?.dmPin;
+  const mainX = needsUsbBridge ? 0 : -4;
+  const isMspm33 = mcuId === "mspm33c321a";
+  const isLargeMcu = mcuId === "msp430f5529";
+  const mainDecouplingX = isLargeMcu ? -11.5 : isMspm33 ? -2.5 : mainX;
+  const mainDecouplingY = isLargeMcu ? 12 : isMspm33 ? -4.2 : -7.2;
+  const resetX = isLargeMcu ? -8.5 : isMspm33 ? -5.8 : mainX + 3;
+  const resetY = isLargeMcu ? 12 : isMspm33 ? -3 : -7.2;
+  const mainSchX = isMspm33
+    ? needsUsbBridge
+      ? 0.31
+      : -0.72
+    : needsUsbBridge
+      ? 1.3
+      : 1;
+  const mainSchHeight =
+    mcuId === "msp430fr2433"
+      ? 2.6
+      : mcuId === "msp430fr5994" || isMspm33
+        ? 5
+        : undefined;
+  const usbBridgeSchX = isMspm33 ? -7.32 : -5.1;
+  const opaSchX = isMspm33 ? (needsUsbBridge ? 9.9 : 8.81) : 8;
+  const adcSchX = isMspm33 ? (needsUsbBridge ? 7.2 : 6.1) : 5.2;
+  const boardWidth = isLargeMcu ? 62 : isMspm33 ? 60 : 56;
+  const boardHeight = isLargeMcu || isMspm33 ? 34 : 30;
   const connectorX =
     connector === "usb-c"
       ? -(boardWidth / 2) + 5
       : connector === "usb-micro"
         ? -(boardWidth / 2) + 4.4
-        : -(boardWidth / 2) + 3.55
-  const boardTitle = `${connectorInfo.displayName} + ${mcu.displayName}`
+        : -(boardWidth / 2) + 3.55;
+  const boardTitle = `${connectorInfo.displayName} + ${mcu.displayName}`;
 
   return (
     <board
@@ -79,7 +99,10 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       <schematicsheet name="Main" displayName={boardTitle} sheetIndex={0} />
       <schematicsection name="Interface" displayName="Connector & Power" />
       <schematicsection name="Control" displayName="USB & Controller" />
-      <schematicsection name="Analog" displayName="Photodiode Analog Front End" />
+      <schematicsection
+        name="Analog"
+        displayName="Photodiode Analog Front End"
+      />
 
       {connector === "usb-c" && (
         <SmdUsbC
@@ -90,6 +113,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           pcbRotation={-90}
           schX={-14}
           schY={5}
+          schHeight={1.4}
         />
       )}
 
@@ -102,6 +126,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           pcbRotation={-90}
           schX={-14}
           schY={5}
+          schHeight={1}
         />
       )}
 
@@ -122,6 +147,16 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           pcbRotation={-90}
           schX={-14}
           schY={5}
+          schPortArrangement={{
+            leftSide: {
+              pins: ["GND", "VCC_3V3"],
+              direction: "top-to-bottom",
+            },
+            rightSide: {
+              pins: ["UART_TX", "UART_RX"],
+              direction: "top-to-bottom",
+            },
+          }}
         />
       )}
 
@@ -138,7 +173,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
             pcbY={9.5}
             pcbRotation={-90}
             schX={-10}
-            schY={5}
+            schY={5.1}
           />
           <chip
             {...interfaceSection}
@@ -151,6 +186,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
             pcbRotation={90}
             schX={-10}
             schY={-4}
+            schHeight={0.6}
           />
           <capacitor
             {...interfaceSection}
@@ -161,6 +197,7 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
             pcbY={-9.5}
             schX={-12}
             schY={-6}
+            {...verticalSchematic}
           />
           <capacitor
             {...interfaceSection}
@@ -171,14 +208,33 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
             pcbY={-8}
             schX={-8}
             schY={-6}
+            {...verticalSchematic}
           />
         </>
       )}
 
       {connector === "usb-c" && (
         <>
-          <resistor {...interfaceSection} name="R_CC1" resistance="5.1k" footprint="0402" pcbX={-21} pcbY={11.5} schX={-13} schY={8} />
-          <resistor {...interfaceSection} name="R_CC2" resistance="5.1k" footprint="0402" pcbX={-18} pcbY={12.2} schX={-11} schY={8} />
+          <resistor
+            {...interfaceSection}
+            name="R_CC1"
+            resistance="5.1k"
+            footprint="0402"
+            pcbX={-21}
+            pcbY={11.5}
+            schX={-13}
+            schY={8}
+          />
+          <resistor
+            {...interfaceSection}
+            name="R_CC2"
+            resistance="5.1k"
+            footprint="0402"
+            pcbX={-18}
+            pcbY={12.2}
+            schX={-11}
+            schY={8}
+          />
         </>
       )}
 
@@ -194,12 +250,41 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
             pcbX={-10.5}
             pcbY={3}
             pcbRotation={180}
-            schX={-5}
+            schX={usbBridgeSchX}
             schY={3}
           />
-          <capacitor {...controlSection} name="C_USB" capacitance="100nF" footprint="0402" pcbX={-10.5} pcbY={8.5} schX={-5} schY={6.5} />
-          <capacitor {...controlSection} name="C_USB_V33" capacitance="100nF" footprint="0402" pcbX={-7} pcbY={8.5} schX={-3} schY={6.5} />
-          <resistor {...controlSection} name="R_USB_RST" resistance="100k" footprint="0402" pcbX={-14} pcbY={8.5} schX={-7} schY={6.5} />
+          <capacitor
+            {...controlSection}
+            {...verticalSchematic}
+            name="C_USB"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={-10.5}
+            pcbY={8.5}
+            schX={-5.3}
+            schY={6.5}
+          />
+          <capacitor
+            {...controlSection}
+            {...verticalSchematic}
+            name="C_USB_V33"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={-7}
+            pcbY={8.5}
+            schX={-2.7}
+            schY={6.5}
+          />
+          <resistor
+            {...controlSection}
+            name="R_USB_RST"
+            resistance="100k"
+            footprint="0402"
+            pcbX={-14}
+            pcbY={8.5}
+            schX={-7}
+            schY={6.5}
+          />
         </>
       )}
 
@@ -211,8 +296,9 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           pcbX={mainX}
           pcbY={1.5}
           pcbRotation={180}
-          schX={1}
+          schX={mainSchX}
           schY={1}
+          schHeight={mainSchHeight}
         />
       ) : (
         <chip
@@ -225,12 +311,24 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           pcbX={mainX}
           pcbY={1.5}
           pcbRotation={mcu.pinCount >= 48 ? 45 : 180}
-          schX={1}
+          schX={mainSchX}
           schY={1}
+          schHeight={mainSchHeight}
         />
       )}
 
-      <capacitor {...controlSection} name="C_MAIN" capacitance="100nF" footprint="0402" pcbX={mainDecouplingX} pcbY={mainDecouplingY} pcbRotation={isLargeMcu ? 90 : 0} schX={1} schY={6.5} />
+      <capacitor
+        {...controlSection}
+        {...verticalSchematic}
+        name="C_MAIN"
+        capacitance="100nF"
+        footprint="0402"
+        pcbX={mainDecouplingX}
+        pcbY={mainDecouplingY}
+        pcbRotation={isLargeMcu ? 90 : 0}
+        schX={0.9}
+        schY={6.5}
+      />
       <resistor
         {...controlSection}
         name="R_RESET"
@@ -239,32 +337,84 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         pcbX={resetX}
         pcbY={resetY}
         pcbRotation={isMspm33 ? 90 : 0}
-        schX={3.5}
+        schX={3.6}
         schY={6.5}
       />
 
       {isMspm33 && (
         <>
-          <capacitor {...controlSection} name="C_MAIN_2" capacitance="100nF" footprint="0402" pcbX={mainX + 5.25} pcbY={5} pcbRotation={90} schX={-1} schY={8} />
-          <capacitor {...controlSection} name="C_MSPM33_VDD_BULK" capacitance="10uF" footprint="0603" pcbX={mainX} pcbY={8.4} schX={1.5} schY={8} />
-          <capacitor {...controlSection} name="C_MSPM33_VBAT" capacitance="1uF" footprint="0603" pcbX={mainX - 5.4} pcbY={-0.4} pcbRotation={90} schX={4} schY={8} />
-          <capacitor {...controlSection} name="C_MSPM33_VCORE" capacitance="2.2uF" footprint="0603" pcbX={mainX - 5.4} pcbY={2.2} pcbRotation={90} schX={6.5} schY={8} />
-          <capacitor {...controlSection} name="C_MSPM33_RESET" capacitance="10nF" footprint="0402" pcbX={mainX - 5} pcbY={-4.6} schX={5.5} schY={6.5} />
-          <resistor {...controlSection} name="R_MSPM33_BSL" resistance="47k" footprint="0402" pcbX={mainX + 2.8} pcbY={7} schX={9} schY={8} />
-          <capacitor {...controlSection} name="C_MSPM33_VREF" capacitance="1uF" footprint="0603" pcbX={mainX - 3} pcbY={6.9} schX={11.5} schY={8} />
+          <capacitor {...controlSection} {...verticalSchematic} name="C_MAIN_2" capacitance="100nF" footprint="0402" pcbX={mainX + 5.25} pcbY={5} pcbRotation={90} schX={-1} schY={8} />
+          <capacitor {...controlSection} {...verticalSchematic} name="C_MSPM33_VDD_BULK" capacitance="10uF" footprint="0603" pcbX={mainX} pcbY={8.4} schX={1.5} schY={8} />
+          <capacitor {...controlSection} {...verticalSchematic} name="C_MSPM33_VBAT" capacitance="1uF" footprint="0603" pcbX={mainX - 5.4} pcbY={-0.4} pcbRotation={90} schX={4} schY={8} />
+          <capacitor {...controlSection} {...verticalSchematic} name="C_MSPM33_VCORE" capacitance="2.2uF" footprint="0603" pcbX={mainX - 5.4} pcbY={2.2} pcbRotation={90} schX={6.19} schY={8} />
+          <capacitor {...controlSection} {...verticalSchematic} name="C_MSPM33_RESET" capacitance="10nF" footprint="0402" pcbX={mainX - 5} pcbY={-4.6} schX={5.5} schY={6.5} />
+          <resistor {...controlSection} name="R_MSPM33_BSL" resistance="47k" footprint="0402" pcbX={mainX + 2.8} pcbY={7} schX={9.31} schY={8} />
+          <capacitor {...controlSection} {...verticalSchematic} name="C_MSPM33_VREF" capacitance="1uF" footprint="0603" pcbX={mainX - 3} pcbY={6.9} schX={11.5} schY={8} />
         </>
       )}
 
       {mcuId === "ch552t" && (
-        <capacitor {...controlSection} name="C_MAIN_V33" capacitance="100nF" footprint="0402" pcbX={mainX - 3} pcbY={-7.2} schX={-1.5} schY={6.5} />
+        <capacitor
+          {...controlSection}
+          {...verticalSchematic}
+          name="C_MAIN_V33"
+          capacitance="100nF"
+          footprint="0402"
+          pcbX={mainX - 3}
+          pcbY={-7.2}
+          schX={-1.5}
+          schY={6.5}
+        />
       )}
 
       {mcuId === "msp430f5529" && (
         <>
-          <capacitor {...controlSection} name="C_VCORE" capacitance="470nF" footprint="0603" pcbX={-5.5} pcbY={12} pcbRotation={90} schX={-1} schY={8} />
-          <capacitor {...controlSection} name="C_V18" capacitance="1uF" footprint="0603" pcbX={-2.5} pcbY={12} pcbRotation={90} schX={1} schY={8} />
-          <capacitor {...controlSection} name="C_VUSB" capacitance="220nF" footprint="0603" pcbX={0.5} pcbY={12} pcbRotation={90} schX={3} schY={8} />
-          <resistor {...controlSection} name="R_USB_PULLUP" resistance="1.4k" footprint="0402" pcbX={3.5} pcbY={12} schX={-1} schY={9.5} />
+          <capacitor
+            {...controlSection}
+            {...verticalSchematic}
+            name="C_VCORE"
+            capacitance="470nF"
+            footprint="0603"
+            pcbX={-5.5}
+            pcbY={12}
+            pcbRotation={90}
+            schX={-1}
+            schY={8}
+          />
+          <capacitor
+            {...controlSection}
+            {...verticalSchematic}
+            name="C_V18"
+            capacitance="1uF"
+            footprint="0603"
+            pcbX={-2.5}
+            pcbY={12}
+            pcbRotation={90}
+            schX={1}
+            schY={8}
+          />
+          <capacitor
+            {...controlSection}
+            {...verticalSchematic}
+            name="C_VUSB"
+            capacitance="220nF"
+            footprint="0603"
+            pcbX={0.5}
+            pcbY={12}
+            pcbRotation={90}
+            schX={3}
+            schY={8}
+          />
+          <resistor
+            {...controlSection}
+            name="R_USB_PULLUP"
+            resistance="1.4k"
+            footprint="0402"
+            pcbX={3.5}
+            pcbY={12}
+            schX={-1}
+            schY={9.5}
+          />
         </>
       )}
 
@@ -278,8 +428,9 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         pcbX={12.5}
         pcbY={2}
         pcbRotation={90}
-        schX={8}
+        schX={opaSchX}
         schY={0}
+        schHeight={0.6}
       />
 
       <diode
@@ -297,14 +448,90 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         schY={0}
       />
 
-      <capacitor {...analogSection} name="C_OPA" capacitance="100nF" footprint="0402" pcbX={12.5} pcbY={6} schX={8} schY={4} />
-      <resistor {...analogSection} name="R_REF_TOP" resistance="56k" footprint="0402" pcbX={8} pcbY={-5.2} schX={6} schY={-4} />
-      <resistor {...analogSection} name="R_REF_BOTTOM" resistance="10k" footprint="0402" pcbX={11} pcbY={-5.2} schX={8} schY={-4} />
-      <capacitor {...analogSection} name="C_REF" capacitance="1uF" footprint="0603" pcbX={14} pcbY={-7.5} schX={10} schY={-4} />
-      <resistor {...analogSection} name="R_FB" resistance="330k" footprint="0402" pcbX={16} pcbY={6.5} schX={11} schY={2} />
-      <capacitor {...analogSection} name="C_FB" capacitance="10pF" footprint="0402" pcbX={16} pcbY={4.7} schX={11} schY={3} />
-      <resistor {...analogSection} name="R_ADC" resistance="100" footprint="0402" pcbX={8} pcbY={1.5} schX={5} schY={0} />
-      <capacitor {...analogSection} name="C_ADC" capacitance="1nF" footprint="0402" pcbX={8} pcbY={-1} schX={5} schY={-2} />
+      <capacitor
+        {...analogSection}
+        {...verticalSchematic}
+        name="C_OPA"
+        capacitance="100nF"
+        footprint="0402"
+        pcbX={12.5}
+        pcbY={6}
+        schX={8}
+        schY={4}
+      />
+      <resistor
+        {...analogSection}
+        name="R_REF_TOP"
+        resistance="56k"
+        footprint="0402"
+        pcbX={8}
+        pcbY={-5.2}
+        schX={6}
+        schY={-4}
+      />
+      <resistor
+        {...analogSection}
+        name="R_REF_BOTTOM"
+        resistance="10k"
+        footprint="0402"
+        pcbX={11}
+        pcbY={-5.2}
+        schX={8}
+        schY={-4}
+      />
+      <capacitor
+        {...analogSection}
+        {...verticalSchematic}
+        name="C_REF"
+        capacitance="1uF"
+        footprint="0603"
+        pcbX={14}
+        pcbY={-7.5}
+        schX={10}
+        schY={-4}
+      />
+      <resistor
+        {...analogSection}
+        name="R_FB"
+        resistance="330k"
+        footprint="0402"
+        pcbX={16}
+        pcbY={6.5}
+        schX={11}
+        schY={2}
+      />
+      <capacitor
+        {...analogSection}
+        {...verticalSchematic}
+        name="C_FB"
+        capacitance="10pF"
+        footprint="0402"
+        pcbX={16}
+        pcbY={4.7}
+        schX={11}
+        schY={3}
+      />
+      <resistor
+        {...analogSection}
+        name="R_ADC"
+        resistance="100"
+        footprint="0402"
+        pcbX={8}
+        pcbY={1.5}
+        schX={adcSchX}
+        schY={0}
+      />
+      <capacitor
+        {...analogSection}
+        {...verticalSchematic}
+        name="C_ADC"
+        capacitance="1nF"
+        footprint="0402"
+        pcbX={8}
+        pcbY={-1}
+        schX={5}
+        schY={-2}
+      />
 
       <pinheader
         {...controlSection}
@@ -329,14 +556,53 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         pcbOrientation="horizontal"
         schX={1}
         schY={-9}
+        schWidth={0.865}
       />
 
-      <testpoint {...analogSection} name="TP_VREF" footprintVariant="pad" padDiameter="1.5mm" pcbX={15.5} pcbY={-9.5} schX={10} schY={-7} />
-      <testpoint {...analogSection} name="TP_TIA" footprintVariant="pad" padDiameter="1.5mm" pcbX={19} pcbY={-9.5} schX={12} schY={-7} />
-      <hole name="H1" diameter="2.4mm" pcbX={-(boardWidth / 2 - 3)} pcbY={boardHeight / 2 - 3} />
-      <hole name="H2" diameter="2.4mm" pcbX={boardWidth / 2 - 3} pcbY={-(boardHeight / 2 - 3)} />
-      <hole name="H3" diameter="2.4mm" pcbX={boardWidth / 2 - 3} pcbY={boardHeight / 2 - 3} />
-      <hole name="H4" diameter="2.4mm" pcbX={-(boardWidth / 2 - 3)} pcbY={-(boardHeight / 2 - 3)} />
+      <testpoint
+        {...analogSection}
+        name="TP_VREF"
+        footprintVariant="pad"
+        padDiameter="1.5mm"
+        pcbX={15.5}
+        pcbY={-9.5}
+        schX={10}
+        schY={-7}
+      />
+      <testpoint
+        {...analogSection}
+        name="TP_TIA"
+        footprintVariant="pad"
+        padDiameter="1.5mm"
+        pcbX={19}
+        pcbY={-9.5}
+        schX={12}
+        schY={-7}
+      />
+      <hole
+        name="H1"
+        diameter="2.4mm"
+        pcbX={-(boardWidth / 2 - 3)}
+        pcbY={boardHeight / 2 - 3}
+      />
+      <hole
+        name="H2"
+        diameter="2.4mm"
+        pcbX={boardWidth / 2 - 3}
+        pcbY={-(boardHeight / 2 - 3)}
+      />
+      <hole
+        name="H3"
+        diameter="2.4mm"
+        pcbX={boardWidth / 2 - 3}
+        pcbY={boardHeight / 2 - 3}
+      />
+      <hole
+        name="H4"
+        diameter="2.4mm"
+        pcbX={-(boardWidth / 2 - 3)}
+        pcbY={-(boardHeight / 2 - 3)}
+      />
 
       {isMspm33 && (
         <>
@@ -394,7 +660,12 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
           <trace from=".J1 > .pin15" to="net.GND" thickness="0.5mm" />
           <trace from=".J1 > .pin16" to="net.GND" thickness="0.5mm" />
           {[17, 18, 19, 20].map((pin) => (
-            <trace key={`usb-shield-${pin}`} from={`.J1 > .pin${pin}`} to="net.GND" thickness="0.5mm" />
+            <trace
+              key={`usb-shield-${pin}`}
+              from={`.J1 > .pin${pin}`}
+              to="net.GND"
+              thickness="0.5mm"
+            />
           ))}
           <trace from=".J1 > .pin6" to="net.USB_CC1" />
           <trace from=".R_CC1 > .pin1" to="net.USB_CC1" />
@@ -420,12 +691,28 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
 
       {isUsb && usbDpPin && usbDmPin && (
         <>
-          <trace from=".U_ESD > .pin1" to="net.USB_DP_PORT" thickness="0.25mm" />
-          <trace from=".U_ESD > .pin3" to="net.USB_DM_PORT" thickness="0.25mm" />
+          <trace
+            from=".U_ESD > .pin1"
+            to="net.USB_DP_PORT"
+            thickness="0.25mm"
+          />
+          <trace
+            from=".U_ESD > .pin3"
+            to="net.USB_DM_PORT"
+            thickness="0.25mm"
+          />
           <trace from=".U_ESD > .pin6" to="net.USB_DP_MCU" thickness="0.25mm" />
           <trace from=".U_ESD > .pin4" to="net.USB_DM_MCU" thickness="0.25mm" />
-          <trace from={p(usbController, usbDpPin)} to="net.USB_DP_MCU" thickness="0.25mm" />
-          <trace from={p(usbController, usbDmPin)} to="net.USB_DM_MCU" thickness="0.25mm" />
+          <trace
+            from={p(usbController, usbDpPin)}
+            to="net.USB_DP_MCU"
+            thickness="0.25mm"
+          />
+          <trace
+            from={p(usbController, usbDmPin)}
+            to="net.USB_DM_MCU"
+            thickness="0.25mm"
+          />
           <trace from=".U_ESD > .pin5" to="net.VBUS5" />
           <trace from=".U_ESD > .pin2" to="net.GND" />
           <trace from=".U_LDO > .pin1" to="net.VBUS5" thickness="0.4mm" />
@@ -448,7 +735,14 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
             from=".J1 > .pin4"
             to="net.UART_MAIN_RX"
             thickness={mcuId === "msp430fr5994" ? "0.13mm" : undefined}
-            pcbRouteHints={mcuId === "msp430fr5994" ? [{ x: -13, y: 4 }, { x: -2, y: 4 }] : undefined}
+            pcbRouteHints={
+              mcuId === "msp430fr5994"
+                ? [
+                    { x: -13, y: 4 },
+                    { x: -2, y: 4 },
+                  ]
+                : undefined
+            }
           />
         </>
       )}
@@ -471,10 +765,20 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
       )}
 
       {mcu.vccPins.map((pin) => (
-        <trace key={`vcc-${pin}`} from={p("U_MAIN", pin)} to="net.VCC_3V3" thickness="0.35mm" />
+        <trace
+          key={`vcc-${pin}`}
+          from={p("U_MAIN", pin)}
+          to="net.VCC_3V3"
+          thickness="0.35mm"
+        />
       ))}
       {mcu.gndPins.map((pin) => (
-        <trace key={`gnd-${pin}`} from={p("U_MAIN", pin)} to="net.GND" thickness="0.35mm" />
+        <trace
+          key={`gnd-${pin}`}
+          from={p("U_MAIN", pin)}
+          to="net.GND"
+          thickness="0.35mm"
+        />
       ))}
       <trace from=".C_MAIN > .pin1" to="net.VCC_3V3" />
       <trace from=".C_MAIN > .pin2" to="net.GND" />
@@ -484,7 +788,10 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         thickness="0.12mm"
       />
       <trace from=".R_RESET > .pin1" to="net.MAIN_RESET" />
-      <trace from=".R_RESET > .pin2" to={mcuId === "ch552t" ? "net.GND" : "net.VCC_3V3"} />
+      <trace
+        from=".R_RESET > .pin2"
+        to={mcuId === "ch552t" ? "net.GND" : "net.VCC_3V3"}
+      />
       <trace
         from={p("U_MAIN", mcu.uartTxPin)}
         to="net.UART_MAIN_TX"
@@ -619,10 +926,32 @@ export const PhotodiodeBoard = ({ connector, mcu: mcuId }: PhotodiodeBoardProps)
         useThermalReliefs
       />
 
-      <silkscreentext text={boardTitle} pcbX={7} pcbY={boardHeight / 2 - 1.6} fontSize="0.78mm" />
-      <silkscreentext text="BPX65 + OPA320" pcbX={16.5} pcbY={-12.4} fontSize="0.65mm" />
-      <silkscreentext text="4L • GND / 3V3 PLANES" pcbX={8.5} pcbY={-13.5} fontSize="0.48mm" />
-      {needsUsbBridge && <silkscreentext text="CH552 USB BRIDGE" pcbX={-10.5} pcbY={10.8} fontSize="0.55mm" />}
+      <silkscreentext
+        text={boardTitle}
+        pcbX={7}
+        pcbY={boardHeight / 2 - 1.6}
+        fontSize="0.78mm"
+      />
+      <silkscreentext
+        text="BPX65 + OPA320"
+        pcbX={16.5}
+        pcbY={-12.4}
+        fontSize="0.65mm"
+      />
+      <silkscreentext
+        text="4L • GND / 3V3 PLANES"
+        pcbX={8.5}
+        pcbY={-13.5}
+        fontSize="0.48mm"
+      />
+      {needsUsbBridge && (
+        <silkscreentext
+          text="CH552 USB BRIDGE"
+          pcbX={-10.5}
+          pcbY={10.8}
+          fontSize="0.55mm"
+        />
+      )}
     </board>
-  )
-}
+  );
+};
