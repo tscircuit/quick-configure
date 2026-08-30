@@ -5,10 +5,12 @@
   "description": "Selectable tscircuit board family for optical, environmental, motion, thermal, and display designs",
   "scripts": {
     "build": "npm run build:circuits && npm run assemble-site",
-    "build:circuits": "npm run models && tsci build --site --ignore-warnings --concurrency 4 --autorouter-timeout 8m --all-images --3d --glbs --pcb-svgs --schematic-svgs && bun run resources",
+    "build:circuits": "npm run check:schematic-placement && npm run models && bun run scripts/build-circuit-artifacts.ts && bun run resources",
+    "build:circuits:plan": "bun run scripts/build-circuit-artifacts.ts --plan",
     "assemble-site": "bun run scripts/assemble-site.ts",
-    "models": "bun run scripts/generate-screen-models.ts",
+    "models": "bun run scripts/generate-screen-models.ts && bun run scripts/generate-mspm0-model.ts",
     "resources": "bun run scripts/generate-resources.ts",
+    "check:schematic-placement": "bun run scripts/check-schematic-placement.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
@@ -30,5 +32,8 @@
     "circuit-json-to-altium": {
       "altiumts": "$altiumts"
     }
+  },
+  "dependencies": {
+    "@tsci/tscircuit.ti": "^1.0.102"
   }
 }
