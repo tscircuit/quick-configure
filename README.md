@@ -1,9 +1,9 @@
 # tscircuit Quick Configure — Sensor & Display Boards
 
 A local selector and pre-generated tscircuit board family for photodiode,
-environmental, motion, and thermal sensing plus raw BuyDisplay panels. Every
-configuration includes an interactive 3D model, routed PCB, schematic, and
-downloadable fabrication/EDA resources.
+environmental, motion, orientation, distance, light, and thermal sensing plus
+raw BuyDisplay panels. Every configuration includes an interactive 3D model,
+routed PCB, schematic, and downloadable fabrication/EDA resources.
 
 ## Configuration catalog
 
@@ -15,15 +15,46 @@ The original photodiode matrix remains intact:
 - Sensor: BPX65 photodiode with OPA320 transimpedance amplifier
 - Photodiode configurations: 18
 
-Three I²C sensor reference designs use USB-C and an MSP430F5529, exact imported
-component footprints and 3D models, address straps, local decoupling, and a
-shared debug header.
+Three legacy I²C sensor reference designs use USB-C and an MSP430F5529, exact
+imported component footprints and 3D models, address straps, local decoupling,
+and a shared debug header.
 
 | Sensor | Measurements | Exact part / package | I²C address |
 | --- | --- | --- | --- |
 | BME280 | Relative humidity, temperature, barometric pressure | Bosch BME280 / LGA-8 2.5×2.5 mm (JLCPCB C92489) | `0x76` |
 | MPU-6050 | 3-axis acceleration, 3-axis angular rate | TDK InvenSense MPU-6050 / QFN-24-EP 4×4 mm (JLCPCB C24112) | `0x68` |
 | MLX90640 | 32×24-pixel far-infrared thermal image | Melexis MLX90640ESF-BAA-000-TU / TO-39-4 (JLCPCB C17380659) | `0x33` |
+
+### Adafruit store-rank sensor set
+
+Ten additional I²C sensor boards use a fixed USB-C and
+[TI MSPM0G3507SPMR](https://www.ti.com/product/MSPM0G3507) pairing. The selected
+MCU is available for JLCPCB assembly as
+[LCSC/JLCPCB part C22389960](https://jlcpcb.com/partdetail/TexasInstruments-MSPM0G3507SPMR/C22389960);
+its [datasheet is available from TI](https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf).
+
+Selected 2026-08-29 from Adafruit's live default Sensors category merchandising
+order. Because Adafruit publishes neither unit-sales counts nor a labeled Best
+Selling sort, the list is a reproducible store-rank proxy. Filtered to distinct
+in-stock I2C sensor breakout boards; skipped loose sensors, actuators, cables,
+I2S-only microphones, external-transducer amplifiers, and duplicate board
+variants.
+
+Source: [Adafruit Sensors category, default order](https://www.adafruit.com/category/35),
+observed 2026-08-29.
+
+| Rank | Adafruit breakout | Sensor / default I²C address | Sensor datasheet |
+| ---: | --- | --- | --- |
+| 1 | [BNO085 9-DOF Orientation IMU, PID 4754](https://www.adafruit.com/product/4754) | BNO085 / `0x4A` | [BNO080/BNO085](https://www.ceva-ip.com/wp-content/uploads/BNO080_085-Datasheet.pdf) |
+| 2 | [MCP9808 High Accuracy Temperature, PID 1782](https://www.adafruit.com/product/1782) | MCP9808T-E/MS / `0x18` | [MCP9808](https://www.adafruit.com/datasheets/MCP9808.pdf) |
+| 3 | [BNO055 Absolute Orientation, PID 2472](https://www.adafruit.com/product/2472) | BNO055 / `0x28` | [BNO055](https://cdn-learn.adafruit.com/assets/assets/000/125/776/original/bst-bno055-ds000.pdf?1698865246) |
+| 4 | [SHT45 Precision Temperature & Humidity, PID 5665](https://www.adafruit.com/product/5665) | SHT45-AD1B-R2 / `0x44` | [SHT4x](https://cdn-shop.adafruit.com/product-files/5665/5665_Datasheet_SHT4x.pdf) |
+| 5 | [SHT41 Temperature & Humidity, PID 5776](https://www.adafruit.com/product/5776) | SHT41-AD1B-R2 / `0x44` | [SHT4x](https://cdn-shop.adafruit.com/product-files/5776/Datasheet_SHT4x.pdf) |
+| 6 | [LIS3DH Triple-Axis Accelerometer, PID 2809](https://www.adafruit.com/product/2809) | LIS3DHTR / `0x18` | [LIS3DH](https://cdn-learn.adafruit.com/assets/assets/000/085/846/original/lis3dh.pdf?1576396666) |
+| 7 | [LSM6DSOX 6 DoF Accelerometer and Gyroscope, PID 4438](https://www.adafruit.com/product/4438) | LSM6DSOXTR / `0x6A` | [LSM6DSOX](https://www.st.com/resource/en/datasheet/lsm6dsox.pdf) |
+| 8 | [AHT20 Temperature & Humidity, PID 4566](https://www.adafruit.com/product/4566) | AHT20 / `0x38` | [AHT20](https://cdn-learn.adafruit.com/assets/assets/000/123/394/original/Data_Sheet_AHT20.pdf?1691532479) |
+| 9 | [VL53L4CD Time of Flight Distance, PID 5396](https://www.adafruit.com/product/5396) | VL53L4CDV0DH/1 / `0x29` | [VL53L4CD](https://www.st.com/resource/en/datasheet/vl53l4cd.pdf) |
+| 10 | [VEML7700 Lux Sensor, PID 4162](https://www.adafruit.com/product/4162) | VEML7700-TR / `0x10` | [VEML7700](https://www.vishay.com/docs/84286/veml7700.pdf) |
 
 Four display reference designs add USB-C power/data and an MSP430F5529 with
 four-wire SPI on a two-layer board with a bottom-side ground pour. Each uses the
@@ -36,10 +67,11 @@ panel manufacturer's exact recommended mating FPC connector.
 | [ER-TFT020-3](https://www.buydisplay.com/2-inch-240x320-ips-tft-lcd-display-with-connector-fpc) | ST7789, 240×320 IPS | [ER-CON14HB-1](https://www.buydisplay.com/download/connector/ER-CON14HB-1.pdf), 14-pin 0.5 mm **bottom contact** | Lowest-cost compact color/SPI option in the launch set |
 | [ER-TFT028A2-4](https://www.buydisplay.com/2-8-inch-240x320-ips-tft-lcd-display-panel-optional-touch-panel-wide-view) | ILI9341, 240×320 IPS | [ER-CON50HT-1](https://www.buydisplay.com/50-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 50-pin 0.5 mm top contact | Strongest popularity signal and an OEM mechanical model |
 
-This yields **25 selectable configurations**. The three digital sensors and
-four display choices intentionally use one implemented host/controller pairing
-rather than multiplying partially validated circuits across the full
-connector/MCU matrix.
+This yields **35 selectable configurations**: 18 photodiode combinations,
+three legacy sensor boards, ten Adafruit-ranked sensor boards, and four display
+boards. The legacy sensors and displays retain their validated USB-C/MSP430F5529
+pairing; the ten Adafruit additions use USB-C/MSPM0G3507. Fixed configurations
+are not multiplied across the full connector/MCU matrix.
 
 ## Sensor implementation
 
@@ -53,6 +85,17 @@ connector/MCU matrix.
   locally downloaded component models. The BME280 is strapped for I²C and
   address `0x76`; the MPU-6050 uses address `0x68` and exposes its interrupt;
   the wide-angle MLX90640 BAA variant uses its fixed `0x33` address.
+- `src/adafruit-sensor-data.ts` is the typed, ordered catalog for the ten
+  Adafruit-ranked boards, product IDs, sensor parts, I²C addresses,
+  capabilities, and product/datasheet links.
+- `src/Mspm0SensorBoard.tsx` contains the shared USB-C/MSPM0G3507 reference
+  design: an MSPM0G3507SPMR, turnkey CH340N USB-to-UART bridge
+  ([JLCPCB C506813](https://jlcpcb.com/partdetail/wch_jiangsu_Qin_heng-CH340N/C506813)), USBLC6-2SC6 USB ESD
+  protection, TLV75533PDBVR 3.3 V regulator, 4.7 kΩ I²C pull-ups, and a 10-pin
+  SWD/reset header. The MSPM0 support network includes the TI-recommended
+  VCORE, reset, and precision ROSC components. Sensor-specific support includes local decoupling,
+  interrupt/reset/address straps where available, BNO085/BNO055 crystal and
+  reset circuits, and VL53L4CD XSHUT/GPIO pull-ups.
 
 The e-paper panel already integrates its UC8251 timing controller and
 high-voltage display driver in chip-on-glass form. Its board still implements
@@ -107,7 +150,7 @@ npm run typecheck
 npm run build
 ```
 
-`npm run models` can be used to regenerate only the four source GLBs. The full
+`npm run models` can be used to regenerate only the five source GLBs. The full
 build writes circuit JSON, binary glTF (`3d.glb`), 3D posters, PCB SVGs,
 schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 `dist/`, then assembles the deployable selector in `public/`.
@@ -121,6 +164,8 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 - [ER-TFT020-3 datasheet](https://www.buydisplay.com/download/manual/ER-TFT020-3_Datasheet.pdf)
 - [ER-TFT028A2-4 datasheet](https://www.buydisplay.com/download/manual/ER-TFT028A2-4_Datasheet.pdf)
 - [MSP430F5529 datasheet](https://www.ti.com/lit/ds/symlink/msp430f5529.pdf)
+- [MSPM0G3507 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf)
+- [Adafruit Sensors category](https://www.adafruit.com/category/35)
 - [BME280 datasheet](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf)
 - [MPU-6000/MPU-6050 datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet.pdf)
 - [MLX90640 datasheet](https://media.melexis.com/-/media/files/documents/datasheets/mlx90640-datasheet-melexis.pdf)
