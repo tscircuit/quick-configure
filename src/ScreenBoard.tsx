@@ -1,10 +1,10 @@
-import { Fragment } from "react"
-import { mcus } from "./board-data"
-import { screens, type ScreenId } from "./screen-data"
-import { SmdUsbC } from "./SmdUsbC"
+import { Fragment } from "react";
+import { mcus } from "./board-data";
+import { screens, type ScreenId } from "./screen-data";
+import { SmdUsbC } from "./SmdUsbC";
 
 export interface ScreenBoardProps {
-  screen: ScreenId
+  screen: ScreenId;
 }
 
 const usbEsdPins = {
@@ -14,7 +14,7 @@ const usbEsdPins = {
   pin4: "DM_MCU",
   pin5: "VBUS",
   pin6: "DP_MCU",
-} as const
+} as const;
 
 const ldoPins = {
   pin1: "IN",
@@ -22,24 +22,24 @@ const ldoPins = {
   pin3: "EN",
   pin4: "NC",
   pin5: "OUT",
-} as const
+} as const;
 
 const backlightMosfetPins = {
   pin1: "GATE",
   pin2: "SOURCE",
   pin3: "DRAIN",
-} as const
+} as const;
 
 const epaperMosfetPins = {
   pin1: "GATE",
   pin2: "SOURCE",
   pin3: "DRAIN",
-} as const
+} as const;
 
 const epaperSchottkyPins = {
   pin1: "CATHODE",
   pin2: "ANODE",
-} as const
+} as const;
 
 const f5529 = {
   vcore: 20,
@@ -64,25 +64,99 @@ const f5529 = {
   xt2Out: 70,
   test: 71,
   reset: 76,
-} as const
+} as const;
 
-const p = (component: string, pin: number) => `.${component} > .pin${pin}`
+const p = (component: string, pin: number) => `.${component} > .pin${pin}`;
 
-const interfaceSection = { schSectionName: "Interface" } as const
-const controlSection = { schSectionName: "Control" } as const
-const displaySection = { schSectionName: "Display" } as const
+const interfaceSection = { schSectionName: "Interface" } as const;
+const controlSection = { schSectionName: "Control" } as const;
+const displaySection = { schSectionName: "Display" } as const;
+const verticalCapacitorSymbol = { schOrientation: "vertical" } as const;
 
 const OledSupport = () => (
   <>
-    <capacitor {...displaySection} name="C_OLED_C2" capacitance="1uF" footprint="0603" pcbX={31.5} pcbY={6.5} pcbRotation={90} schX={8} schY={7} />
-    <capacitor {...displaySection} name="C_OLED_C1" capacitance="1uF" footprint="0603" pcbX={28.5} pcbY={6} pcbRotation={90} schX={10} schY={7} />
-    <capacitor {...displaySection} name="C_OLED_VBAT" capacitance="1uF" footprint="0603" pcbX={25.5} pcbY={7.5} schX={12} schY={7} />
-    <capacitor {...displaySection} name="C_OLED_VDD" capacitance="100nF" footprint="0402" pcbX={25.5} pcbY={4.5} schX={14} schY={7} />
-    <resistor {...displaySection} name="R_OLED_IREF" resistance="390k" footprint="0402" pcbX={28} pcbY={-2} schX={8} schY={-5} />
-    <capacitor {...displaySection} name="C_OLED_VCOMH" capacitance="2.2uF" maxDecouplingTraceLength="6mm" footprint="0603" pcbX={32.2} pcbY={-4} schX={11} schY={-5} />
-    <capacitor {...displaySection} name="C_OLED_VCC" capacitance="4.7uF" maxDecouplingTraceLength="6mm" footprint="0805" pcbX={32} pcbY={-8.3} schX={14} schY={-5} />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_OLED_C2"
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={31.5}
+      pcbY={6.5}
+      pcbRotation={90}
+      schX={20}
+      schY={7}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_OLED_C1"
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={28.5}
+      pcbY={6}
+      pcbRotation={90}
+      schX={24}
+      schY={7}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_OLED_VBAT"
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={25.5}
+      pcbY={7.5}
+      schX={28}
+      schY={7}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_OLED_VDD"
+      capacitance="100nF"
+      footprint="0402"
+      pcbX={25.5}
+      pcbY={4.5}
+      schX={32}
+      schY={7}
+    />
+    <resistor
+      {...displaySection}
+      name="R_OLED_IREF"
+      resistance="390k"
+      footprint="0402"
+      pcbX={28}
+      pcbY={-2}
+      schX={8}
+      schY={-5}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_OLED_VCOMH"
+      capacitance="2.2uF"
+      maxDecouplingTraceLength="6mm"
+      footprint="0603"
+      pcbX={32.2}
+      pcbY={-4}
+      schX={24}
+      schY={-5}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_OLED_VCC"
+      capacitance="4.7uF"
+      maxDecouplingTraceLength="6mm"
+      footprint="0805"
+      pcbX={32}
+      pcbY={-8.3}
+      schX={30}
+      schY={-5}
+    />
   </>
-)
+);
 
 const BacklightSwitch = () => (
   <>
@@ -96,22 +170,70 @@ const BacklightSwitch = () => (
       pcbX={14}
       pcbY={-16}
       pcbRotation={90}
-      schX={7}
+      schX={22}
+      schY={-6}
+      schHeight={0.4}
+    />
+    <resistor
+      {...displaySection}
+      name="R_BL_GATE"
+      resistance="100"
+      footprint="0402"
+      pcbX={9}
+      pcbY={-16}
+      schX={18}
       schY={-6}
     />
-    <resistor {...displaySection} name="R_BL_GATE" resistance="100" footprint="0402" pcbX={9} pcbY={-16} schX={4} schY={-6} />
-    <resistor {...displaySection} name="R_BL_GATE_PD" resistance="100k" footprint="0402" pcbX={11.5} pcbY={-19} schX={5.5} schY={-8} />
+    <resistor
+      {...displaySection}
+      name="R_BL_GATE_PD"
+      resistance="100k"
+      footprint="0402"
+      pcbX={11.5}
+      pcbY={-19}
+      schX={22}
+      schY={-9}
+    />
   </>
-)
+);
 
 const Tft020Support = () => (
   <>
     <BacklightSwitch />
-    <resistor {...displaySection} name="R_BL1" resistance="47" footprint="1206" pcbX={24} pcbY={-17} schX={10} schY={-6} />
-    <capacitor {...displaySection} name="C_TFT_VDD" capacitance="1uF" footprint="0603" pcbX={22} pcbY={10} schX={9} schY={7} />
-    <capacitor {...displaySection} name="C_TFT_IOVDD" capacitance="100nF" footprint="0402" pcbX={26} pcbY={10} schX={12} schY={7} />
+    <resistor
+      {...displaySection}
+      name="R_BL1"
+      resistance="47"
+      footprint="1206"
+      pcbX={24}
+      pcbY={-17}
+      schX={28}
+      schY={-6}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_TFT_VDD"
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={22}
+      pcbY={10}
+      schX={20}
+      schY={7}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_TFT_IOVDD"
+      capacitance="100nF"
+      footprint="0402"
+      pcbX={26}
+      pcbY={10}
+      schX={26}
+      schY={7}
+    />
   </>
-)
+);
 
 const Tft028Support = () => (
   <>
@@ -125,15 +247,45 @@ const Tft028Support = () => (
         footprint="0805"
         pcbX={20 + (index - 1) * 4}
         pcbY={-18}
-        schX={10 + (index - 1) * 1.5}
+        schX={28 + (index - 1) * 5}
         schY={-6}
       />
     ))}
-    <capacitor {...displaySection} name="C_TFT_VDDI1" capacitance="100nF" footprint="0402" pcbX={22} pcbY={12} schX={9} schY={7} />
-    <capacitor {...displaySection} name="C_TFT_VDDI2" capacitance="100nF" footprint="0402" pcbX={25} pcbY={12} schX={11} schY={7} />
-    <capacitor {...displaySection} name="C_TFT_VCI" capacitance="1uF" footprint="0603" pcbX={28} pcbY={12} schX={13} schY={7} />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_TFT_VDDI1"
+      capacitance="100nF"
+      footprint="0402"
+      pcbX={22}
+      pcbY={12}
+      schX={20}
+      schY={7}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_TFT_VDDI2"
+      capacitance="100nF"
+      footprint="0402"
+      pcbX={25}
+      pcbY={12}
+      schX={26}
+      schY={7}
+    />
+    <capacitor
+      {...displaySection}
+      {...verticalCapacitorSymbol}
+      name="C_TFT_VCI"
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={28}
+      pcbY={12}
+      schX={32}
+      schY={7}
+    />
   </>
-)
+);
 
 const EpaperSupport = () => (
   <>
@@ -148,7 +300,7 @@ const EpaperSupport = () => (
       pcbX={17}
       pcbY={13}
       pcbRotation={0}
-      schX={5}
+      schX={20}
       schY={5}
     />
     <chip
@@ -161,8 +313,9 @@ const EpaperSupport = () => (
       pcbX={22}
       pcbY={13}
       pcbRotation={90}
-      schX={8}
+      schX={25}
       schY={4}
+      schHeight={0.4}
     />
     <resistor
       {...displaySection}
@@ -174,7 +327,7 @@ const EpaperSupport = () => (
       pcbX={26}
       pcbY={13}
       pcbRotation={90}
-      schX={10}
+      schX={30}
       schY={3}
     />
     <resistor
@@ -185,7 +338,7 @@ const EpaperSupport = () => (
       pcbX={22}
       pcbY={16}
       pcbRotation={0}
-      schX={9}
+      schX={25}
       schY={2}
     />
 
@@ -201,13 +354,14 @@ const EpaperSupport = () => (
         pcbX={30 - index * 5}
         pcbY={7}
         pcbRotation={index === 3 ? 180 : 0}
-        schX={6 + (index - 1) * 2}
+        schX={20 + (index - 1) * 5}
         schY={0}
       />
     ))}
 
     <capacitor
       {...displaySection}
+      {...verticalCapacitorSymbol}
       name="C_EPD_FLY"
       manufacturerPartNumber="CL31B475KAHNNNE"
       supplierPartNumbers={{ jlcpcb: ["C1872"] }}
@@ -218,11 +372,12 @@ const EpaperSupport = () => (
       pcbX={18.5}
       pcbY={10.5}
       pcbRotation={0}
-      schX={12}
+      schX={35}
       schY={1}
     />
     <capacitor
       {...displaySection}
+      {...verticalCapacitorSymbol}
       name="C_EPD_BOOST_IN"
       manufacturerPartNumber="CL31B475KAHNNNE"
       supplierPartNumbers={{ jlcpcb: ["C1872"] }}
@@ -233,22 +388,23 @@ const EpaperSupport = () => (
       pcbX={10}
       pcbY={16}
       pcbRotation={0}
-      schX={3}
+      schX={16}
       schY={5}
     />
 
     {[
-      ["C_EPD_VDHR", 29.75, 7, 12, 6],
-      ["C_EPD_VDDD", 29, -3, 12, 4],
-      ["C_EPD_VSH", 29, -6, 12, 2],
-      ["C_EPD_VSL", 29, -8, 12, 0],
-      ["C_EPD_VCOM", 29, -11, 12, -2],
-      ["C_EPD_VDD", 32.3, -1, 7, 7],
-      ["C_EPD_VGH", 29, 1, 8, -3],
-      ["C_EPD_VGL", 25, -3, 6, -3],
+      ["C_EPD_VDHR", 29.75, 7, 38, 7],
+      ["C_EPD_VDDD", 29, -3, 38, 4],
+      ["C_EPD_VSH", 29, -6, 38, 1],
+      ["C_EPD_VSL", 29, -8, 38, -2],
+      ["C_EPD_VCOM", 29, -11, 38, -5],
+      ["C_EPD_VDD", 32.3, -1, 22, 8],
+      ["C_EPD_VGH", 29, 1, 30, -4],
+      ["C_EPD_VGL", 25, -3, 24, -4],
     ].map(([name, pcbX, pcbY, schX, schY]) => (
       <capacitor
         {...displaySection}
+        {...verticalCapacitorSymbol}
         key={name}
         name={name as string}
         manufacturerPartNumber="CL21B105KBFNNNE"
@@ -266,6 +422,7 @@ const EpaperSupport = () => (
     ))}
     <capacitor
       {...displaySection}
+      {...verticalCapacitorSymbol}
       name="C_EPD_VDD_HF"
       manufacturerPartNumber="CC0603KRX7R9BB104"
       supplierPartNumbers={{ jlcpcb: ["C14663"] }}
@@ -276,26 +433,33 @@ const EpaperSupport = () => (
       pcbX={32.5}
       pcbY={1.5}
       pcbRotation={180}
-      schX={9}
-      schY={7}
+      schX={28}
+      schY={8}
     />
   </>
-)
+);
 
 export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
-  const screen = screens[screenId]
-  const mcu = mcus.msp430f5529
-  const isOled = screenId === "er-oled096-1-3w"
-  const isTft020 = screenId === "er-tft020-3"
-  const isTft028 = screenId === "er-tft028a2-4"
-  const isEpaper = screenId === "er-epd0213-2b"
-  const boardWidth = 82
-  const boardHeight = 52
-  const boardTitle = `USB-C + MSP430F5529 + ${screen.displayName}`
+  const screen = screens[screenId];
+  const mcu = mcus.msp430f5529;
+  const isOled = screenId === "er-oled096-1-3w";
+  const isTft020 = screenId === "er-tft020-3";
+  const isTft028 = screenId === "er-tft028a2-4";
+  const isEpaper = screenId === "er-epd0213-2b";
+  const displaySchematicHeight = isOled
+    ? 3.2
+    : isTft020
+      ? 1.6
+      : isTft028
+        ? 5.2
+        : 2.6;
+  const boardWidth = 82;
+  const boardHeight = 52;
+  const boardTitle = `USB-C + MSP430F5529 + ${screen.displayName}`;
   const displaySignalPins = Array.from(
     { length: screen.connector.positionCount },
     (_, index) => screen.connector.pinLabels[`pin${index + 1}`],
-  )
+  );
   const displayPortArrangement = {
     leftSide: {
       pins: displaySignalPins.slice(
@@ -305,16 +469,16 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       direction: "top-to-bottom" as const,
     },
     rightSide: {
-      pins: displaySignalPins.slice(
-        Math.ceil(screen.connector.positionCount / 2),
-      ),
+      pins: [
+        ...displaySignalPins.slice(
+          Math.ceil(screen.connector.positionCount / 2),
+        ),
+        "MP1",
+        "MP2",
+      ],
       direction: "top-to-bottom" as const,
     },
-    bottomSide: {
-      pins: ["MP1", "MP2"],
-      direction: "left-to-right" as const,
-    },
-  }
+  };
 
   return (
     <board
@@ -328,7 +492,10 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <schematicsheet name="Main" displayName={boardTitle} sheetIndex={0} />
       <schematicsection name="Interface" displayName="USB-C & Power" />
       <schematicsection name="Control" displayName="MSP430F5529 Controller" />
-      <schematicsection name="Display" displayName={`${screen.controller} Display Interface`} />
+      <schematicsection
+        name="Display"
+        displayName={`${screen.controller} Display Interface`}
+      />
 
       <SmdUsbC
         {...interfaceSection}
@@ -350,7 +517,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pcbY={0}
         pcbRotation={0}
         schX={-11}
-        schY={5}
+        schY={5.2}
       />
       <chip
         {...interfaceSection}
@@ -363,6 +530,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pcbRotation={90}
         schX={-11}
         schY={-4}
+        schHeight={0.6}
       />
       <resistor
         {...interfaceSection}
@@ -386,11 +554,59 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schX={-7}
         schY={3}
       />
-      <resistor {...interfaceSection} name="R_CC1" resistance="5.1k" footprint="0402" pcbX={-31} pcbY={12} schX={-14} schY={8} />
-      <resistor {...interfaceSection} name="R_CC2" resistance="5.1k" footprint="0402" pcbX={-27} pcbY={12} schX={-12} schY={8} />
-      <capacitor {...interfaceSection} name="C_LDO_IN" capacitance="1uF" footprint="0603" pcbX={-32} pcbY={-11} schX={-13} schY={-7} />
-      <capacitor {...interfaceSection} name="C_LDO_OUT" capacitance="1uF" footprint="0603" pcbX={-24} pcbY={-11} schX={-9} schY={-7} />
-      <capacitor {...interfaceSection} name="C_3V3_BULK" capacitance="4.7uF" footprint="0805" pcbX={-20} pcbY={-11} schX={-7} schY={-7} />
+      <resistor
+        {...interfaceSection}
+        name="R_CC1"
+        resistance="5.1k"
+        footprint="0402"
+        pcbX={-31}
+        pcbY={12}
+        schX={-14}
+        schY={8}
+      />
+      <resistor
+        {...interfaceSection}
+        name="R_CC2"
+        resistance="5.1k"
+        footprint="0402"
+        pcbX={-27}
+        pcbY={12}
+        schX={-12}
+        schY={8}
+      />
+      <capacitor
+        {...interfaceSection}
+        {...verticalCapacitorSymbol}
+        name="C_LDO_IN"
+        capacitance="1uF"
+        footprint="0603"
+        pcbX={-32}
+        pcbY={-11}
+        schX={-13}
+        schY={-7}
+      />
+      <capacitor
+        {...interfaceSection}
+        {...verticalCapacitorSymbol}
+        name="C_LDO_OUT"
+        capacitance="1uF"
+        footprint="0603"
+        pcbX={-24}
+        pcbY={-11}
+        schX={-9}
+        schY={-7}
+      />
+      <capacitor
+        {...interfaceSection}
+        {...verticalCapacitorSymbol}
+        name="C_3V3_BULK"
+        capacitance="4.7uF"
+        footprint="0805"
+        pcbX={-20}
+        pcbY={-11}
+        schX={-7}
+        schY={-7}
+      />
 
       <chip
         {...controlSection}
@@ -405,16 +621,124 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schX={0}
         schY={1}
       />
-      <capacitor {...controlSection} name="C_MCU_DVCC1" capacitance="100nF" footprint="0402" pcbX={-18} pcbY={-3.75} pcbRotation={180} schX={-4} schY={7} />
-      <capacitor {...controlSection} name="C_MCU_DVCC2" capacitance="100nF" footprint="0402" pcbX={0} pcbY={-0.25} pcbRotation={0} schX={-2} schY={7} />
-      <capacitor {...controlSection} name="C_MCU_AVCC" capacitance="1uF" footprint="0603" pcbX={-19} pcbY={-0.25} pcbRotation={180} schX={0} schY={7} />
-      <capacitor {...controlSection} name="C_VCORE" capacitance="470nF" footprint="0603" pcbX={-18} pcbY={-6.5} pcbRotation={180} schX={2} schY={7} />
-      <capacitor {...controlSection} name="C_VBUS" capacitance="4.7uF" footprint="0805" pcbX={-3.5} pcbY={12.5} pcbRotation={90} schX={2} schY={8} />
-      <capacitor {...controlSection} name="C_V18" capacitance="220nF" footprint="0603" pcbX={-10.3} pcbY={12.75} pcbRotation={90} schX={4} schY={8} />
-      <capacitor {...controlSection} name="C_VUSB" capacitance="220nF" footprint="0603" pcbX={-8} pcbY={12.75} pcbRotation={90} schX={6} schY={8} />
-      <resistor {...controlSection} name="R_USB_PULLUP" resistance="1.4k" footprint="0402" pcbX={-1} pcbY={9.5} pcbRotation={0} schX={-3} schY={9} />
-      <resistor {...controlSection} name="R_MCU_RESET" resistance="47k" footprint="0402" pcbX={-13} pcbY={9} pcbRotation={0} schX={2} schY={9} />
-      <capacitor {...controlSection} name="C_MCU_RESET" capacitance="2.2nF" footprint="0402" pcbX={-15.25} pcbY={9} pcbRotation={0} schX={4} schY={9} />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_MCU_DVCC1"
+        capacitance="100nF"
+        footprint="0402"
+        pcbX={-18}
+        pcbY={-3.75}
+        pcbRotation={180}
+        schX={-4}
+        schY={7}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_MCU_DVCC2"
+        capacitance="100nF"
+        footprint="0402"
+        pcbX={0}
+        pcbY={-0.25}
+        pcbRotation={0}
+        schX={-2}
+        schY={7}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_MCU_AVCC"
+        capacitance="1uF"
+        footprint="0603"
+        pcbX={-19}
+        pcbY={-0.25}
+        pcbRotation={180}
+        schX={0}
+        schY={7}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_VCORE"
+        capacitance="470nF"
+        footprint="0603"
+        pcbX={-18}
+        pcbY={-6.5}
+        pcbRotation={180}
+        schX={2}
+        schY={7}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_VBUS"
+        capacitance="4.7uF"
+        footprint="0805"
+        pcbX={-3.5}
+        pcbY={12.5}
+        pcbRotation={90}
+        schX={4}
+        schY={8}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_V18"
+        capacitance="220nF"
+        footprint="0603"
+        pcbX={-10.3}
+        pcbY={12.75}
+        pcbRotation={90}
+        schX={7}
+        schY={8}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_VUSB"
+        capacitance="220nF"
+        footprint="0603"
+        pcbX={-8}
+        pcbY={12.75}
+        pcbRotation={90}
+        schX={10}
+        schY={8}
+      />
+      <resistor
+        {...controlSection}
+        name="R_USB_PULLUP"
+        resistance="1.4k"
+        footprint="0402"
+        pcbX={-1}
+        pcbY={9.5}
+        pcbRotation={0}
+        schX={-3}
+        schY={9}
+      />
+      <resistor
+        {...controlSection}
+        name="R_MCU_RESET"
+        resistance="47k"
+        footprint="0402"
+        pcbX={-13}
+        pcbY={9}
+        pcbRotation={0}
+        schX={2}
+        schY={9}
+      />
+      <capacitor
+        {...controlSection}
+        {...verticalCapacitorSymbol}
+        name="C_MCU_RESET"
+        capacitance="2.2nF"
+        footprint="0402"
+        pcbX={-15.25}
+        pcbY={9}
+        pcbRotation={0}
+        schX={4}
+        schY={10}
+      />
       <resonator
         {...controlSection}
         name="Y_XT2"
@@ -425,11 +749,42 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pinVariant="ground_pin"
         footprint={
           <footprint>
-            <smtpad portHints={["1"]} pcbX={0} pcbY={-1.5} width={2.6} height={0.4} shape="rect" />
-            <smtpad portHints={["2"]} pcbX={0} pcbY={0} width={2.6} height={0.4} shape="rect" />
-            <smtpad portHints={["3"]} pcbX={0} pcbY={1.5} width={2.6} height={0.4} shape="rect" />
-            <silkscreenpath route={[{ x: -1.1, y: -2.35 }, { x: 1.1, y: -2.35 }]} />
-            <silkscreenpath route={[{ x: -1.1, y: 2.35 }, { x: 1.1, y: 2.35 }]} />
+            <smtpad
+              portHints={["1"]}
+              pcbX={0}
+              pcbY={-1.5}
+              width={2.6}
+              height={0.4}
+              shape="rect"
+            />
+            <smtpad
+              portHints={["2"]}
+              pcbX={0}
+              pcbY={0}
+              width={2.6}
+              height={0.4}
+              shape="rect"
+            />
+            <smtpad
+              portHints={["3"]}
+              pcbX={0}
+              pcbY={1.5}
+              width={2.6}
+              height={0.4}
+              shape="rect"
+            />
+            <silkscreenpath
+              route={[
+                { x: -1.1, y: -2.35 },
+                { x: 1.1, y: -2.35 },
+              ]}
+            />
+            <silkscreenpath
+              route={[
+                { x: -1.1, y: 2.35 },
+                { x: 1.1, y: 2.35 },
+              ]}
+            />
             <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
           </footprint>
         }
@@ -440,8 +795,26 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schX={-1}
         schY={-5}
       />
-      <resistor {...displaySection} name="R_DISPLAY_CS" resistance="10k" footprint="0402" pcbX={10} pcbY={12} schX={6} schY={9} />
-      <resistor {...displaySection} name="R_DISPLAY_RESET" resistance="10k" footprint="0402" pcbX={13} pcbY={12} schX={10} schY={9} />
+      <resistor
+        {...displaySection}
+        name="R_DISPLAY_CS"
+        resistance="10k"
+        footprint="0402"
+        pcbX={10}
+        pcbY={12}
+        schX={10}
+        schY={10}
+      />
+      <resistor
+        {...displaySection}
+        name="R_DISPLAY_RESET"
+        resistance="10k"
+        footprint="0402"
+        pcbX={13}
+        pcbY={12}
+        schX={14}
+        schY={10}
+      />
 
       <chip
         {...displaySection}
@@ -455,8 +828,9 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pcbX={35}
         pcbY={0}
         pcbRotation={-90}
-        schX={14}
+        schX={45}
         schY={1}
+        schHeight={displaySchematicHeight}
       />
 
       {isOled && <OledSupport />}
@@ -471,14 +845,37 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pitch="2.54mm"
         gender="unpopulated"
         doNotPlace
-        pinLabels={["VCC_3V3", "GND", "RESET", "TEST", "UART_TX", "UART_RX", "SPI_CLK", "SPI_MOSI", "SPI_MISO", isEpaper ? "BUSY_N" : "TE"]}
-        pcbPinLabels={{ pin1: "3V3", pin2: "G", pin3: "RST", pin4: "TST", pin5: "TX", pin6: "RX", pin7: "CLK", pin8: "MO", pin9: "MI", pin10: isEpaper ? "BSY" : "TE" }}
+        pinLabels={[
+          "VCC_3V3",
+          "GND",
+          "RESET",
+          "TEST",
+          "UART_TX",
+          "UART_RX",
+          "SPI_CLK",
+          "SPI_MOSI",
+          "SPI_MISO",
+          isEpaper ? "BUSY_N" : "TE",
+        ]}
+        pcbPinLabels={{
+          pin1: "3V3",
+          pin2: "G",
+          pin3: "RST",
+          pin4: "TST",
+          pin5: "TX",
+          pin6: "RX",
+          pin7: "CLK",
+          pin8: "MO",
+          pin9: "MI",
+          pin10: isEpaper ? "BSY" : "TE",
+        }}
         showSilkscreenPinLabels
         pcbX={-6}
         pcbY={-20}
         pcbOrientation="horizontal"
         schX={0}
         schY={-8}
+        schWidth={0.96}
       />
 
       <hole name="H1" diameter="2.4mm" pcbX={-38} pcbY={23} />
@@ -501,10 +898,20 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from=".J_USB > .pin13" to="net.VBUS5" thickness="0.5mm" />
       <trace from=".J_USB > .pin14" to="net.VBUS5" thickness="0.5mm" />
       {[1, 2, 15, 16].map((pin) => (
-        <trace key={`usb-gnd-${pin}`} from={p("J_USB", pin)} to="net.GND" thickness="0.5mm" />
+        <trace
+          key={`usb-gnd-${pin}`}
+          from={p("J_USB", pin)}
+          to="net.GND"
+          thickness="0.5mm"
+        />
       ))}
       {[17, 18, 19, 20].map((pin) => (
-        <trace key={`usb-shield-${pin}`} from={p("J_USB", pin)} to="net.GND" thickness="0.5mm" />
+        <trace
+          key={`usb-shield-${pin}`}
+          from={p("J_USB", pin)}
+          to="net.GND"
+          thickness="0.5mm"
+        />
       ))}
       <trace from=".J_USB > .pin6" to="net.USB_CC1" />
       <trace from=".R_CC1 > .pin1" to="net.USB_CC1" />
@@ -512,14 +919,51 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from=".J_USB > .pin12" to="net.USB_CC2" />
       <trace from=".R_CC2 > .pin1" to="net.USB_CC2" />
       <trace from=".R_CC2 > .pin2" to="net.GND" />
-      <trace name="usb-dp-port" path={[".J_USB > .pin8", ".J_USB > .pin10", ".U_ESD > .pin1"]} thickness="0.25mm" maxViaCount={2} />
-      <trace name="usb-dm-port" path={[".J_USB > .pin7", ".J_USB > .pin9", ".U_ESD > .pin3"]} thickness="0.25mm" maxViaCount={2} />
-      <trace name="usb-dp-phy" from=".U_ESD > .pin6" to=".R_USB_DP > .pin1" thickness="0.25mm" maxViaCount={0} />
-      <trace name="usb-dm-phy" from=".U_ESD > .pin4" to=".R_USB_DM > .pin1" thickness="0.25mm" maxViaCount={0} />
+      <trace
+        name="usb-dp-port"
+        path={[".J_USB > .pin8", ".J_USB > .pin10", ".U_ESD > .pin1"]}
+        thickness="0.25mm"
+        maxViaCount={2}
+      />
+      <trace
+        name="usb-dm-port"
+        path={[".J_USB > .pin7", ".J_USB > .pin9", ".U_ESD > .pin3"]}
+        thickness="0.25mm"
+        maxViaCount={2}
+      />
+      <trace
+        name="usb-dp-phy"
+        from=".U_ESD > .pin6"
+        to=".R_USB_DP > .pin1"
+        thickness="0.25mm"
+        maxViaCount={0}
+      />
+      <trace
+        name="usb-dm-phy"
+        from=".U_ESD > .pin4"
+        to=".R_USB_DM > .pin1"
+        thickness="0.25mm"
+        maxViaCount={0}
+      />
       <trace from=".U_ESD > .pin5" to="net.VBUS5" />
       <trace from=".U_ESD > .pin2" to="net.GND" />
-      <trace name="usb-dp-mcu" path={[".R_USB_DP > .pin2", p("U_MAIN", f5529.usbDp), ".R_USB_PULLUP > .pin2"]} thickness="0.25mm" maxViaCount={0} />
-      <trace name="usb-dm-mcu" from=".R_USB_DM > .pin2" to={p("U_MAIN", f5529.usbDm)} thickness="0.25mm" maxViaCount={0} />
+      <trace
+        name="usb-dp-mcu"
+        path={[
+          ".R_USB_DP > .pin2",
+          p("U_MAIN", f5529.usbDp),
+          ".R_USB_PULLUP > .pin2",
+        ]}
+        thickness="0.25mm"
+        maxViaCount={0}
+      />
+      <trace
+        name="usb-dm-mcu"
+        from=".R_USB_DM > .pin2"
+        to={p("U_MAIN", f5529.usbDm)}
+        thickness="0.25mm"
+        maxViaCount={0}
+      />
       <trace from={p("U_MAIN", f5529.usbVbus)} to="net.VBUS5" />
       <trace from=".C_VBUS > .pin1" to="net.VBUS5" />
       <trace from=".C_VBUS > .pin2" to="net.GND" />
@@ -551,16 +995,25 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         />
       ))}
       {mcu.gndPins.map((pin) => (
-        <trace key={`mcu-gnd-${pin}`} from={p("U_MAIN", pin)} to="net.GND" thickness="0.35mm" />
+        <trace
+          key={`mcu-gnd-${pin}`}
+          from={p("U_MAIN", pin)}
+          to="net.GND"
+          thickness="0.35mm"
+        />
       ))}
-      {[
-        "C_MCU_DVCC1",
-        "C_MCU_DVCC2",
-        "C_MCU_AVCC",
-      ].map((component) => (
+      {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map((component) => (
         <Fragment key={`${component}-rails`}>
-          <trace key={`${component}-vcc`} from={`.${component} > .pin1`} to="net.VCC_3V3" />
-          <trace key={`${component}-gnd`} from={`.${component} > .pin2`} to="net.GND" />
+          <trace
+            key={`${component}-vcc`}
+            from={`.${component} > .pin1`}
+            to="net.VCC_3V3"
+          />
+          <trace
+            key={`${component}-gnd`}
+            from={`.${component} > .pin2`}
+            to="net.GND"
+          />
         </Fragment>
       ))}
       <trace from={p("U_MAIN", f5529.vcore)} to="net.MSP_VCORE" />
@@ -583,12 +1036,36 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from={p("U_MAIN", f5529.xt2Out)} to="net.XT2_OUT" />
       <trace from=".Y_XT2 > .pin3" to="net.XT2_OUT" />
 
-      <trace from={p("U_MAIN", f5529.spiClock)} to="net.DISPLAY_SCLK" thickness="0.12mm" />
-      <trace from={p("U_MAIN", f5529.spiMosi)} to="net.DISPLAY_MOSI" thickness="0.12mm" />
-      <trace from={p("U_MAIN", f5529.spiMiso)} to="net.DISPLAY_MISO" thickness="0.12mm" />
-      <trace from={p("U_MAIN", f5529.displayCs)} to="net.DISPLAY_CS_N" thickness="0.12mm" />
-      <trace from={p("U_MAIN", f5529.displayDc)} to="net.DISPLAY_DC" thickness="0.12mm" />
-      <trace from={p("U_MAIN", f5529.displayReset)} to="net.DISPLAY_RESET_N" thickness="0.12mm" />
+      <trace
+        from={p("U_MAIN", f5529.spiClock)}
+        to="net.DISPLAY_SCLK"
+        thickness="0.12mm"
+      />
+      <trace
+        from={p("U_MAIN", f5529.spiMosi)}
+        to="net.DISPLAY_MOSI"
+        thickness="0.12mm"
+      />
+      <trace
+        from={p("U_MAIN", f5529.spiMiso)}
+        to="net.DISPLAY_MISO"
+        thickness="0.12mm"
+      />
+      <trace
+        from={p("U_MAIN", f5529.displayCs)}
+        to="net.DISPLAY_CS_N"
+        thickness="0.12mm"
+      />
+      <trace
+        from={p("U_MAIN", f5529.displayDc)}
+        to="net.DISPLAY_DC"
+        thickness="0.12mm"
+      />
+      <trace
+        from={p("U_MAIN", f5529.displayReset)}
+        to="net.DISPLAY_RESET_N"
+        thickness="0.12mm"
+      />
       <trace
         from={p("U_MAIN", isEpaper ? f5529.displayBusy : f5529.displayTe)}
         to={isEpaper ? "net.DISPLAY_BUSY_N" : "net.DISPLAY_TE"}
@@ -601,11 +1078,21 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
 
       {isOled && (
         <>
-          {[1, 8, 10, 11, 12, 16, 17, 20, 21, 22, 23, 24, 25, 29, 30].map((pin) => (
-            <trace key={`oled-gnd-${pin}`} from={p("J_DISPLAY", pin)} to="net.GND" />
-          ))}
+          {[1, 8, 10, 11, 12, 16, 17, 20, 21, 22, 23, 24, 25, 29, 30].map(
+            (pin) => (
+              <trace
+                key={`oled-gnd-${pin}`}
+                from={p("J_DISPLAY", pin)}
+                to="net.GND"
+              />
+            ),
+          )}
           {[6, 9].map((pin) => (
-            <trace key={`oled-vcc-${pin}`} from={p("J_DISPLAY", pin)} to="net.VCC_3V3" />
+            <trace
+              key={`oled-vcc-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.VCC_3V3"
+            />
           ))}
           <trace from=".J_DISPLAY > .pin2" to=".C_OLED_C2 > .pin1" />
           <trace from=".J_DISPLAY > .pin3" to=".C_OLED_C2 > .pin2" />
@@ -632,10 +1119,18 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       {isTft020 && (
         <>
           {[2, 5, 13].map((pin) => (
-            <trace key={`tft020-gnd-${pin}`} from={p("J_DISPLAY", pin)} to="net.GND" />
+            <trace
+              key={`tft020-gnd-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.GND"
+            />
           ))}
           {[10, 11].map((pin) => (
-            <trace key={`tft020-vcc-${pin}`} from={p("J_DISPLAY", pin)} to="net.VCC_3V3" />
+            <trace
+              key={`tft020-vcc-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.VCC_3V3"
+            />
           ))}
           <trace from=".J_DISPLAY > .pin6" to="net.DISPLAY_RESET_N" />
           <trace from=".J_DISPLAY > .pin7" to="net.DISPLAY_DC" />
@@ -648,26 +1143,52 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
           <trace from=".C_TFT_IOVDD > .pin2" to="net.GND" />
           <trace from=".J_DISPLAY > .pin4" to="net.BACKLIGHT_ANODE_1" />
           <trace from=".R_BL1 > .pin1" to="net.VBUS5" thickness="0.4mm" />
-          <trace from=".R_BL1 > .pin2" to="net.BACKLIGHT_ANODE_1" thickness="0.4mm" />
-          <trace from=".J_DISPLAY > .pin3" to="net.BACKLIGHT_CATHODE" thickness="0.4mm" />
+          <trace
+            from=".R_BL1 > .pin2"
+            to="net.BACKLIGHT_ANODE_1"
+            thickness="0.4mm"
+          />
+          <trace
+            from=".J_DISPLAY > .pin3"
+            to="net.BACKLIGHT_CATHODE"
+            thickness="0.4mm"
+          />
         </>
       )}
 
       {isTft028 && (
         <>
           {[43, 48, 49, 50].map((pin) => (
-            <trace key={`tft028-gnd-${pin}`} from={p("J_DISPLAY", pin)} to="net.GND" thickness="0.4mm" />
+            <trace
+              key={`tft028-gnd-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.GND"
+              thickness="0.4mm"
+            />
           ))}
           {[40, 41, 42].map((pin) => (
-            <trace key={`tft028-vcc-${pin}`} from={p("J_DISPLAY", pin)} to="net.VCC_3V3" thickness="0.35mm" />
+            <trace
+              key={`tft028-vcc-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.VCC_3V3"
+              thickness="0.35mm"
+            />
           ))}
           <trace from=".J_DISPLAY > .pin6" to="net.GND" />
           {[7, 8, 9].map((pin) => (
-            <trace key={`tft028-mode-${pin}`} from={p("J_DISPLAY", pin)} to="net.VCC_3V3" />
+            <trace
+              key={`tft028-mode-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.VCC_3V3"
+            />
           ))}
           <trace from=".J_DISPLAY > .pin10" to="net.DISPLAY_RESET_N" />
           {Array.from({ length: 18 }, (_, index) => index + 15).map((pin) => (
-            <trace key={`tft028-db-${pin}`} from={p("J_DISPLAY", pin)} to="net.GND" />
+            <trace
+              key={`tft028-db-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.GND"
+            />
           ))}
           <trace from=".J_DISPLAY > .pin33" to="net.DISPLAY_MISO" />
           <trace from=".J_DISPLAY > .pin34" to="net.DISPLAY_MOSI" />
@@ -684,12 +1205,31 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
           <trace from=".C_TFT_VCI > .pin2" to="net.GND" />
           {[2, 3, 4, 5].map((pin, index) => (
             <Fragment key={`tft028-backlight-${pin}`}>
-              <trace key={`tft028-bl-vbus-${pin}`} from={`.R_BL${index + 1} > .pin1`} to="net.VBUS5" thickness="0.35mm" />
-              <trace key={`tft028-bl-anode-${pin}`} from={`.R_BL${index + 1} > .pin2`} to={`net.BACKLIGHT_ANODE_${index + 1}`} thickness="0.35mm" />
-              <trace key={`tft028-bl-display-${pin}`} from={p("J_DISPLAY", pin)} to={`net.BACKLIGHT_ANODE_${index + 1}`} thickness="0.35mm" />
+              <trace
+                key={`tft028-bl-vbus-${pin}`}
+                from={`.R_BL${index + 1} > .pin1`}
+                to="net.VBUS5"
+                thickness="0.35mm"
+              />
+              <trace
+                key={`tft028-bl-anode-${pin}`}
+                from={`.R_BL${index + 1} > .pin2`}
+                to={`net.BACKLIGHT_ANODE_${index + 1}`}
+                thickness="0.35mm"
+              />
+              <trace
+                key={`tft028-bl-display-${pin}`}
+                from={p("J_DISPLAY", pin)}
+                to={`net.BACKLIGHT_ANODE_${index + 1}`}
+                thickness="0.35mm"
+              />
             </Fragment>
           ))}
-          <trace from=".J_DISPLAY > .pin1" to="net.BACKLIGHT_CATHODE" thickness="0.5mm" />
+          <trace
+            from=".J_DISPLAY > .pin1"
+            to="net.BACKLIGHT_CATHODE"
+            thickness="0.5mm"
+          />
         </>
       )}
 
@@ -702,24 +1242,64 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
           <trace from=".R_EPD_GATE_PD > .pin1" to="net.EPD_GDR" />
           <trace from=".R_EPD_GATE_PD > .pin2" to="net.GND" />
           <trace from=".J_DISPLAY > .pin3" to="net.EPD_RESE" />
-          <trace from=".Q_EPD_BOOST > .pin2" to="net.EPD_RESE" thickness="0.35mm" />
-          <trace from=".R_EPD_SENSE > .pin1" to="net.EPD_RESE" thickness="0.35mm" />
+          <trace
+            from=".Q_EPD_BOOST > .pin2"
+            to="net.EPD_RESE"
+            thickness="0.35mm"
+          />
+          <trace
+            from=".R_EPD_SENSE > .pin1"
+            to="net.EPD_RESE"
+            thickness="0.35mm"
+          />
           <trace from=".R_EPD_SENSE > .pin2" to="net.GND" thickness="0.35mm" />
 
-          <trace from=".L_EPD_BOOST > .pin1" to="net.VCC_3V3" thickness="0.45mm" />
-          <trace from=".C_EPD_BOOST_IN > .pin1" to="net.VCC_3V3" thickness="0.45mm" />
-          <trace from=".C_EPD_BOOST_IN > .pin2" to="net.GND" thickness="0.45mm" />
-          <trace from=".L_EPD_BOOST > .pin2" to="net.EPD_SWITCH" thickness="0.45mm" />
-          <trace from=".Q_EPD_BOOST > .pin3" to="net.EPD_SWITCH" thickness="0.45mm" />
-          <trace from=".D_EPD_1 > .pin2" to="net.EPD_SWITCH" thickness="0.35mm" />
-          <trace from=".C_EPD_FLY > .pin1" to="net.EPD_SWITCH" thickness="0.35mm" />
+          <trace
+            from=".L_EPD_BOOST > .pin1"
+            to="net.VCC_3V3"
+            thickness="0.45mm"
+          />
+          <trace
+            from=".C_EPD_BOOST_IN > .pin1"
+            to="net.VCC_3V3"
+            thickness="0.45mm"
+          />
+          <trace
+            from=".C_EPD_BOOST_IN > .pin2"
+            to="net.GND"
+            thickness="0.45mm"
+          />
+          <trace
+            from=".L_EPD_BOOST > .pin2"
+            to="net.EPD_SWITCH"
+            thickness="0.45mm"
+          />
+          <trace
+            from=".Q_EPD_BOOST > .pin3"
+            to="net.EPD_SWITCH"
+            thickness="0.45mm"
+          />
+          <trace
+            from=".D_EPD_1 > .pin2"
+            to="net.EPD_SWITCH"
+            thickness="0.35mm"
+          />
+          <trace
+            from=".C_EPD_FLY > .pin1"
+            to="net.EPD_SWITCH"
+            thickness="0.35mm"
+          />
 
           <trace from=".D_EPD_1 > .pin1" to="net.EPD_VGH" thickness="0.35mm" />
           <trace from=".J_DISPLAY > .pin21" to="net.EPD_VGH" />
           <trace from=".C_EPD_VGH > .pin1" to="net.EPD_VGH" />
           <trace from=".C_EPD_VGH > .pin2" to="net.GND" />
 
-          <trace from=".C_EPD_FLY > .pin2" to="net.EPD_PUMP" thickness="0.35mm" />
+          <trace
+            from=".C_EPD_FLY > .pin2"
+            to="net.EPD_PUMP"
+            thickness="0.35mm"
+          />
           <trace from=".D_EPD_2 > .pin2" to="net.EPD_PUMP" thickness="0.35mm" />
           <trace from=".D_EPD_2 > .pin1" to="net.GND" thickness="0.35mm" />
           <trace from=".D_EPD_3 > .pin1" to="net.EPD_PUMP" thickness="0.35mm" />
@@ -738,7 +1318,12 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
           <trace from=".J_DISPLAY > .pin13" to="net.DISPLAY_SCLK" />
           <trace from=".J_DISPLAY > .pin14" to="net.DISPLAY_MOSI" />
           {[15, 16].map((pin) => (
-            <trace key={`epd-vcc-${pin}`} from={p("J_DISPLAY", pin)} to="net.VCC_3V3" thickness="0.35mm" />
+            <trace
+              key={`epd-vcc-${pin}`}
+              from={p("J_DISPLAY", pin)}
+              to="net.VCC_3V3"
+              thickness="0.35mm"
+            />
           ))}
           <trace from=".J_DISPLAY > .pin17" to="net.GND" thickness="0.35mm" />
           <trace from=".J_DISPLAY > .pin18" to=".C_EPD_VDDD > .pin1" />
@@ -765,7 +1350,11 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
           <trace from=".R_BL_GATE_PD > .pin2" to="net.GND" />
           <trace from=".Q_BL > .pin1" to="net.BACKLIGHT_GATE" />
           <trace from=".Q_BL > .pin2" to="net.GND" thickness="0.5mm" />
-          <trace from=".Q_BL > .pin3" to="net.BACKLIGHT_CATHODE" thickness="0.5mm" />
+          <trace
+            from=".Q_BL > .pin3"
+            to="net.BACKLIGHT_CATHODE"
+            thickness="0.5mm"
+          />
         </>
       )}
 
@@ -778,7 +1367,10 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from=".J_DEBUG > .pin7" to="net.DISPLAY_SCLK" />
       <trace from=".J_DEBUG > .pin8" to="net.DISPLAY_MOSI" />
       <trace from=".J_DEBUG > .pin9" to="net.DISPLAY_MISO" />
-      <trace from=".J_DEBUG > .pin10" to={isEpaper ? "net.DISPLAY_BUSY_N" : "net.DISPLAY_TE"} />
+      <trace
+        from=".J_DEBUG > .pin10"
+        to={isEpaper ? "net.DISPLAY_BUSY_N" : "net.DISPLAY_TE"}
+      />
 
       <copperpour
         name="BOTTOM_GND_POUR"
@@ -790,10 +1382,30 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         useThermalReliefs
       />
 
-      <silkscreentext text="QUICK CONFIGURE • SCREEN" pcbX={0} pcbY={24} fontSize="0.72mm" />
-      <silkscreentext text={screen.id.toUpperCase()} pcbX={15} pcbY={22.5} fontSize="0.58mm" />
-      <silkscreentext text={`${screen.connector.mpn} • 4-WIRE SPI`} pcbX={18} pcbY={-24} fontSize="0.55mm" />
-      <silkscreentext text="2L • BOTTOM GND POUR" pcbX={-18} pcbY={-24} fontSize="0.48mm" />
+      <silkscreentext
+        text="QUICK CONFIGURE • SCREEN"
+        pcbX={0}
+        pcbY={24}
+        fontSize="0.72mm"
+      />
+      <silkscreentext
+        text={screen.id.toUpperCase()}
+        pcbX={15}
+        pcbY={22.5}
+        fontSize="0.58mm"
+      />
+      <silkscreentext
+        text={`${screen.connector.mpn} • 4-WIRE SPI`}
+        pcbX={18}
+        pcbY={-24}
+        fontSize="0.55mm"
+      />
+      <silkscreentext
+        text="2L • BOTTOM GND POUR"
+        pcbX={-18}
+        pcbY={-24}
+        fontSize="0.48mm"
+      />
     </board>
-  )
-}
+  );
+};
