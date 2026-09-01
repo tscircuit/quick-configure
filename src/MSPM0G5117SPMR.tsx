@@ -1,4 +1,4 @@
-export const mspm0g5117Pins = {
+export const mspm0UsbLqfp64Pins = {
   swdio: 12, // PA19 / SWDIO
   swclk: 13, // PA20 / SWCLK
   vusb: 29, // VUSB33
@@ -24,7 +24,9 @@ export const mspm0g5117Pins = {
   spiClock: 61, // PB9 / UC3_SCK_RX
 } as const;
 
-export const mspm0g5117PinLabels = {
+export const mspm0g5117Pins = mspm0UsbLqfp64Pins;
+
+export const mspm0UsbLqfp64PinLabels = {
   pin1: "PB13",
   pin2: "PB14",
   pin3: "PB15",
@@ -91,13 +93,15 @@ export const mspm0g5117PinLabels = {
   pin64: "PB12",
 } as const;
 
+export const mspm0g5117PinLabels = mspm0UsbLqfp64PinLabels;
+
 export const MSPM0G5117SPMR = (props: any) => (
   <chip
     manufacturerPartNumber="MSPM0G5117SPMR"
     datasheetUrl="https://www.ti.com/lit/ds/symlink/mspm0g5117.pdf"
     footprint="lqfp64_w10_h10_p0.5mm"
     cadModel={{ glbUrl: "./src/models/mspm0g3507spmr.glb" }}
-    pinLabels={mspm0g5117PinLabels}
+    pinLabels={mspm0UsbLqfp64PinLabels}
     schPinArrangement={{
       leftSide: {
         direction: "top-to-bottom",

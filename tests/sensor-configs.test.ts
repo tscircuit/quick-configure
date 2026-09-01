@@ -78,20 +78,22 @@ describe("sensor catalog", () => {
 })
 
 describe("sensor reference boards", () => {
-  test("has USB-C MSP430F5529 and MSPM0G5117 wrappers per sensor", async () => {
+  test("has USB-C MSP430F5529 and MSPM0G51x wrappers per sensor", async () => {
     for (const id of ids) {
       const msp430Wrapper = Bun.file(
         join(projectRoot, `usb-c__msp430f5529__${id}.circuit.tsx`),
       )
-      const mspm0Wrapper = Bun.file(
-        join(projectRoot, `usb-c__mspm0g5117__${id}.circuit.tsx`),
-      )
       expect(await msp430Wrapper.exists()).toBe(true)
       expect(await msp430Wrapper.text()).toContain(`<SensorBoard sensor="${id}" />`)
-      expect(await mspm0Wrapper.exists()).toBe(true)
-      expect(await mspm0Wrapper.text()).toContain(
-        `<SensorBoard controller="mspm0g5117" sensor="${id}" />`,
-      )
+      for (const controller of ["mspm0g5117", "mspm0g5187"] as const) {
+        const mspm0Wrapper = Bun.file(
+          join(projectRoot, `usb-c__${controller}__${id}.circuit.tsx`),
+        )
+        expect(await mspm0Wrapper.exists()).toBe(true)
+        expect(await mspm0Wrapper.text()).toContain(
+          `<SensorBoard controller="${controller}" sensor="${id}" />`,
+        )
+      }
     }
   })
 
@@ -139,7 +141,7 @@ describe("sensor reference boards", () => {
     expect(rotations.every((rotation) => rotation % 90 === 0)).toBe(true)
   })
 
-  test("exposes every sensor with both generated controller variants", async () => {
+  test("exposes every sensor with all generated controller variants", async () => {
     const html = await Bun.file(join(projectRoot, "site", "index.html")).text()
 
     for (const id of ids) {
@@ -151,6 +153,9 @@ describe("sensor reference boards", () => {
     )
     expect(html).toContain(
       "sensorIds.map(sensor=>`usb-c__mspm0g5117__${sensor}`)",
+    )
+    expect(html).toContain(
+      "sensorIds.map(sensor=>`usb-c__mspm0g5187__${sensor}`)",
     )
   })
 })

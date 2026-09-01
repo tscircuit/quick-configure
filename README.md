@@ -23,9 +23,10 @@ expose SWD on the debug header. The exposed pad is stitched to the inner ground
 plane with four 0.2 mm thermal vias. This RGZ device is currently a
 product-preview part; confirm availability before fabrication.
 
-Three legacy I²C sensor reference designs use USB-C and an MSP430F5529, exact
-imported component footprints and 3D models, address straps, local decoupling,
-and a shared debug header.
+Three legacy I²C sensor reference designs use USB-C and offer MSP430F5529,
+MSPM0G5117, or MSPM0G5187 controller variants, exact imported component
+footprints and 3D models, address straps, local decoupling, and a shared debug
+header.
 
 | Sensor   | Measurements                                        | Exact part / package                                        | I²C address |
 | -------- | --------------------------------------------------- | ----------------------------------------------------------- | ----------- |
@@ -35,13 +36,15 @@ and a shared debug header.
 
 ### Additional MSPM0 sensor boards
 
-Ten additional I²C sensors use USB-C and offer TI MSPM0G3507SPMR or
-MSPM0G5117SPMR controller variants. The MSPM0G3507 uses a CH340N USB-UART
-bridge and is available for JLCPCB assembly as part `C22389960`. The
-MSPM0G5117 removes that bridge by using its integrated USB 2.0 full-speed PHY,
-clock source, and termination resistors in crystal-less device mode; see the
-[MSPM0G3507 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf) and
-[MSPM0G5117 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g5117.pdf).
+Ten additional I²C sensors use USB-C and offer TI MSPM0G3507SPMR,
+MSPM0G5117SPMR, or MSPM0G5187SPMR controller variants. The MSPM0G3507 uses a
+CH340N USB-UART bridge and is available for JLCPCB assembly as part `C22389960`.
+The MSPM0G5117 and MSPM0G5187 remove that bridge by using their integrated USB
+2.0 full-speed PHY, clock source, and termination resistors in crystal-less
+device mode; see the
+[MSPM0G3507 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf),
+[MSPM0G5117 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g5117.pdf), and
+[MSPM0G5187 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g5187.pdf).
 
 | Sensor         | Function                                             | Interface / address                     | Datasheet                                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,9 +60,9 @@ clock source, and termination resistors in crystal-less device mode; see the
 | VEML7700-TR    | 16-bit ambient-light measurement                     | I²C / `0x10`                            | [VEML7700](https://www.vishay.com/docs/84286/veml7700.pdf)                                                                                                                                |
 
 Four display reference designs add USB-C power/data and a selectable
-MSP430F5529 or native-USB MSPM0G5117 with four-wire SPI on a two-layer board
-with a bottom-side ground pour. Each uses the panel manufacturer's exact
-recommended mating FPC connector.
+MSP430F5529, native-USB MSPM0G5117, or native-USB MSPM0G5187 with four-wire SPI
+on a two-layer board with a bottom-side ground pour. Each uses the panel
+manufacturer's exact recommended mating FPC connector.
 
 | Panel                                                                                                                 | Controller / resolution             | Exact connector                                                                                                                  | Selection rationale                                                 |
 | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -68,9 +71,9 @@ recommended mating FPC connector.
 | [ER-TFT020-3](https://www.buydisplay.com/2-inch-240x320-ips-tft-lcd-display-with-connector-fpc)                       | ST7789, 240×320 IPS                 | [ER-CON14HB-1](https://www.buydisplay.com/download/connector/ER-CON14HB-1.pdf), 14-pin 0.5 mm **bottom contact**                 | Lowest-cost compact color/SPI option in the launch set              |
 | [ER-TFT028A2-4](https://www.buydisplay.com/2-8-inch-240x320-ips-tft-lcd-display-panel-optional-touch-panel-wide-view) | ILI9341, 240×320 IPS                | [ER-CON50HT-1](https://www.buydisplay.com/50-pin-0-5mm-pitch-top-contact-zif-connector-fpc-connector), 50-pin 0.5 mm top contact | Strongest popularity signal and an OEM mechanical model             |
 
-This yields **55 selectable configurations**: 21 photodiode combinations,
-six legacy-sensor controller variants, 20 additional MSPM0-sensor controller
-variants, and eight display-controller variants. Sensor and display boards keep
+This yields **72 selectable configurations**: 21 photodiode combinations,
+nine legacy-sensor controller variants, 30 additional MSPM0-sensor controller
+variants, and 12 display-controller variants. Sensor and display boards keep
 USB-C fixed while exposing only their validated controller choices; they are
 not multiplied across the full connector/MCU matrix.
 
@@ -78,9 +81,9 @@ not multiplied across the full connector/MCU matrix.
 
 - `src/sensor-data.ts` is the typed catalog for capabilities, exact manufacturer
   and supplier part numbers, I²C addresses, and manufacturer references.
-- `src/SensorBoard.tsx` contains the shared USB-C MSP430F5529/MSPM0G5117
-  reference design, datasheet-selected I²C pull-ups, exposed debug/test points,
-  and sensor-specific support circuits.
+- `src/SensorBoard.tsx` contains the shared USB-C
+  MSP430F5529/MSPM0G5117/MSPM0G5187 reference design, datasheet-selected I²C
+  pull-ups, exposed debug/test points, and sensor-specific support circuits.
 - `imports/BME280`, `imports/MPU_6050`, and
   `imports/MLX90640ESF_BAA_000_TU` contain exact EasyEDA-derived footprints and
   locally downloaded component models. The BME280 is strapped for I²C and
@@ -97,10 +100,11 @@ not multiplied across the full connector/MCU matrix.
   VCORE, reset, and precision ROSC components. Sensor-specific support includes local decoupling,
   interrupt/reset/address straps where available, BNO085/BNO055 crystal and
   reset circuits, and VL53L4CD XSHUT/GPIO pull-ups.
-- The same ten sensor layouts also support MSPM0G5117SPMR. That variant routes
-  USB D+/D- directly to pins 31/30, powers and decouples VUSB33 on pin 29, and
-  retains TI's 0.47 µF VCORE, 47 kΩ/10 nF reset, 100 kΩ precision ROSC, SWD,
-  and 10 µF plus 0.1 µF VDD support network.
+- The same ten sensor layouts also support MSPM0G5117SPMR and MSPM0G5187SPMR.
+  Both variants route USB D+/D- directly to pins 31/30, power and decouple
+  VUSB33 on pin 29, and retain TI's 0.47 µF VCORE, 47 kΩ/10 nF reset, 100 kΩ
+  precision ROSC, SWD, and 10 µF plus 0.1 µF VDD support network. The
+  MSPM0G5187 additionally provides the TinyEngine NPU.
 
 The e-paper panel already integrates its UC8251 timing controller and
 high-voltage display driver in chip-on-glass form. Its board still implements
@@ -117,9 +121,9 @@ display.
 
 - `src/screen-data.ts` is the hard-coded panel catalog, including complete FPC
   pin labels, exact connector MPN, contact side, footprint, and model URL.
-- `src/ScreenBoard.tsx` contains the shared USB-C MSP430F5529/MSPM0G5117
-  reference design and panel-specific power, interface-strap, charge-pump, and
-  backlight circuits.
+- `src/ScreenBoard.tsx` contains the shared USB-C
+  MSP430F5529/MSPM0G5117/MSPM0G5187 reference design and panel-specific power,
+  interface-strap, charge-pump, and backlight circuits.
   Its explicit component placements are restricted to 0/90/180/270-degree
   rotations, with a regression test enforcing that rule.
 - `src/screen-model-specs.ts` holds datasheet-derived panel, active-area, flex,
@@ -157,7 +161,7 @@ npm run check:schematic-placement
 npm run build
 ```
 
-The schematic-placement gate checks all 55 circuit entry files with four-way
+The schematic-placement gate checks all 72 circuit entry files with four-way
 concurrency and fails on either a nonzero `tsci` exit or any emitted placement
 issue block.
 
@@ -179,6 +183,7 @@ schematic SVGs, Gerbers, schematic PDFs, KiCad projects, and Altium projects to
 - [MSPM33 C-Series hardware development guide](https://www.ti.com/lit/an/sdaa132/sdaa132.pdf)
 - [MSPM0G3507 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf)
 - [MSPM0G5117 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g5117.pdf)
+- [MSPM0G5187 datasheet](https://www.ti.com/lit/ds/symlink/mspm0g5187.pdf)
 - [BME280 datasheet](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf)
 - [MPU-6000/MPU-6050 datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet.pdf)
 - [MLX90640 datasheet](https://media.melexis.com/-/media/files/documents/datasheets/mlx90640-datasheet-melexis.pdf)

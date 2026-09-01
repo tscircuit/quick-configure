@@ -2,14 +2,15 @@ import { Fragment } from "react";
 import { BME280 } from "../imports/BME280/BME280";
 import { MLX90640ESF_BAA_000_TU } from "../imports/MLX90640ESF_BAA_000_TU/MLX90640ESF_BAA_000_TU";
 import { MPU_6050 } from "../imports/MPU_6050/MPU_6050";
-import { MSPM0G5117SPMR, mspm0g5117Pins } from "./MSPM0G5117SPMR";
+import { MSPM0G5117SPMR, mspm0UsbLqfp64Pins } from "./MSPM0G5117SPMR";
+import { MSPM0G5187SPMR } from "./MSPM0G5187SPMR";
 import { mcus } from "./board-data";
 import { sensors, type SensorId } from "./sensor-data";
 import { SmdUsbC } from "./SmdUsbC";
 
 export interface SensorBoardProps {
   sensor: SensorId;
-  controller?: "msp430f5529" | "mspm0g5117";
+  controller?: "msp430f5529" | "mspm0g5117" | "mspm0g5187";
 }
 
 const usbEsdPins = {
@@ -235,9 +236,15 @@ export const SensorBoard = ({
 }: SensorBoardProps) => {
   const sensor = sensors[sensorId];
   const mcu = mcus.msp430f5529;
-  const isMspm0g5117 = controller === "mspm0g5117";
-  const controllerLabel = isMspm0g5117 ? "MSPM0G5117" : "MSP430F5529";
-  const controllerPins = isMspm0g5117 ? mspm0g5117Pins : f5529;
+  const isNativeUsbMspm0 = controller !== "msp430f5529";
+  const isMspm0g5187 = controller === "mspm0g5187";
+  const controllerLabel = isMspm0g5187
+    ? "MSPM0G5187"
+    : isNativeUsbMspm0
+      ? "MSPM0G5117"
+      : "MSP430F5529";
+  const NativeUsbMspm0 = isMspm0g5187 ? MSPM0G5187SPMR : MSPM0G5117SPMR;
+  const controllerPins = isNativeUsbMspm0 ? mspm0UsbLqfp64Pins : f5529;
   const i2cPullupResistance = sensorId === "mlx90640" ? "1k" : "4.7k";
   const boardWidth = 82;
   const boardHeight = 52;
@@ -302,7 +309,7 @@ export const SensorBoard = ({
       <resistor
         {...interfaceSection}
         name="R_USB_DP"
-        resistance={isMspm0g5117 ? "0" : "27"}
+        resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
         pcbX={-3.8}
         pcbY={9}
@@ -313,7 +320,7 @@ export const SensorBoard = ({
       <resistor
         {...interfaceSection}
         name="R_USB_DM"
-        resistance={isMspm0g5117 ? "0" : "27"}
+        resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
         pcbX={-5}
         pcbY={9}
@@ -375,8 +382,8 @@ export const SensorBoard = ({
         schY={-7}
       />
 
-      {isMspm0g5117 ? (
-        <MSPM0G5117SPMR
+      {isNativeUsbMspm0 ? (
+        <NativeUsbMspm0
           {...controlSection}
           name="U_MAIN"
           pcbX={-9}
@@ -400,7 +407,7 @@ export const SensorBoard = ({
           schY={1}
         />
       )}
-      {isMspm0g5117 ? (
+      {isNativeUsbMspm0 ? (
         <>
           <capacitor
             {...verticalCapacitor}
@@ -473,9 +480,9 @@ export const SensorBoard = ({
         name="C_VCORE"
         capacitance="470nF"
         footprint="0603"
-        pcbX={isMspm0g5117 ? -3.5 : -18}
-        pcbY={isMspm0g5117 ? -10.5 : -6.5}
-        pcbRotation={isMspm0g5117 ? -90 : 180}
+        pcbX={isNativeUsbMspm0 ? -3.5 : -18}
+        pcbY={isNativeUsbMspm0 ? -10.5 : -6.5}
+        pcbRotation={isNativeUsbMspm0 ? -90 : 180}
         schX={1.9}
         schY={7}
       />
@@ -491,7 +498,7 @@ export const SensorBoard = ({
         schX={2.93}
         schY={8}
       />
-      {!isMspm0g5117 && (
+      {!isNativeUsbMspm0 && (
         <capacitor
           {...verticalCapacitor}
           {...controlSection}
@@ -509,15 +516,15 @@ export const SensorBoard = ({
         {...verticalCapacitor}
         {...controlSection}
         name="C_VUSB"
-        capacitance={isMspm0g5117 ? "100nF" : "220nF"}
+        capacitance={isNativeUsbMspm0 ? "100nF" : "220nF"}
         footprint="0603"
-        pcbX={isMspm0g5117 ? -8.5 : -8}
-        pcbY={isMspm0g5117 ? -10.5 : 12.75}
-        pcbRotation={isMspm0g5117 ? -90 : 90}
+        pcbX={isNativeUsbMspm0 ? -8.5 : -8}
+        pcbY={isNativeUsbMspm0 ? -10.5 : 12.75}
+        pcbRotation={isNativeUsbMspm0 ? -90 : 90}
         schX={6}
         schY={8}
       />
-      {!isMspm0g5117 && (
+      {!isNativeUsbMspm0 && (
         <resistor
           {...controlSection}
           name="R_USB_PULLUP"
@@ -545,7 +552,7 @@ export const SensorBoard = ({
         {...verticalCapacitor}
         {...controlSection}
         name="C_MCU_RESET"
-        capacitance={isMspm0g5117 ? "10nF" : "2.2nF"}
+        capacitance={isNativeUsbMspm0 ? "10nF" : "2.2nF"}
         footprint="0402"
         pcbX={-15.25}
         pcbY={9}
@@ -553,7 +560,7 @@ export const SensorBoard = ({
         schX={3.5}
         schY={9}
       />
-      {isMspm0g5117 ? (
+      {isNativeUsbMspm0 ? (
         <resistor
           {...controlSection}
           name="R_MCU_ROSC"
@@ -633,7 +640,7 @@ export const SensorBoard = ({
         footprint="0402"
         pcbX={12}
         pcbY={9}
-        pcbRotation={isMspm0g5117 ? 180 : 0}
+        pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={8}
         schY={9}
       />
@@ -644,7 +651,7 @@ export const SensorBoard = ({
         footprint="0402"
         pcbX={15}
         pcbY={9}
-        pcbRotation={isMspm0g5117 ? 180 : 0}
+        pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={11}
         schY={9}
       />
@@ -661,7 +668,7 @@ export const SensorBoard = ({
         gender="unpopulated"
         doNotPlace
         pinLabels={
-          isMspm0g5117
+          isNativeUsbMspm0
             ? [
                 "VTREF",
                 "GND",
@@ -688,7 +695,7 @@ export const SensorBoard = ({
               ]
         }
         pcbPinLabels={
-          isMspm0g5117
+          isNativeUsbMspm0
             ? {
                 pin1: "3V3",
                 pin2: "G",
@@ -813,11 +820,11 @@ export const SensorBoard = ({
       />
       <trace from=".U_ESD > .pin5" to="net.VBUS5" />
       <trace from=".U_ESD > .pin2" to="net.GND" />
-      {isMspm0g5117 ? (
+      {isNativeUsbMspm0 ? (
         <trace
           name="usb-dp-mcu"
           from=".R_USB_DP > .pin2"
-          to={p("U_MAIN", mspm0g5117Pins.usbDp)}
+          to={p("U_MAIN", mspm0UsbLqfp64Pins.usbDp)}
           thickness="0.25mm"
         />
       ) : (
@@ -837,14 +844,14 @@ export const SensorBoard = ({
         from=".R_USB_DM > .pin2"
         to={p(
           "U_MAIN",
-          isMspm0g5117 ? mspm0g5117Pins.usbDm : f5529.usbDm,
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.usbDm : f5529.usbDm,
         )}
         thickness="0.25mm"
-        maxViaCount={isMspm0g5117 ? undefined : 0}
+        maxViaCount={isNativeUsbMspm0 ? undefined : 0}
       />
       <trace from=".C_VBUS > .pin1" to="net.VBUS5" />
       <trace from=".C_VBUS > .pin2" to="net.GND" />
-      {!isMspm0g5117 && (
+      {!isNativeUsbMspm0 && (
         <>
           <trace from={p("U_MAIN", f5529.usbVbus)} to="net.VBUS5" />
           <trace from={p("U_MAIN", f5529.usbPullup)} to="net.MSP_USB_PUR" />
@@ -863,15 +870,15 @@ export const SensorBoard = ({
       <trace from=".C_3V3_BULK > .pin1" to="net.VCC_3V3" />
       <trace from=".C_3V3_BULK > .pin2" to="net.GND" />
 
-      {isMspm0g5117 ? (
+      {isNativeUsbMspm0 ? (
         <>
           <trace
-            from={p("U_MAIN", mspm0g5117Pins.vdd)}
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.vdd)}
             to="net.VCC_3V3"
             thickness="0.35mm"
           />
           <trace
-            from={p("U_MAIN", mspm0g5117Pins.vss)}
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.vss)}
             to="net.GND"
             thickness="0.35mm"
           />
@@ -919,7 +926,7 @@ export const SensorBoard = ({
       />
       <trace from=".C_VCORE > .pin1" to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin2" to="net.GND" />
-      {!isMspm0g5117 && (
+      {!isNativeUsbMspm0 && (
         <>
           <trace from={p("U_MAIN", f5529.v18)} to="net.MSP_V18" />
           <trace from=".C_V18 > .pin1" to="net.MSP_V18" />
@@ -929,13 +936,13 @@ export const SensorBoard = ({
       <trace
         from={p(
           "U_MAIN",
-          isMspm0g5117 ? mspm0g5117Pins.vusb : f5529.usbVusb,
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.vusb : f5529.usbVusb,
         )}
-        to={isMspm0g5117 ? "net.VCC_3V3" : "net.MSP_VUSB"}
+        to={isNativeUsbMspm0 ? "net.VCC_3V3" : "net.MSP_VUSB"}
       />
       <trace
         from=".C_VUSB > .pin1"
-        to={isMspm0g5117 ? "net.VCC_3V3" : "net.MSP_VUSB"}
+        to={isNativeUsbMspm0 ? "net.VCC_3V3" : "net.MSP_VUSB"}
       />
       <trace from=".C_VUSB > .pin2" to="net.GND" />
       <trace from={p("U_MAIN", controllerPins.reset)} to="net.MAIN_RESET" />
@@ -943,10 +950,10 @@ export const SensorBoard = ({
       <trace from=".R_MCU_RESET > .pin2" to="net.VCC_3V3" />
       <trace from=".C_MCU_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".C_MCU_RESET > .pin2" to="net.GND" />
-      {isMspm0g5117 ? (
+      {isNativeUsbMspm0 ? (
         <>
           <trace
-            from={p("U_MAIN", mspm0g5117Pins.rosc)}
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.rosc)}
             to=".R_MCU_ROSC > .pin1"
           />
           <trace from=".R_MCU_ROSC > .pin2" to="net.GND" />
@@ -988,7 +995,7 @@ export const SensorBoard = ({
         from=".J_DEBUG > .pin4"
         to={p(
           "U_MAIN",
-          isMspm0g5117 ? mspm0g5117Pins.swdio : f5529.test,
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.swdio : f5529.test,
         )}
       />
       <trace from=".J_DEBUG > .pin5" to="net.SENSOR_SDA" />
@@ -997,14 +1004,14 @@ export const SensorBoard = ({
       <trace
         from=".J_DEBUG > .pin8"
         to={
-          isMspm0g5117
-            ? p("U_MAIN", mspm0g5117Pins.swclk)
+          isNativeUsbMspm0
+            ? p("U_MAIN", mspm0UsbLqfp64Pins.swclk)
             : p("U_MAIN", f5529.uartTx)
         }
       />
       <trace
         from=".J_DEBUG > .pin9"
-        to={isMspm0g5117 ? "net.GND" : p("U_MAIN", f5529.uartRx)}
+        to={isNativeUsbMspm0 ? "net.GND" : p("U_MAIN", f5529.uartRx)}
       />
       <trace from=".J_DEBUG > .pin10" to="net.VBUS5" />
       <trace from=".TP_SDA > .pin1" to="net.SENSOR_SDA" />

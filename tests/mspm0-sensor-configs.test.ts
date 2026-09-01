@@ -87,18 +87,20 @@ describe("MSPM0 sensor catalog", () => {
     }
   });
 
-  test("adds a native-USB MSPM0G5117 variant for every configuration", async () => {
-    for (const id of mspm0SensorIds) {
-      const configurationId = `usb-c__mspm0g5117__${id}`;
-      const wrapper = Bun.file(
-        join(projectRoot, `${configurationId}.circuit.tsx`),
-      );
+  test("adds native-USB MSPM0G51x variants for every configuration", async () => {
+    for (const controller of ["mspm0g5117", "mspm0g5187"] as const) {
+      for (const id of mspm0SensorIds) {
+        const configurationId = `usb-c__${controller}__${id}`;
+        const wrapper = Bun.file(
+          join(projectRoot, `${configurationId}.circuit.tsx`),
+        );
 
-      expect(expectedConfigurationIds).toContain(configurationId);
-      expect(await wrapper.exists()).toBe(true);
-      expect(await wrapper.text()).toContain(
-        `<Mspm0SensorBoard controller="mspm0g5117" sensor="${id}" />`,
-      );
+        expect(expectedConfigurationIds).toContain(configurationId);
+        expect(await wrapper.exists()).toBe(true);
+        expect(await wrapper.text()).toContain(
+          `<Mspm0SensorBoard controller="${controller}" sensor="${id}" />`,
+        );
+      }
     }
   });
 });
