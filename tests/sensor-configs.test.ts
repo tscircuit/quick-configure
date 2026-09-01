@@ -78,13 +78,20 @@ describe("sensor catalog", () => {
 })
 
 describe("sensor reference boards", () => {
-  test("has one USB-C and MSP430F5529 wrapper per sensor", async () => {
+  test("has USB-C MSP430F5529 and MSPM0G5117 wrappers per sensor", async () => {
     for (const id of ids) {
-      const wrapper = Bun.file(
+      const msp430Wrapper = Bun.file(
         join(projectRoot, `usb-c__msp430f5529__${id}.circuit.tsx`),
       )
-      expect(await wrapper.exists()).toBe(true)
-      expect(await wrapper.text()).toContain(`<SensorBoard sensor="${id}" />`)
+      const mspm0Wrapper = Bun.file(
+        join(projectRoot, `usb-c__mspm0g5117__${id}.circuit.tsx`),
+      )
+      expect(await msp430Wrapper.exists()).toBe(true)
+      expect(await msp430Wrapper.text()).toContain(`<SensorBoard sensor="${id}" />`)
+      expect(await mspm0Wrapper.exists()).toBe(true)
+      expect(await mspm0Wrapper.text()).toContain(
+        `<SensorBoard controller="mspm0g5117" sensor="${id}" />`,
+      )
     }
   })
 
@@ -112,24 +119,38 @@ describe("sensor reference boards", () => {
     const source = await Bun.file(
       join(projectRoot, "src", "SensorBoard.tsx"),
     ).text()
-    const rotations = [...source.matchAll(/pcbRotation=\{([^}]+)\}/g)].map(
-      ([, value]) => Number(value),
-    )
+    const rotationExpressions = [
+      ...source.matchAll(/pcbRotation=\{([^}]+)\}/g),
+    ].map(([, value]) => value.trim())
+    const rotations = rotationExpressions.flatMap((expression) => {
+      if (/^-?\d+(?:\.\d+)?$/.test(expression)) {
+        return [Number(expression)]
+      }
 
-    expect(rotations.length).toBeGreaterThan(10)
+      const conditional = expression.match(
+        /\?\s*(-?\d+(?:\.\d+)?)\s*:\s*(-?\d+(?:\.\d+)?)$/,
+      )
+      expect(conditional).not.toBeNull()
+      return conditional ? [Number(conditional[1]), Number(conditional[2])] : []
+    })
+
+    expect(rotationExpressions.length).toBeGreaterThan(10)
     expect(rotations.every(Number.isFinite)).toBe(true)
     expect(rotations.every((rotation) => rotation % 90 === 0)).toBe(true)
   })
 
-  test("exposes every sensor in the selector as a fixed configuration", async () => {
+  test("exposes every sensor with both generated controller variants", async () => {
     const html = await Bun.file(join(projectRoot, "site", "index.html")).text()
 
     for (const id of ids) {
       expect(html).toContain(`<option value="${id}">`)
     }
-    expect(html).toContain("fixedChoiceIds")
+    expect(html).toContain("peripheralChoiceIds")
     expect(html).toContain(
       "sensorIds.map(sensor=>`usb-c__msp430f5529__${sensor}`)",
+    )
+    expect(html).toContain(
+      "sensorIds.map(sensor=>`usb-c__mspm0g5117__${sensor}`)",
     )
   })
 })

@@ -2,12 +2,14 @@ import { Fragment } from "react";
 import { BME280 } from "../imports/BME280/BME280";
 import { MLX90640ESF_BAA_000_TU } from "../imports/MLX90640ESF_BAA_000_TU/MLX90640ESF_BAA_000_TU";
 import { MPU_6050 } from "../imports/MPU_6050/MPU_6050";
+import { MSPM0G5117SPMR, mspm0g5117Pins } from "./MSPM0G5117SPMR";
 import { mcus } from "./board-data";
 import { sensors, type SensorId } from "./sensor-data";
 import { SmdUsbC } from "./SmdUsbC";
 
 export interface SensorBoardProps {
   sensor: SensorId;
+  controller?: "msp430f5529" | "mspm0g5117";
 }
 
 const usbEsdPins = {
@@ -227,17 +229,23 @@ const Mlx90640Circuit = () => (
   </>
 );
 
-export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
+export const SensorBoard = ({
+  sensor: sensorId,
+  controller = "msp430f5529",
+}: SensorBoardProps) => {
   const sensor = sensors[sensorId];
   const mcu = mcus.msp430f5529;
+  const isMspm0g5117 = controller === "mspm0g5117";
+  const controllerLabel = isMspm0g5117 ? "MSPM0G5117" : "MSP430F5529";
+  const controllerPins = isMspm0g5117 ? mspm0g5117Pins : f5529;
   const i2cPullupResistance = sensorId === "mlx90640" ? "1k" : "4.7k";
   const boardWidth = 82;
   const boardHeight = 52;
-  const boardTitle = `USB-C + MSP430F5529 + ${sensor.manufacturerPartNumber}`;
+  const boardTitle = `USB-C + ${controllerLabel} + ${sensor.manufacturerPartNumber}`;
 
   return (
     <board
-      name={`usb-c_msp430f5529_${sensorId}`}
+      name={`usb-c_${controller}_${sensorId}`}
       width={boardWidth}
       height={boardHeight}
       layers={2}
@@ -246,7 +254,10 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
     >
       <schematicsheet name="Main" displayName={boardTitle} sheetIndex={0} />
       <schematicsection name="Interface" displayName="USB-C & Power" />
-      <schematicsection name="Control" displayName="MSP430F5529 Controller" />
+      <schematicsection
+        name="Control"
+        displayName={`${controllerLabel} Controller`}
+      />
       <schematicsection
         name="Sensor"
         displayName={`${sensor.manufacturerPartNumber} ${sensor.interface} Sensor`}
@@ -291,7 +302,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
       <resistor
         {...interfaceSection}
         name="R_USB_DP"
-        resistance="27"
+        resistance={isMspm0g5117 ? "0" : "27"}
         footprint="0402"
         pcbX={-3.8}
         pcbY={9}
@@ -302,7 +313,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
       <resistor
         {...interfaceSection}
         name="R_USB_DM"
-        resistance="27"
+        resistance={isMspm0g5117 ? "0" : "27"}
         footprint="0402"
         pcbX={-5}
         pcbY={9}
@@ -364,64 +375,107 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schY={-7}
       />
 
-      <chip
-        {...controlSection}
-        name="U_MAIN"
-        manufacturerPartNumber={mcu.manufacturerPartNumber}
-        supplierPartNumbers={mcu.supplierPartNumbers}
-        footprint={mcu.footprint}
-        pinLabels={mcu.pinLabels}
-        pcbX={-9}
-        pcbY={0}
-        pcbRotation={0}
-        schX={0}
-        schY={1}
-      />
-      <capacitor
-        {...verticalCapacitor}
-        {...controlSection}
-        name="C_MCU_DVCC1"
-        capacitance="100nF"
-        footprint="0402"
-        pcbX={-18}
-        pcbY={-3.75}
-        pcbRotation={180}
-        schX={-4}
-        schY={7}
-      />
-      <capacitor
-        {...verticalCapacitor}
-        {...controlSection}
-        name="C_MCU_DVCC2"
-        capacitance="100nF"
-        footprint="0402"
-        pcbX={0}
-        pcbY={-0.25}
-        pcbRotation={0}
-        schX={-2}
-        schY={7}
-      />
-      <capacitor
-        {...verticalCapacitor}
-        {...controlSection}
-        name="C_MCU_AVCC"
-        capacitance="1uF"
-        footprint="0603"
-        pcbX={-19}
-        pcbY={-0.25}
-        pcbRotation={180}
-        schX={0}
-        schY={7}
-      />
+      {isMspm0g5117 ? (
+        <MSPM0G5117SPMR
+          {...controlSection}
+          name="U_MAIN"
+          pcbX={-9}
+          pcbY={0}
+          pcbRotation={0}
+          schX={0}
+          schY={1}
+        />
+      ) : (
+        <chip
+          {...controlSection}
+          name="U_MAIN"
+          manufacturerPartNumber={mcu.manufacturerPartNumber}
+          supplierPartNumbers={mcu.supplierPartNumbers}
+          footprint={mcu.footprint}
+          pinLabels={mcu.pinLabels}
+          pcbX={-9}
+          pcbY={0}
+          pcbRotation={0}
+          schX={0}
+          schY={1}
+        />
+      )}
+      {isMspm0g5117 ? (
+        <>
+          <capacitor
+            {...verticalCapacitor}
+            {...controlSection}
+            name="C_MCU_VDD"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={0}
+            pcbY={-0.25}
+            pcbRotation={0}
+            schX={-4}
+            schY={7}
+          />
+          <capacitor
+            {...verticalCapacitor}
+            {...controlSection}
+            name="C_MCU_BULK"
+            capacitance="10uF"
+            footprint="0805"
+            pcbX={-18}
+            pcbY={-3.75}
+            pcbRotation={180}
+            schX={-1}
+            schY={7}
+          />
+        </>
+      ) : (
+        <>
+          <capacitor
+            {...verticalCapacitor}
+            {...controlSection}
+            name="C_MCU_DVCC1"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={-18}
+            pcbY={-3.75}
+            pcbRotation={180}
+            schX={-4}
+            schY={7}
+          />
+          <capacitor
+            {...verticalCapacitor}
+            {...controlSection}
+            name="C_MCU_DVCC2"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={0}
+            pcbY={-0.25}
+            pcbRotation={0}
+            schX={-2}
+            schY={7}
+          />
+          <capacitor
+            {...verticalCapacitor}
+            {...controlSection}
+            name="C_MCU_AVCC"
+            capacitance="1uF"
+            footprint="0603"
+            pcbX={-19}
+            pcbY={-0.25}
+            pcbRotation={180}
+            schX={0}
+            schY={7}
+          />
+        </>
+      )}
       <capacitor
         {...verticalCapacitor}
         {...controlSection}
         name="C_VCORE"
         capacitance="470nF"
         footprint="0603"
-        pcbX={-18}
-        pcbY={-6.5}
-        pcbRotation={180}
+        pcbX={isMspm0g5117 ? -3.5 : -18}
+        pcbY={isMspm0g5117 ? -10.5 : -6.5}
+        pcbRotation={isMspm0g5117 ? -90 : 180}
         schX={1.9}
         schY={7}
       />
@@ -437,41 +491,45 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schX={2.93}
         schY={8}
       />
-      <capacitor
-        {...verticalCapacitor}
-        {...controlSection}
-        name="C_V18"
-        capacitance="220nF"
-        footprint="0603"
-        pcbX={-10.3}
-        pcbY={12.75}
-        pcbRotation={90}
-        schX={4.33}
-        schY={8}
-      />
+      {!isMspm0g5117 && (
+        <capacitor
+          {...verticalCapacitor}
+          {...controlSection}
+          name="C_V18"
+          capacitance="220nF"
+          footprint="0603"
+          pcbX={-10.3}
+          pcbY={12.75}
+          pcbRotation={90}
+          schX={4.33}
+          schY={8}
+        />
+      )}
       <capacitor
         {...verticalCapacitor}
         {...controlSection}
         name="C_VUSB"
-        capacitance="220nF"
+        capacitance={isMspm0g5117 ? "100nF" : "220nF"}
         footprint="0603"
-        pcbX={-8}
-        pcbY={12.75}
-        pcbRotation={90}
+        pcbX={isMspm0g5117 ? -8.5 : -8}
+        pcbY={isMspm0g5117 ? -10.5 : 12.75}
+        pcbRotation={isMspm0g5117 ? -90 : 90}
         schX={6}
         schY={8}
       />
-      <resistor
-        {...controlSection}
-        name="R_USB_PULLUP"
-        resistance="1.4k"
-        footprint="0402"
-        pcbX={-1}
-        pcbY={9.5}
-        pcbRotation={0}
-        schX={-3}
-        schY={9}
-      />
+      {!isMspm0g5117 && (
+        <resistor
+          {...controlSection}
+          name="R_USB_PULLUP"
+          resistance="1.4k"
+          footprint="0402"
+          pcbX={-1}
+          pcbY={9.5}
+          pcbRotation={0}
+          schX={-3}
+          schY={9}
+        />
+      )}
       <resistor
         {...controlSection}
         name="R_MCU_RESET"
@@ -487,7 +545,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         {...verticalCapacitor}
         {...controlSection}
         name="C_MCU_RESET"
-        capacitance="2.2nF"
+        capacitance={isMspm0g5117 ? "10nF" : "2.2nF"}
         footprint="0402"
         pcbX={-15.25}
         pcbY={9}
@@ -495,62 +553,78 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         schX={3.5}
         schY={9}
       />
-      <resonator
-        {...controlSection}
-        name="Y_XT2"
-        manufacturerPartNumber="CSTNR4M00GH5L000R0"
-        supplierPartNumbers={{ jlcpcb: ["C341526"] }}
-        frequency="4MHz"
-        loadCapacitance="39pF"
-        pinVariant="ground_pin"
-        footprint={
-          <footprint>
-            <smtpad
-              portHints={["1"]}
-              pcbX={0}
-              pcbY={-1.5}
-              width={2.6}
-              height={0.4}
-              shape="rect"
-            />
-            <smtpad
-              portHints={["2"]}
-              pcbX={0}
-              pcbY={0}
-              width={2.6}
-              height={0.4}
-              shape="rect"
-            />
-            <smtpad
-              portHints={["3"]}
-              pcbX={0}
-              pcbY={1.5}
-              width={2.6}
-              height={0.4}
-              shape="rect"
-            />
-            <silkscreenpath
-              route={[
-                { x: -1.1, y: -2.35 },
-                { x: 1.1, y: -2.35 },
-              ]}
-            />
-            <silkscreenpath
-              route={[
-                { x: -1.1, y: 2.35 },
-                { x: 1.1, y: 2.35 },
-              ]}
-            />
-            <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
-          </footprint>
-        }
-        cadModel={null}
-        pcbX={-8.5}
-        pcbY={9.5}
-        pcbRotation={90}
-        schX={-1}
-        schY={-5}
-      />
+      {isMspm0g5117 ? (
+        <resistor
+          {...controlSection}
+          name="R_MCU_ROSC"
+          manufacturerPartNumber="PTFR0402B100KP9"
+          supplierPartNumbers={{ jlcpcb: ["C478863"] }}
+          resistance="100k"
+          tolerance="0.1%"
+          footprint="0402"
+          pcbX={-8.5}
+          pcbY={9.5}
+          schX={-1}
+          schY={-5}
+        />
+      ) : (
+        <resonator
+          {...controlSection}
+          name="Y_XT2"
+          manufacturerPartNumber="CSTNR4M00GH5L000R0"
+          supplierPartNumbers={{ jlcpcb: ["C341526"] }}
+          frequency="4MHz"
+          loadCapacitance="39pF"
+          pinVariant="ground_pin"
+          footprint={
+            <footprint>
+              <smtpad
+                portHints={["1"]}
+                pcbX={0}
+                pcbY={-1.5}
+                width={2.6}
+                height={0.4}
+                shape="rect"
+              />
+              <smtpad
+                portHints={["2"]}
+                pcbX={0}
+                pcbY={0}
+                width={2.6}
+                height={0.4}
+                shape="rect"
+              />
+              <smtpad
+                portHints={["3"]}
+                pcbX={0}
+                pcbY={1.5}
+                width={2.6}
+                height={0.4}
+                shape="rect"
+              />
+              <silkscreenpath
+                route={[
+                  { x: -1.1, y: -2.35 },
+                  { x: 1.1, y: -2.35 },
+                ]}
+              />
+              <silkscreenpath
+                route={[
+                  { x: -1.1, y: 2.35 },
+                  { x: 1.1, y: 2.35 },
+                ]}
+              />
+              <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
+            </footprint>
+          }
+          cadModel={null}
+          pcbX={-8.5}
+          pcbY={9.5}
+          pcbRotation={90}
+          schX={-1}
+          schY={-5}
+        />
+      )}
 
       <resistor
         {...sensorSection}
@@ -559,6 +633,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         footprint="0402"
         pcbX={12}
         pcbY={9}
+        pcbRotation={isMspm0g5117 ? 180 : 0}
         schX={8}
         schY={9}
       />
@@ -569,6 +644,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         footprint="0402"
         pcbX={15}
         pcbY={9}
+        pcbRotation={isMspm0g5117 ? 180 : 0}
         schX={11}
         schY={9}
       />
@@ -584,30 +660,60 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
         pitch="2.54mm"
         gender="unpopulated"
         doNotPlace
-        pinLabels={[
-          "VCC_3V3",
-          "GND",
-          "RESET",
-          "TEST",
-          "I2C_SDA",
-          "I2C_SCL",
-          "SENSOR_INT",
-          "UART_TX",
-          "UART_RX",
-          "VBUS5",
-        ]}
-        pcbPinLabels={{
-          pin1: "3V3",
-          pin2: "G",
-          pin3: "RST",
-          pin4: "TST",
-          pin5: "SDA",
-          pin6: "SCL",
-          pin7: "INT",
-          pin8: "TX",
-          pin9: "RX",
-          pin10: "5V",
-        }}
+        pinLabels={
+          isMspm0g5117
+            ? [
+                "VTREF",
+                "GND",
+                "RESET",
+                "SWDIO",
+                "I2C_SDA",
+                "I2C_SCL",
+                "SENSOR_INT",
+                "SWCLK",
+                "GND_DETECT",
+                "VBUS5",
+              ]
+            : [
+                "VCC_3V3",
+                "GND",
+                "RESET",
+                "TEST",
+                "I2C_SDA",
+                "I2C_SCL",
+                "SENSOR_INT",
+                "UART_TX",
+                "UART_RX",
+                "VBUS5",
+              ]
+        }
+        pcbPinLabels={
+          isMspm0g5117
+            ? {
+                pin1: "3V3",
+                pin2: "G",
+                pin3: "RST",
+                pin4: "DIO",
+                pin5: "SDA",
+                pin6: "SCL",
+                pin7: "INT",
+                pin8: "CLK",
+                pin9: "G",
+                pin10: "5V",
+              }
+            : {
+                pin1: "3V3",
+                pin2: "G",
+                pin3: "RST",
+                pin4: "TST",
+                pin5: "SDA",
+                pin6: "SCL",
+                pin7: "INT",
+                pin8: "TX",
+                pin9: "RX",
+                pin10: "5V",
+              }
+        }
         showSilkscreenPinLabels
         pcbX={-6}
         pcbY={-18}
@@ -707,28 +813,44 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
       />
       <trace from=".U_ESD > .pin5" to="net.VBUS5" />
       <trace from=".U_ESD > .pin2" to="net.GND" />
-      <trace
-        name="usb-dp-mcu"
-        path={[
-          ".R_USB_DP > .pin2",
-          p("U_MAIN", f5529.usbDp),
-          ".R_USB_PULLUP > .pin2",
-        ]}
-        thickness="0.25mm"
-        maxViaCount={0}
-      />
+      {isMspm0g5117 ? (
+        <trace
+          name="usb-dp-mcu"
+          from=".R_USB_DP > .pin2"
+          to={p("U_MAIN", mspm0g5117Pins.usbDp)}
+          thickness="0.25mm"
+        />
+      ) : (
+        <trace
+          name="usb-dp-mcu"
+          path={[
+            ".R_USB_DP > .pin2",
+            p("U_MAIN", f5529.usbDp),
+            ".R_USB_PULLUP > .pin2",
+          ]}
+          thickness="0.25mm"
+          maxViaCount={0}
+        />
+      )}
       <trace
         name="usb-dm-mcu"
         from=".R_USB_DM > .pin2"
-        to={p("U_MAIN", f5529.usbDm)}
+        to={p(
+          "U_MAIN",
+          isMspm0g5117 ? mspm0g5117Pins.usbDm : f5529.usbDm,
+        )}
         thickness="0.25mm"
-        maxViaCount={0}
+        maxViaCount={isMspm0g5117 ? undefined : 0}
       />
-      <trace from={p("U_MAIN", f5529.usbVbus)} to="net.VBUS5" />
       <trace from=".C_VBUS > .pin1" to="net.VBUS5" />
       <trace from=".C_VBUS > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.usbPullup)} to="net.MSP_USB_PUR" />
-      <trace from=".R_USB_PULLUP > .pin1" to="net.MSP_USB_PUR" />
+      {!isMspm0g5117 && (
+        <>
+          <trace from={p("U_MAIN", f5529.usbVbus)} to="net.VBUS5" />
+          <trace from={p("U_MAIN", f5529.usbPullup)} to="net.MSP_USB_PUR" />
+          <trace from=".R_USB_PULLUP > .pin1" to="net.MSP_USB_PUR" />
+        </>
+      )}
 
       <trace from=".U_LDO > .pin1" to="net.VBUS5" thickness="0.4mm" />
       <trace from=".U_LDO > .pin3" to="net.VBUS5" />
@@ -741,60 +863,111 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
       <trace from=".C_3V3_BULK > .pin1" to="net.VCC_3V3" />
       <trace from=".C_3V3_BULK > .pin2" to="net.GND" />
 
-      {[
-        { pin: 11, capacitor: "C_MCU_AVCC" },
-        { pin: 18, capacitor: "C_MCU_DVCC1" },
-        { pin: 50, capacitor: "C_MCU_DVCC2" },
-      ].map(({ pin, capacitor }) => (
-        <trace
-          key={`mcu-vcc-${pin}`}
-          from={p("U_MAIN", pin)}
-          to={`.${capacitor} > .pin1`}
-          thickness="0.35mm"
-          maxViaCount={0}
-        />
-      ))}
-      {mcu.gndPins.map((pin) => (
-        <trace
-          key={`mcu-gnd-${pin}`}
-          from={p("U_MAIN", pin)}
-          to="net.GND"
-          thickness="0.35mm"
-        />
-      ))}
-      {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map((component) => (
-        <Fragment key={`${component}-rails`}>
-          <trace from={`.${component} > .pin1`} to="net.VCC_3V3" />
-          <trace from={`.${component} > .pin2`} to="net.GND" />
-        </Fragment>
-      ))}
-      <trace from={p("U_MAIN", f5529.vcore)} to="net.MSP_VCORE" />
+      {isMspm0g5117 ? (
+        <>
+          <trace
+            from={p("U_MAIN", mspm0g5117Pins.vdd)}
+            to="net.VCC_3V3"
+            thickness="0.35mm"
+          />
+          <trace
+            from={p("U_MAIN", mspm0g5117Pins.vss)}
+            to="net.GND"
+            thickness="0.35mm"
+          />
+          <trace from=".C_MCU_VDD > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_MCU_VDD > .pin2" to="net.GND" />
+          <trace from=".C_MCU_BULK > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_MCU_BULK > .pin2" to="net.GND" />
+        </>
+      ) : (
+        <>
+          {[
+            { pin: 11, capacitor: "C_MCU_AVCC" },
+            { pin: 18, capacitor: "C_MCU_DVCC1" },
+            { pin: 50, capacitor: "C_MCU_DVCC2" },
+          ].map(({ pin, capacitor }) => (
+            <trace
+              key={`mcu-vcc-${pin}`}
+              from={p("U_MAIN", pin)}
+              to={`.${capacitor} > .pin1`}
+              thickness="0.35mm"
+              maxViaCount={0}
+            />
+          ))}
+          {mcu.gndPins.map((pin) => (
+            <trace
+              key={`mcu-gnd-${pin}`}
+              from={p("U_MAIN", pin)}
+              to="net.GND"
+              thickness="0.35mm"
+            />
+          ))}
+          {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map(
+            (component) => (
+              <Fragment key={`${component}-rails`}>
+                <trace from={`.${component} > .pin1`} to="net.VCC_3V3" />
+                <trace from={`.${component} > .pin2`} to="net.GND" />
+              </Fragment>
+            ),
+          )}
+        </>
+      )}
+      <trace
+        from={p("U_MAIN", controllerPins.vcore)}
+        to="net.MSP_VCORE"
+      />
       <trace from=".C_VCORE > .pin1" to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.v18)} to="net.MSP_V18" />
-      <trace from=".C_V18 > .pin1" to="net.MSP_V18" />
-      <trace from=".C_V18 > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.usbVusb)} to="net.MSP_VUSB" />
-      <trace from=".C_VUSB > .pin1" to="net.MSP_VUSB" />
+      {!isMspm0g5117 && (
+        <>
+          <trace from={p("U_MAIN", f5529.v18)} to="net.MSP_V18" />
+          <trace from=".C_V18 > .pin1" to="net.MSP_V18" />
+          <trace from=".C_V18 > .pin2" to="net.GND" />
+        </>
+      )}
+      <trace
+        from={p(
+          "U_MAIN",
+          isMspm0g5117 ? mspm0g5117Pins.vusb : f5529.usbVusb,
+        )}
+        to={isMspm0g5117 ? "net.VCC_3V3" : "net.MSP_VUSB"}
+      />
+      <trace
+        from=".C_VUSB > .pin1"
+        to={isMspm0g5117 ? "net.VCC_3V3" : "net.MSP_VUSB"}
+      />
       <trace from=".C_VUSB > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.reset)} to="net.MAIN_RESET" />
+      <trace from={p("U_MAIN", controllerPins.reset)} to="net.MAIN_RESET" />
       <trace from=".R_MCU_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".R_MCU_RESET > .pin2" to="net.VCC_3V3" />
       <trace from=".C_MCU_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".C_MCU_RESET > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.xt2In)} to="net.XT2_IN" />
-      <trace from=".Y_XT2 > .pin1" to="net.XT2_IN" />
-      <trace from=".Y_XT2 > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.xt2Out)} to="net.XT2_OUT" />
-      <trace from=".Y_XT2 > .pin3" to="net.XT2_OUT" />
+      {isMspm0g5117 ? (
+        <>
+          <trace
+            from={p("U_MAIN", mspm0g5117Pins.rosc)}
+            to=".R_MCU_ROSC > .pin1"
+          />
+          <trace from=".R_MCU_ROSC > .pin2" to="net.GND" />
+        </>
+      ) : (
+        <>
+          <trace from={p("U_MAIN", f5529.xt2In)} to="net.XT2_IN" />
+          <trace from=".Y_XT2 > .pin1" to="net.XT2_IN" />
+          <trace from=".Y_XT2 > .pin2" to="net.GND" />
+          <trace from={p("U_MAIN", f5529.xt2Out)} to="net.XT2_OUT" />
+          <trace from=".Y_XT2 > .pin3" to="net.XT2_OUT" />
+        </>
+      )}
 
       <trace
-        from={p("U_MAIN", f5529.i2cSda)}
+        from={p("U_MAIN", controllerPins.i2cSda)}
         to="net.SENSOR_SDA"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", f5529.i2cScl)}
+        from={p("U_MAIN", controllerPins.i2cScl)}
         to="net.SENSOR_SCL"
         thickness="0.12mm"
       />
@@ -803,7 +976,7 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
       <trace from=".R_I2C_SCL > .pin1" to="net.SENSOR_SCL" />
       <trace from=".R_I2C_SCL > .pin2" to="net.VCC_3V3" />
       <trace
-        from={p("U_MAIN", f5529.sensorInterrupt)}
+        from={p("U_MAIN", controllerPins.sensorInterrupt)}
         to="net.SENSOR_INT"
         thickness="0.12mm"
       />
@@ -811,12 +984,28 @@ export const SensorBoard = ({ sensor: sensorId }: SensorBoardProps) => {
       <trace from=".J_DEBUG > .pin1" to="net.VCC_3V3" />
       <trace from=".J_DEBUG > .pin2" to="net.GND" />
       <trace from=".J_DEBUG > .pin3" to="net.MAIN_RESET" />
-      <trace from=".J_DEBUG > .pin4" to={p("U_MAIN", f5529.test)} />
+      <trace
+        from=".J_DEBUG > .pin4"
+        to={p(
+          "U_MAIN",
+          isMspm0g5117 ? mspm0g5117Pins.swdio : f5529.test,
+        )}
+      />
       <trace from=".J_DEBUG > .pin5" to="net.SENSOR_SDA" />
       <trace from=".J_DEBUG > .pin6" to="net.SENSOR_SCL" />
       <trace from=".J_DEBUG > .pin7" to="net.SENSOR_INT" />
-      <trace from=".J_DEBUG > .pin8" to={p("U_MAIN", f5529.uartTx)} />
-      <trace from=".J_DEBUG > .pin9" to={p("U_MAIN", f5529.uartRx)} />
+      <trace
+        from=".J_DEBUG > .pin8"
+        to={
+          isMspm0g5117
+            ? p("U_MAIN", mspm0g5117Pins.swclk)
+            : p("U_MAIN", f5529.uartTx)
+        }
+      />
+      <trace
+        from=".J_DEBUG > .pin9"
+        to={isMspm0g5117 ? "net.GND" : p("U_MAIN", f5529.uartRx)}
+      />
       <trace from=".J_DEBUG > .pin10" to="net.VBUS5" />
       <trace from=".TP_SDA > .pin1" to="net.SENSOR_SDA" />
       <trace from=".TP_SCL > .pin1" to="net.SENSOR_SCL" />

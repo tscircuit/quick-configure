@@ -4,7 +4,7 @@ import { expectedConfigurationIds } from "./configuration-ids";
 
 const projectRoot = join(import.meta.dir, "..");
 const distDir = join(projectRoot, "dist");
-const sensorBoardPattern = /^usb-c__mspm0g3507__.+\.circuit\.tsx$/;
+const sensorBoardPattern = /^usb-c__mspm0g(?:3507|5117)__.+\.circuit\.tsx$/;
 const planOnly = process.argv.includes("--plan");
 
 const commonBuildArgs = [
@@ -99,9 +99,9 @@ const legacyFilenames = circuitFilenames.filter(
 const discoveredBoardIds = circuitFilenames.map(boardIdFromFilename).sort();
 const expectedBoardIds = [...expectedConfigurationIds].sort();
 
-if (sensorFilenames.length !== 10) {
+if (sensorFilenames.length !== 27) {
   throw new Error(
-    `Expected 10 isolated MSPM0 sensor boards, found ${sensorFilenames.length}`,
+    `Expected 27 isolated MSPM0 sensor/display boards, found ${sensorFilenames.length}`,
   );
 }
 if (JSON.stringify(discoveredBoardIds) !== JSON.stringify(expectedBoardIds)) {

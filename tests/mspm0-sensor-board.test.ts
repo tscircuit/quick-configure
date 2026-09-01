@@ -138,7 +138,7 @@ describe("MSPM0 sensor board source", () => {
     const source = await Bun.file(
       join(projectRoot, "src", "Mspm0SensorBoard.tsx"),
     ).text();
-    const pinBlock = section(source, "const mspm0Pins = {", "} as const");
+    const pinBlock = section(source, "const mspm0g3507Pins = {", "} as const");
 
     expect(pinBlock).toContain("swdio: 12");
     expect(pinBlock).toContain("swclk: 13");
@@ -160,8 +160,8 @@ describe("MSPM0 sensor board source", () => {
       'mspm0Pins.vcore)} to="net.MSPM0_VCORE"',
       'mspm0Pins.rosc)} to=".R_MCU_ROSC > .pin1"',
       'mspm0Pins.reset)} to="net.MAIN_RESET"',
-      'mspm0Pins.uartTx)} to="net.UART_MSP_TX"',
-      'mspm0Pins.uartRx)} to="net.UART_MSP_RX"',
+      'mspm0g3507Pins.uartTx)} to="net.UART_MSP_TX"',
+      'mspm0g3507Pins.uartRx)} to="net.UART_MSP_RX"',
       'mspm0Pins.i2cSda)} to="net.MCU_I2C_SDA_LOCAL"',
       'mspm0Pins.i2cScl)} to="net.MCU_I2C_SCL_LOCAL"',
       'mspm0Pins.sensorInterrupt)} to="net.SENSOR_INT"',

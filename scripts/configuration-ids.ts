@@ -10,8 +10,13 @@ export const expectedConfigurationIds = [
   ...Object.keys(screenModelSpecs).map(
     (screen) => `usb-c__msp430f5529__${screen}`,
   ),
+  ...Object.keys(screenModelSpecs).map(
+    (screen) => `usb-c__mspm0g5117__${screen}`,
+  ),
   ...Object.keys(sensors).map((sensor) => `usb-c__msp430f5529__${sensor}`),
+  ...Object.keys(sensors).map((sensor) => `usb-c__mspm0g5117__${sensor}`),
   ...Object.keys(mspm0Sensors).map((sensor) => `usb-c__mspm0g3507__${sensor}`),
+  ...Object.keys(mspm0Sensors).map((sensor) => `usb-c__mspm0g5117__${sensor}`),
 ].sort();
 
 export const expectedBoardAssetFilenames = [
