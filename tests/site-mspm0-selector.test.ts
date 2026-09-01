@@ -16,11 +16,10 @@ describe("MSPM0 sensor selector", () => {
     });
 
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
-    expect(html).toContain("38 selectable designs");
+    expect(html).toContain("72 selectable designs");
     expect(html).toContain("BNO085 MSPM0 Orientation Sensor Board");
-    expect(html).toContain(
-      "This pre-generated sensor configuration uses USB-C, TI MSPM0G3507",
-    );
+    expect(html).toContain("TI MSPM0G5117 — native USB 2.0 FS");
+    expect(html).toContain("TI MSPM0G5187 — native USB + TinyEngine NPU");
     expect(html).toContain('breadcrumb:["Sensors","MSPM0 Sensors"');
     for (const id of mspm0SensorIds) {
       expect(html).toContain(mspm0Sensors[id].displayName);
@@ -32,11 +31,22 @@ describe("MSPM0 sensor selector", () => {
     const html = await Bun.file(join(projectRoot, "site", "index.html")).text();
 
     expect(html).toContain('<option value="mspm0g3507">TI MSPM0G3507');
+    expect(html).toContain('<option value="mspm0g5117">TI MSPM0G5117');
+    expect(html).toContain('<option value="mspm0g5187">TI MSPM0G5187');
     expect(html).toContain(
-      'Object.fromEntries(mspm0SensorIds.map(sensor=>[sensor,{connector:"usb-c",mcu:"mspm0g3507"}]))',
+      'const mspm0PeripheralControllerIds=["mspm0g3507","mspm0g5117","mspm0g5187"]',
+    );
+    expect(html).toContain(
+      'const legacyPeripheralControllerIds=["msp430f5529","mspm0g5117","mspm0g5187"]',
     );
     expect(html).toContain(
       "mspm0SensorIds.map(sensor=>`usb-c__mspm0g3507__${sensor}`)",
+    );
+    expect(html).toContain(
+      "mspm0SensorIds.map(sensor=>`usb-c__mspm0g5117__${sensor}`)",
+    );
+    expect(html).toContain(
+      "mspm0SensorIds.map(sensor=>`usb-c__mspm0g5187__${sensor}`)",
     );
     expect(html).toContain(
       "sensorIds.map(sensor=>`usb-c__msp430f5529__${sensor}`)",
@@ -44,7 +54,21 @@ describe("MSPM0 sensor selector", () => {
     expect(html).toContain(
       "screenIds.map(screen=>`usb-c__msp430f5529__${screen}`)",
     );
-    expect(html).toContain("mspm0Option.disabled=!isMspm0Sensor");
+    expect(html).toContain(
+      "screenIds.map(screen=>`usb-c__mspm0g5117__${screen}`)",
+    );
+    expect(html).toContain(
+      "screenIds.map(screen=>`usb-c__mspm0g5187__${screen}`)",
+    );
+    expect(html).toContain(
+      "sensorIds.map(sensor=>`usb-c__mspm0g5117__${sensor}`)",
+    );
+    expect(html).toContain(
+      "sensorIds.map(sensor=>`usb-c__mspm0g5187__${sensor}`)",
+    );
+    expect(html).toContain(
+      "option.disabled=!allowedControllers.includes(option.value)",
+    );
     expect(html).toContain("photodiodeControllerIds.includes(mcuSelect.value)");
     expect(html).not.toContain(
       "Object.keys(controllers).map(controller=>`${connector}__${controller}__photodiode`)",
@@ -73,7 +97,15 @@ describe("MSPM0 sensor documentation", () => {
     expect(readme).toContain("### Additional MSPM0 sensor boards");
     expect(readme).toContain("MSPM0G3507SPMR");
     expect(readme).toContain("C22389960");
-    expect(readme).toContain("**38 selectable configurations**");
+    expect(readme).toContain("**72 selectable configurations**");
+    expect(readme).toContain("MSPM0G5117SPMR");
+    expect(readme).toContain("MSPM0G5187SPMR");
+    expect(readme).toContain(
+      "https://www.ti.com/lit/ds/symlink/mspm0g5117.pdf",
+    );
+    expect(readme).toContain(
+      "https://www.ti.com/lit/ds/symlink/mspm0g5187.pdf",
+    );
     for (const id of mspm0SensorIds) {
       expect(readme).toContain(mspm0Sensors[id].sensorPartNumber);
       expect(readme).toContain(mspm0Sensors[id].datasheetUrl);

@@ -72,13 +72,13 @@ describe("screen catalog", () => {
 })
 
 describe("generated assets and variants", () => {
-  test("the source manifest contains exactly the 38 selectable circuits", async () => {
+  test("the source manifest contains exactly the 72 selectable circuits", async () => {
     const rootCircuits = (await readdir(projectRoot))
       .filter((filename) => filename.endsWith(".circuit.tsx"))
       .map((filename) => filename.replace(".circuit.tsx", ""))
       .sort()
 
-    expect(expectedConfigurationIds).toHaveLength(38)
+    expect(expectedConfigurationIds).toHaveLength(72)
     expect(rootCircuits).toEqual(expectedConfigurationIds)
   })
 
@@ -87,16 +87,24 @@ describe("generated assets and variants", () => {
       const model = Bun.file(
         join(projectRoot, "src", "models", screenModelSpecs[id].outputFilename),
       )
-      const wrapper = Bun.file(
+      const msp430Wrapper = Bun.file(
         join(projectRoot, `usb-c__msp430f5529__${id}.circuit.tsx`),
       )
-
       expect(await model.exists()).toBe(true)
       expect(model.size).toBeGreaterThan(100_000)
       expect(new TextDecoder().decode((await model.arrayBuffer()).slice(0, 4))).toBe(
         "glTF",
       )
-      expect(await wrapper.exists()).toBe(true)
+      expect(await msp430Wrapper.exists()).toBe(true)
+      for (const controller of ["mspm0g5117", "mspm0g5187"] as const) {
+        const mspm0Wrapper = Bun.file(
+          join(projectRoot, `usb-c__${controller}__${id}.circuit.tsx`),
+        )
+        expect(await mspm0Wrapper.exists()).toBe(true)
+        expect(await mspm0Wrapper.text()).toContain(
+          `<ScreenBoard controller="${controller}" screen="${id}" />`,
+        )
+      }
     })
   }
 
@@ -180,8 +188,10 @@ describe("generated assets and variants", () => {
     for (const id of ids) {
       expect(html).toContain(`<option value="${id}">`)
     }
-    expect(html).toContain("38 selectable designs")
+    expect(html).toContain("72 selectable designs")
     expect(html).toContain("usb-c__msp430f5529__${screen}")
+    expect(html).toContain("usb-c__mspm0g5117__${screen}")
+    expect(html).toContain("usb-c__mspm0g5187__${screen}")
     expect(html).toContain("availableConfigurations")
   })
 })

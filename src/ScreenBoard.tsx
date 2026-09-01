@@ -1,10 +1,13 @@
 import { Fragment } from "react";
+import { MSPM0G5117SPMR, mspm0UsbLqfp64Pins } from "./MSPM0G5117SPMR";
+import { MSPM0G5187SPMR } from "./MSPM0G5187SPMR";
 import { mcus } from "./board-data";
 import { screens, type ScreenId } from "./screen-data";
 import { SmdUsbC } from "./SmdUsbC";
 
 export interface ScreenBoardProps {
   screen: ScreenId;
+  controller?: "msp430f5529" | "mspm0g5117" | "mspm0g5187";
 }
 
 const usbEsdPins = {
@@ -439,9 +442,21 @@ const EpaperSupport = () => (
   </>
 );
 
-export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
+export const ScreenBoard = ({
+  screen: screenId,
+  controller = "msp430f5529",
+}: ScreenBoardProps) => {
   const screen = screens[screenId];
   const mcu = mcus.msp430f5529;
+  const isNativeUsbMspm0 = controller !== "msp430f5529";
+  const isMspm0g5187 = controller === "mspm0g5187";
+  const controllerLabel = isMspm0g5187
+    ? "MSPM0G5187"
+    : isNativeUsbMspm0
+      ? "MSPM0G5117"
+      : "MSP430F5529";
+  const NativeUsbMspm0 = isMspm0g5187 ? MSPM0G5187SPMR : MSPM0G5117SPMR;
+  const controllerPins = isNativeUsbMspm0 ? mspm0UsbLqfp64Pins : f5529;
   const isOled = screenId === "er-oled096-1-3w";
   const isTft020 = screenId === "er-tft020-3";
   const isTft028 = screenId === "er-tft028a2-4";
@@ -455,7 +470,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         : 2.6;
   const boardWidth = 82;
   const boardHeight = 52;
-  const boardTitle = `USB-C + MSP430F5529 + ${screen.displayName}`;
+  const boardTitle = `USB-C + ${controllerLabel} + ${screen.displayName}`;
   const displaySignalPins = Array.from(
     { length: screen.connector.positionCount },
     (_, index) => screen.connector.pinLabels[`pin${index + 1}`],
@@ -482,7 +497,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
 
   return (
     <board
-      name={`usb-c_msp430f5529_${screenId}`}
+      name={`usb-c_${controller}_${screenId}`}
       width={boardWidth}
       height={boardHeight}
       layers={2}
@@ -491,7 +506,10 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
     >
       <schematicsheet name="Main" displayName={boardTitle} sheetIndex={0} />
       <schematicsection name="Interface" displayName="USB-C & Power" />
-      <schematicsection name="Control" displayName="MSP430F5529 Controller" />
+      <schematicsection
+        name="Control"
+        displayName={`${controllerLabel} Controller`}
+      />
       <schematicsection
         name="Display"
         displayName={`${screen.controller} Display Interface`}
@@ -535,7 +553,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <resistor
         {...interfaceSection}
         name="R_USB_DP"
-        resistance="27"
+        resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
         pcbX={-3.8}
         pcbY={9}
@@ -546,7 +564,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <resistor
         {...interfaceSection}
         name="R_USB_DM"
-        resistance="27"
+        resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
         pcbX={-5}
         pcbY={9}
@@ -608,55 +626,98 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schY={-7}
       />
 
-      <chip
-        {...controlSection}
-        name="U_MAIN"
-        manufacturerPartNumber={mcu.manufacturerPartNumber}
-        supplierPartNumbers={mcu.supplierPartNumbers}
-        footprint={mcu.footprint}
-        pinLabels={mcu.pinLabels}
-        pcbX={-9}
-        pcbY={0}
-        pcbRotation={0}
-        schX={0}
-        schY={1}
-      />
-      <capacitor
-        {...controlSection}
-        {...verticalCapacitorSymbol}
-        name="C_MCU_DVCC1"
-        capacitance="100nF"
-        footprint="0402"
-        pcbX={-18}
-        pcbY={-3.75}
-        pcbRotation={180}
-        schX={-4}
-        schY={7}
-      />
-      <capacitor
-        {...controlSection}
-        {...verticalCapacitorSymbol}
-        name="C_MCU_DVCC2"
-        capacitance="100nF"
-        footprint="0402"
-        pcbX={0}
-        pcbY={-0.25}
-        pcbRotation={0}
-        schX={-2}
-        schY={7}
-      />
-      <capacitor
-        {...controlSection}
-        {...verticalCapacitorSymbol}
-        name="C_MCU_AVCC"
-        capacitance="1uF"
-        footprint="0603"
-        pcbX={-19}
-        pcbY={-0.25}
-        pcbRotation={180}
-        schX={0}
-        schY={7}
-      />
+      {isNativeUsbMspm0 ? (
+        <NativeUsbMspm0
+          {...controlSection}
+          name="U_MAIN"
+          pcbX={-9}
+          pcbY={0}
+          pcbRotation={0}
+          schX={0}
+          schY={1}
+        />
+      ) : (
+        <chip
+          {...controlSection}
+          name="U_MAIN"
+          manufacturerPartNumber={mcu.manufacturerPartNumber}
+          supplierPartNumbers={mcu.supplierPartNumbers}
+          footprint={mcu.footprint}
+          pinLabels={mcu.pinLabels}
+          pcbX={-9}
+          pcbY={0}
+          pcbRotation={0}
+          schX={0}
+          schY={1}
+        />
+      )}
+      {isNativeUsbMspm0 ? (
+        <>
+          <capacitor
+            {...controlSection}
+            {...verticalCapacitorSymbol}
+            name="C_MCU_VDD"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={0}
+            pcbY={-0.25}
+            pcbRotation={0}
+            schX={-4}
+            schY={7}
+          />
+          <capacitor
+            {...controlSection}
+            {...verticalCapacitorSymbol}
+            name="C_MCU_BULK"
+            capacitance="10uF"
+            footprint="0805"
+            pcbX={-18}
+            pcbY={-3.75}
+            pcbRotation={180}
+            schX={-1}
+            schY={7}
+          />
+        </>
+      ) : (
+        <>
+          <capacitor
+            {...controlSection}
+            {...verticalCapacitorSymbol}
+            name="C_MCU_DVCC1"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={-18}
+            pcbY={-3.75}
+            pcbRotation={180}
+            schX={-4}
+            schY={7}
+          />
+          <capacitor
+            {...controlSection}
+            {...verticalCapacitorSymbol}
+            name="C_MCU_DVCC2"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={0}
+            pcbY={-0.25}
+            pcbRotation={0}
+            schX={-2}
+            schY={7}
+          />
+          <capacitor
+            {...controlSection}
+            {...verticalCapacitorSymbol}
+            name="C_MCU_AVCC"
+            capacitance="1uF"
+            footprint="0603"
+            pcbX={-19}
+            pcbY={-0.25}
+            pcbRotation={180}
+            schX={0}
+            schY={7}
+          />
+        </>
+      )}
       <capacitor
         {...controlSection}
         {...verticalCapacitorSymbol}
@@ -681,23 +742,25 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schX={4}
         schY={8}
       />
-      <capacitor
-        {...controlSection}
-        {...verticalCapacitorSymbol}
-        name="C_V18"
-        capacitance="220nF"
-        footprint="0603"
-        pcbX={-10.3}
-        pcbY={12.75}
-        pcbRotation={90}
-        schX={7}
-        schY={8}
-      />
+      {!isNativeUsbMspm0 && (
+        <capacitor
+          {...controlSection}
+          {...verticalCapacitorSymbol}
+          name="C_V18"
+          capacitance="220nF"
+          footprint="0603"
+          pcbX={-10.3}
+          pcbY={12.75}
+          pcbRotation={90}
+          schX={7}
+          schY={8}
+        />
+      )}
       <capacitor
         {...controlSection}
         {...verticalCapacitorSymbol}
         name="C_VUSB"
-        capacitance="220nF"
+        capacitance={isNativeUsbMspm0 ? "100nF" : "220nF"}
         footprint="0603"
         pcbX={-8}
         pcbY={12.75}
@@ -705,17 +768,19 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schX={10}
         schY={8}
       />
-      <resistor
-        {...controlSection}
-        name="R_USB_PULLUP"
-        resistance="1.4k"
-        footprint="0402"
-        pcbX={-1}
-        pcbY={9.5}
-        pcbRotation={0}
-        schX={-3}
-        schY={9}
-      />
+      {!isNativeUsbMspm0 && (
+        <resistor
+          {...controlSection}
+          name="R_USB_PULLUP"
+          resistance="1.4k"
+          footprint="0402"
+          pcbX={-1}
+          pcbY={9.5}
+          pcbRotation={0}
+          schX={-3}
+          schY={9}
+        />
+      )}
       <resistor
         {...controlSection}
         name="R_MCU_RESET"
@@ -731,7 +796,7 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         {...controlSection}
         {...verticalCapacitorSymbol}
         name="C_MCU_RESET"
-        capacitance="2.2nF"
+        capacitance={isNativeUsbMspm0 ? "10nF" : "2.2nF"}
         footprint="0402"
         pcbX={-15.25}
         pcbY={9}
@@ -739,62 +804,78 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         schX={4}
         schY={10}
       />
-      <resonator
-        {...controlSection}
-        name="Y_XT2"
-        manufacturerPartNumber="CSTNR4M00GH5L000R0"
-        supplierPartNumbers={{ jlcpcb: ["C341526"] }}
-        frequency="4MHz"
-        loadCapacitance="39pF"
-        pinVariant="ground_pin"
-        footprint={
-          <footprint>
-            <smtpad
-              portHints={["1"]}
-              pcbX={0}
-              pcbY={-1.5}
-              width={2.6}
-              height={0.4}
-              shape="rect"
-            />
-            <smtpad
-              portHints={["2"]}
-              pcbX={0}
-              pcbY={0}
-              width={2.6}
-              height={0.4}
-              shape="rect"
-            />
-            <smtpad
-              portHints={["3"]}
-              pcbX={0}
-              pcbY={1.5}
-              width={2.6}
-              height={0.4}
-              shape="rect"
-            />
-            <silkscreenpath
-              route={[
-                { x: -1.1, y: -2.35 },
-                { x: 1.1, y: -2.35 },
-              ]}
-            />
-            <silkscreenpath
-              route={[
-                { x: -1.1, y: 2.35 },
-                { x: 1.1, y: 2.35 },
-              ]}
-            />
-            <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
-          </footprint>
-        }
-        cadModel={null}
-        pcbX={-8.5}
-        pcbY={9.5}
-        pcbRotation={90}
-        schX={-1}
-        schY={-5}
-      />
+      {isNativeUsbMspm0 ? (
+        <resistor
+          {...controlSection}
+          name="R_MCU_ROSC"
+          manufacturerPartNumber="PTFR0402B100KP9"
+          supplierPartNumbers={{ jlcpcb: ["C478863"] }}
+          resistance="100k"
+          tolerance="0.1%"
+          footprint="0402"
+          pcbX={-8.5}
+          pcbY={9.5}
+          schX={-1}
+          schY={-5}
+        />
+      ) : (
+        <resonator
+          {...controlSection}
+          name="Y_XT2"
+          manufacturerPartNumber="CSTNR4M00GH5L000R0"
+          supplierPartNumbers={{ jlcpcb: ["C341526"] }}
+          frequency="4MHz"
+          loadCapacitance="39pF"
+          pinVariant="ground_pin"
+          footprint={
+            <footprint>
+              <smtpad
+                portHints={["1"]}
+                pcbX={0}
+                pcbY={-1.5}
+                width={2.6}
+                height={0.4}
+                shape="rect"
+              />
+              <smtpad
+                portHints={["2"]}
+                pcbX={0}
+                pcbY={0}
+                width={2.6}
+                height={0.4}
+                shape="rect"
+              />
+              <smtpad
+                portHints={["3"]}
+                pcbX={0}
+                pcbY={1.5}
+                width={2.6}
+                height={0.4}
+                shape="rect"
+              />
+              <silkscreenpath
+                route={[
+                  { x: -1.1, y: -2.35 },
+                  { x: 1.1, y: -2.35 },
+                ]}
+              />
+              <silkscreenpath
+                route={[
+                  { x: -1.1, y: 2.35 },
+                  { x: 1.1, y: 2.35 },
+                ]}
+              />
+              <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
+            </footprint>
+          }
+          cadModel={null}
+          pcbX={-8.5}
+          pcbY={9.5}
+          pcbRotation={90}
+          schX={-1}
+          schY={-5}
+        />
+      )}
       <resistor
         {...displaySection}
         name="R_DISPLAY_CS"
@@ -845,30 +926,60 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
         pitch="2.54mm"
         gender="unpopulated"
         doNotPlace
-        pinLabels={[
-          "VCC_3V3",
-          "GND",
-          "RESET",
-          "TEST",
-          "UART_TX",
-          "UART_RX",
-          "SPI_CLK",
-          "SPI_MOSI",
-          "SPI_MISO",
-          isEpaper ? "BUSY_N" : "TE",
-        ]}
-        pcbPinLabels={{
-          pin1: "3V3",
-          pin2: "G",
-          pin3: "RST",
-          pin4: "TST",
-          pin5: "TX",
-          pin6: "RX",
-          pin7: "CLK",
-          pin8: "MO",
-          pin9: "MI",
-          pin10: isEpaper ? "BSY" : "TE",
-        }}
+        pinLabels={
+          isNativeUsbMspm0
+            ? [
+                "VTREF",
+                "GND",
+                "RESET",
+                "SWDIO",
+                "SWCLK",
+                "DISPLAY_CS",
+                "SPI_CLK",
+                "SPI_MOSI",
+                "SPI_MISO",
+                isEpaper ? "BUSY_N" : "TE",
+              ]
+            : [
+                "VCC_3V3",
+                "GND",
+                "RESET",
+                "TEST",
+                "UART_TX",
+                "UART_RX",
+                "SPI_CLK",
+                "SPI_MOSI",
+                "SPI_MISO",
+                isEpaper ? "BUSY_N" : "TE",
+              ]
+        }
+        pcbPinLabels={
+          isNativeUsbMspm0
+            ? {
+                pin1: "3V3",
+                pin2: "G",
+                pin3: "RST",
+                pin4: "DIO",
+                pin5: "CLK",
+                pin6: "CS",
+                pin7: "SCK",
+                pin8: "MO",
+                pin9: "MI",
+                pin10: isEpaper ? "BSY" : "TE",
+              }
+            : {
+                pin1: "3V3",
+                pin2: "G",
+                pin3: "RST",
+                pin4: "TST",
+                pin5: "TX",
+                pin6: "RX",
+                pin7: "CLK",
+                pin8: "MO",
+                pin9: "MI",
+                pin10: isEpaper ? "BSY" : "TE",
+              }
+        }
         showSilkscreenPinLabels
         pcbX={-6}
         pcbY={-20}
@@ -947,28 +1058,44 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       />
       <trace from=".U_ESD > .pin5" to="net.VBUS5" />
       <trace from=".U_ESD > .pin2" to="net.GND" />
-      <trace
-        name="usb-dp-mcu"
-        path={[
-          ".R_USB_DP > .pin2",
-          p("U_MAIN", f5529.usbDp),
-          ".R_USB_PULLUP > .pin2",
-        ]}
-        thickness="0.25mm"
-        maxViaCount={0}
-      />
+      {isNativeUsbMspm0 ? (
+        <trace
+          name="usb-dp-mcu"
+          from=".R_USB_DP > .pin2"
+          to={p("U_MAIN", mspm0UsbLqfp64Pins.usbDp)}
+          thickness="0.25mm"
+        />
+      ) : (
+        <trace
+          name="usb-dp-mcu"
+          path={[
+            ".R_USB_DP > .pin2",
+            p("U_MAIN", f5529.usbDp),
+            ".R_USB_PULLUP > .pin2",
+          ]}
+          thickness="0.25mm"
+          maxViaCount={0}
+        />
+      )}
       <trace
         name="usb-dm-mcu"
         from=".R_USB_DM > .pin2"
-        to={p("U_MAIN", f5529.usbDm)}
+        to={p(
+          "U_MAIN",
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.usbDm : f5529.usbDm,
+        )}
         thickness="0.25mm"
-        maxViaCount={0}
+        maxViaCount={isNativeUsbMspm0 ? undefined : 0}
       />
-      <trace from={p("U_MAIN", f5529.usbVbus)} to="net.VBUS5" />
       <trace from=".C_VBUS > .pin1" to="net.VBUS5" />
       <trace from=".C_VBUS > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.usbPullup)} to="net.MSP_USB_PUR" />
-      <trace from=".R_USB_PULLUP > .pin1" to="net.MSP_USB_PUR" />
+      {!isNativeUsbMspm0 && (
+        <>
+          <trace from={p("U_MAIN", f5529.usbVbus)} to="net.VBUS5" />
+          <trace from={p("U_MAIN", f5529.usbPullup)} to="net.MSP_USB_PUR" />
+          <trace from=".R_USB_PULLUP > .pin1" to="net.MSP_USB_PUR" />
+        </>
+      )}
 
       <trace from=".U_LDO > .pin1" to="net.VBUS5" thickness="0.4mm" />
       <trace from=".U_LDO > .pin3" to="net.VBUS5" />
@@ -981,93 +1108,147 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from=".C_3V3_BULK > .pin1" to="net.VCC_3V3" />
       <trace from=".C_3V3_BULK > .pin2" to="net.GND" />
 
-      {[
-        { pin: 11, capacitor: "C_MCU_AVCC" },
-        { pin: 18, capacitor: "C_MCU_DVCC1" },
-        { pin: 50, capacitor: "C_MCU_DVCC2" },
-      ].map(({ pin, capacitor }) => (
-        <trace
-          key={`mcu-vcc-${pin}`}
-          from={p("U_MAIN", pin)}
-          to={`.${capacitor} > .pin1`}
-          thickness="0.35mm"
-          maxViaCount={0}
-        />
-      ))}
-      {mcu.gndPins.map((pin) => (
-        <trace
-          key={`mcu-gnd-${pin}`}
-          from={p("U_MAIN", pin)}
-          to="net.GND"
-          thickness="0.35mm"
-        />
-      ))}
-      {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map((component) => (
-        <Fragment key={`${component}-rails`}>
+      {isNativeUsbMspm0 ? (
+        <>
           <trace
-            key={`${component}-vcc`}
-            from={`.${component} > .pin1`}
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.vdd)}
             to="net.VCC_3V3"
+            thickness="0.35mm"
           />
           <trace
-            key={`${component}-gnd`}
-            from={`.${component} > .pin2`}
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.vss)}
             to="net.GND"
+            thickness="0.35mm"
           />
-        </Fragment>
-      ))}
-      <trace from={p("U_MAIN", f5529.vcore)} to="net.MSP_VCORE" />
+          <trace from=".C_MCU_VDD > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_MCU_VDD > .pin2" to="net.GND" />
+          <trace from=".C_MCU_BULK > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_MCU_BULK > .pin2" to="net.GND" />
+        </>
+      ) : (
+        <>
+          {[
+            { pin: 11, capacitor: "C_MCU_AVCC" },
+            { pin: 18, capacitor: "C_MCU_DVCC1" },
+            { pin: 50, capacitor: "C_MCU_DVCC2" },
+          ].map(({ pin, capacitor }) => (
+            <trace
+              key={`mcu-vcc-${pin}`}
+              from={p("U_MAIN", pin)}
+              to={`.${capacitor} > .pin1`}
+              thickness="0.35mm"
+              maxViaCount={0}
+            />
+          ))}
+          {mcu.gndPins.map((pin) => (
+            <trace
+              key={`mcu-gnd-${pin}`}
+              from={p("U_MAIN", pin)}
+              to="net.GND"
+              thickness="0.35mm"
+            />
+          ))}
+          {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map(
+            (component) => (
+              <Fragment key={`${component}-rails`}>
+                <trace
+                  key={`${component}-vcc`}
+                  from={`.${component} > .pin1`}
+                  to="net.VCC_3V3"
+                />
+                <trace
+                  key={`${component}-gnd`}
+                  from={`.${component} > .pin2`}
+                  to="net.GND"
+                />
+              </Fragment>
+            ),
+          )}
+        </>
+      )}
+      <trace
+        from={p("U_MAIN", controllerPins.vcore)}
+        to="net.MSP_VCORE"
+      />
       <trace from=".C_VCORE > .pin1" to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.v18)} to="net.MSP_V18" />
-      <trace from=".C_V18 > .pin1" to="net.MSP_V18" />
-      <trace from=".C_V18 > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.usbVusb)} to="net.MSP_VUSB" />
-      <trace from=".C_VUSB > .pin1" to="net.MSP_VUSB" />
+      {!isNativeUsbMspm0 && (
+        <>
+          <trace from={p("U_MAIN", f5529.v18)} to="net.MSP_V18" />
+          <trace from=".C_V18 > .pin1" to="net.MSP_V18" />
+          <trace from=".C_V18 > .pin2" to="net.GND" />
+        </>
+      )}
+      <trace
+        from={p(
+          "U_MAIN",
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.vusb : f5529.usbVusb,
+        )}
+        to={isNativeUsbMspm0 ? "net.VCC_3V3" : "net.MSP_VUSB"}
+      />
+      <trace
+        from=".C_VUSB > .pin1"
+        to={isNativeUsbMspm0 ? "net.VCC_3V3" : "net.MSP_VUSB"}
+      />
       <trace from=".C_VUSB > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.reset)} to="net.MAIN_RESET" />
+      <trace from={p("U_MAIN", controllerPins.reset)} to="net.MAIN_RESET" />
       <trace from=".R_MCU_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".R_MCU_RESET > .pin2" to="net.VCC_3V3" />
       <trace from=".C_MCU_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".C_MCU_RESET > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.xt2In)} to="net.XT2_IN" />
-      <trace from=".Y_XT2 > .pin1" to="net.XT2_IN" />
-      <trace from=".Y_XT2 > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", f5529.xt2Out)} to="net.XT2_OUT" />
-      <trace from=".Y_XT2 > .pin3" to="net.XT2_OUT" />
+      {isNativeUsbMspm0 ? (
+        <>
+          <trace
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.rosc)}
+            to=".R_MCU_ROSC > .pin1"
+          />
+          <trace from=".R_MCU_ROSC > .pin2" to="net.GND" />
+        </>
+      ) : (
+        <>
+          <trace from={p("U_MAIN", f5529.xt2In)} to="net.XT2_IN" />
+          <trace from=".Y_XT2 > .pin1" to="net.XT2_IN" />
+          <trace from=".Y_XT2 > .pin2" to="net.GND" />
+          <trace from={p("U_MAIN", f5529.xt2Out)} to="net.XT2_OUT" />
+          <trace from=".Y_XT2 > .pin3" to="net.XT2_OUT" />
+        </>
+      )}
 
       <trace
-        from={p("U_MAIN", f5529.spiClock)}
+        from={p("U_MAIN", controllerPins.spiClock)}
         to="net.DISPLAY_SCLK"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", f5529.spiMosi)}
+        from={p("U_MAIN", controllerPins.spiMosi)}
         to="net.DISPLAY_MOSI"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", f5529.spiMiso)}
+        from={p("U_MAIN", controllerPins.spiMiso)}
         to="net.DISPLAY_MISO"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", f5529.displayCs)}
+        from={p("U_MAIN", controllerPins.displayCs)}
         to="net.DISPLAY_CS_N"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", f5529.displayDc)}
+        from={p("U_MAIN", controllerPins.displayDc)}
         to="net.DISPLAY_DC"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", f5529.displayReset)}
+        from={p("U_MAIN", controllerPins.displayReset)}
         to="net.DISPLAY_RESET_N"
         thickness="0.12mm"
       />
       <trace
-        from={p("U_MAIN", isEpaper ? f5529.displayBusy : f5529.displayTe)}
+        from={p(
+          "U_MAIN",
+          isEpaper ? controllerPins.displayBusy : controllerPins.displayTe,
+        )}
         to={isEpaper ? "net.DISPLAY_BUSY_N" : "net.DISPLAY_TE"}
         thickness="0.12mm"
       />
@@ -1343,7 +1524,10 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
 
       {(isTft020 || isTft028) && (
         <>
-          <trace from=".U_MAIN > .pin23" to="net.BACKLIGHT_PWM" />
+          <trace
+            from={p("U_MAIN", controllerPins.backlightPwm)}
+            to="net.BACKLIGHT_PWM"
+          />
           <trace from=".R_BL_GATE > .pin1" to="net.BACKLIGHT_PWM" />
           <trace from=".R_BL_GATE > .pin2" to="net.BACKLIGHT_GATE" />
           <trace from=".R_BL_GATE_PD > .pin1" to="net.BACKLIGHT_GATE" />
@@ -1361,9 +1545,24 @@ export const ScreenBoard = ({ screen: screenId }: ScreenBoardProps) => {
       <trace from=".J_DEBUG > .pin1" to="net.VCC_3V3" />
       <trace from=".J_DEBUG > .pin2" to="net.GND" />
       <trace from=".J_DEBUG > .pin3" to="net.MAIN_RESET" />
-      <trace from=".J_DEBUG > .pin4" to={p("U_MAIN", f5529.test)} />
-      <trace from=".J_DEBUG > .pin5" to={p("U_MAIN", f5529.uartTx)} />
-      <trace from=".J_DEBUG > .pin6" to={p("U_MAIN", f5529.uartRx)} />
+      <trace
+        from=".J_DEBUG > .pin4"
+        to={p(
+          "U_MAIN",
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.swdio : f5529.test,
+        )}
+      />
+      <trace
+        from=".J_DEBUG > .pin5"
+        to={p(
+          "U_MAIN",
+          isNativeUsbMspm0 ? mspm0UsbLqfp64Pins.swclk : f5529.uartTx,
+        )}
+      />
+      <trace
+        from=".J_DEBUG > .pin6"
+        to={isNativeUsbMspm0 ? "net.DISPLAY_CS_N" : p("U_MAIN", f5529.uartRx)}
+      />
       <trace from=".J_DEBUG > .pin7" to="net.DISPLAY_SCLK" />
       <trace from=".J_DEBUG > .pin8" to="net.DISPLAY_MOSI" />
       <trace from=".J_DEBUG > .pin9" to="net.DISPLAY_MISO" />

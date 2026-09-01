@@ -65,7 +65,7 @@ describe("MSPM0 sensor catalog", () => {
     }
   });
 
-  test("uses the JLCPCB-listed MSPM0G3507 for every configuration", async () => {
+  test("uses the JLCPCB-listed MSPM0G3507 for every existing configuration", async () => {
     expect(mspm0SensorController).toEqual({
       id: "mspm0g3507",
       displayName: "TI MSPM0G3507",
@@ -84,6 +84,23 @@ describe("MSPM0 sensor catalog", () => {
       expect(await wrapper.text()).toContain(
         `<Mspm0SensorBoard sensor="${id}" />`,
       );
+    }
+  });
+
+  test("adds native-USB MSPM0G51x variants for every configuration", async () => {
+    for (const controller of ["mspm0g5117", "mspm0g5187"] as const) {
+      for (const id of mspm0SensorIds) {
+        const configurationId = `usb-c__${controller}__${id}`;
+        const wrapper = Bun.file(
+          join(projectRoot, `${configurationId}.circuit.tsx`),
+        );
+
+        expect(expectedConfigurationIds).toContain(configurationId);
+        expect(await wrapper.exists()).toBe(true);
+        expect(await wrapper.text()).toContain(
+          `<Mspm0SensorBoard controller="${controller}" sensor="${id}" />`,
+        );
+      }
     }
   });
 });

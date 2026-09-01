@@ -10,11 +10,14 @@ import { SHT41_AD1B_R2 } from "../imports/SHT41_AD1B_R2";
 import { SHT45_AD1B_R2 } from "../imports/SHT45_AD1B_R2";
 import { VEML7700_TR } from "../imports/VEML7700_TR";
 import { VL53L4CDV0DH_1 } from "../imports/VL53L4CDV0DH_1";
+import { MSPM0G5117SPMR, mspm0UsbLqfp64Pins } from "./MSPM0G5117SPMR";
+import { MSPM0G5187SPMR } from "./MSPM0G5187SPMR";
 import { mspm0Sensors, type Mspm0SensorId } from "./mspm0-sensor-data";
 import { SmdUsbC } from "./SmdUsbC";
 
 export interface Mspm0SensorBoardProps {
   sensor: Mspm0SensorId;
+  controller?: "mspm0g3507" | "mspm0g5117" | "mspm0g5187";
 }
 
 const interfaceSection = { schSectionName: "Interface" } as const;
@@ -30,7 +33,7 @@ const usbEsdPins = {
   pin6: "DP_DEVICE",
 } as const;
 
-const mspm0Pins = {
+const mspm0g3507Pins = {
   swdio: 12,
   swclk: 13,
   vcore: 32,
@@ -959,7 +962,7 @@ const Aht20Circuit = () => (
       height="3.2mm"
       pcbX={31}
       pcbY={2}
-      layers={["top", "bottom"]}
+      layers={["bottom"]}
       excludeRefs={[".U_SENSOR"]}
     />
     {/* Local links give each tightly spaced DFN pad a short outward escape before joining shared board nets. */}
@@ -1181,8 +1184,21 @@ const SensorCircuit = ({ sensor }: Mspm0SensorBoardProps) => {
 
 export const Mspm0SensorBoard = ({
   sensor: sensorId,
+  controller = "mspm0g3507",
 }: Mspm0SensorBoardProps) => {
   const sensor = mspm0Sensors[sensorId];
+  const isNativeUsbMspm0 = controller !== "mspm0g3507";
+  const isMspm0g5187 = controller === "mspm0g5187";
+  const controllerName = isMspm0g5187
+    ? "MSPM0G5187"
+    : isNativeUsbMspm0
+      ? "MSPM0G5117"
+      : "MSPM0G3507";
+  const controllerMpn = `${controllerName}SPMR`;
+  const NativeUsbMspm0 = isMspm0g5187 ? MSPM0G5187SPMR : MSPM0G5117SPMR;
+  const mspm0Pins = isNativeUsbMspm0
+    ? mspm0UsbLqfp64Pins
+    : mspm0g3507Pins;
   const sensorNeedsCopperKeepout =
     sensorId === "sht41" || sensorId === "sht45" || sensorId === "aht20";
   const bottomPourOutline = sensorNeedsCopperKeepout
@@ -1200,7 +1216,7 @@ export const Mspm0SensorBoard = ({
 
   return (
     <board
-      name={`usb-c_mspm0g3507_${sensorId}`}
+      name={`usb-c_${controller}_${sensorId}`}
       width={92}
       height={60}
       layers={2}
@@ -1209,7 +1225,7 @@ export const Mspm0SensorBoard = ({
     >
       <schematicsheet
         name="Main"
-        displayName={`USB-C + MSPM0G3507 + ${sensor.sensorPartNumber}`}
+        displayName={`USB-C + ${controllerName} + ${sensor.sensorPartNumber}`}
         sheetIndex={0}
       />
       <schematicsection
@@ -1218,7 +1234,11 @@ export const Mspm0SensorBoard = ({
       />
       <schematicsection
         name="Control"
-        displayName="MSPM0G3507 + CH340N USB-UART"
+        displayName={
+          isNativeUsbMspm0
+            ? `${controllerName} Native USB Controller`
+            : "MSPM0G3507 + CH340N USB-UART"
+        }
       />
       <schematicsection
         name="Sensor"
@@ -1283,11 +1303,11 @@ export const Mspm0SensorBoard = ({
       {/* Fan both adjacent connector VBUS pairs inboard before joining the 5 V rail. */}
       <resistor
         {...interfaceSection}
-        name="R_USB_VBUS_TOP_LINK"
-        resistance="0"
-        footprint="0603"
-        pcbX={-36.5}
-        pcbY={2.6}
+      name="R_USB_VBUS_TOP_LINK"
+      resistance="0"
+      footprint="0603"
+      pcbX={-36.5}
+      pcbY={isNativeUsbMspm0 ? 4.5 : 2.6}
         pcbRotation={0}
         schX={-18}
         schY={1}
@@ -1316,36 +1336,38 @@ export const Mspm0SensorBoard = ({
       />
       <VerticalCapacitor
         {...interfaceSection}
-        name="C_LDO_OUT"
-        capacitance="1uF"
-        footprint="0603"
-        pcbX={-30}
-        pcbY={-12}
-        pcbRotation={0}
+      name="C_LDO_OUT"
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={isNativeUsbMspm0 ? -34 : -30}
+      pcbY={isNativeUsbMspm0 ? -13.5 : -12}
+      pcbRotation={isNativeUsbMspm0 ? 90 : 0}
         schX={-10.24}
         schY={-7}
       />
       <VerticalCapacitor
         {...interfaceSection}
         name="C_3V3_BULK"
-        capacitance="10uF"
-        footprint="0805"
-        pcbX={-26}
-        pcbY={-12}
-        pcbRotation={0}
+      capacitance="10uF"
+      footprint="0805"
+      pcbX={-26}
+      pcbY={-12}
+      pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={-7}
         schY={-7}
       />
 
-      <CH340N
-        {...controlSection}
-        name="U_USB_UART"
-        pcbX={-24}
-        pcbY={3}
-        pcbRotation={0}
-        schX={-7}
-        schY={3}
-      />
+      {!isNativeUsbMspm0 && (
+        <CH340N
+          {...controlSection}
+          name="U_USB_UART"
+          pcbX={-24}
+          pcbY={3}
+          pcbRotation={0}
+          schX={-7}
+          schY={3}
+        />
+      )}
       <resistor
         {...controlSection}
         name="R_USB_DP_LINK"
@@ -1354,7 +1376,7 @@ export const Mspm0SensorBoard = ({
         pcbX={-28.5}
         pcbY={2}
         pcbRotation={0}
-        schX={-10.12}
+        schX={-10.83}
         schY={1}
       />
       <resistor
@@ -1365,45 +1387,75 @@ export const Mspm0SensorBoard = ({
         pcbX={-28.5}
         pcbY={0}
         pcbRotation={0}
-        schX={-7.64}
+        schX={-6.93}
         schY={1}
       />
-      <VerticalCapacitor
-        {...controlSection}
-        name="C_USB_UART_VCC"
-        capacitance="100nF"
-        footprint="0402"
-        pcbX={-22}
-        pcbY={8}
-        pcbRotation={0}
-        schX={-8}
-        schY={7}
-      />
-      <VerticalCapacitor
-        {...controlSection}
-        name="C_USB_UART_V33"
-        capacitance="100nF"
-        footprint="0402"
-        pcbX={-26}
-        pcbY={8}
-        pcbRotation={0}
-        schX={-5}
-        schY={7}
-      />
+      {!isNativeUsbMspm0 && (
+        <>
+          <VerticalCapacitor
+            {...controlSection}
+            name="C_USB_UART_VCC"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={-22}
+            pcbY={8}
+            pcbRotation={0}
+            schX={-8}
+            schY={7}
+          />
+          <VerticalCapacitor
+            {...controlSection}
+            name="C_USB_UART_V33"
+            capacitance="100nF"
+            footprint="0402"
+            pcbX={-26}
+            pcbY={8}
+            pcbRotation={0}
+            schX={-5}
+            schY={7}
+          />
+        </>
+      )}
 
-      <MSPM0G3507SPMR
-        {...controlSection}
-        name="U_MAIN"
-        supplierPartNumbers={{ jlcpcb: ["C22389960"] }}
-        footprint="lqfp64_w10_h10_p0.5mm"
-        cadModel={{ glbUrl: "./src/models/mspm0g3507spmr.glb" }}
-        pcbX={-4}
-        pcbY={1}
-        pcbRotation={0}
-        schX={1}
-        schY={1}
-        schHeight={3.5}
-      />
+      {isNativeUsbMspm0 ? (
+        <NativeUsbMspm0
+          {...controlSection}
+          name="U_MAIN"
+          pcbX={-4}
+          pcbY={1}
+          pcbRotation={0}
+          schX={1}
+          schY={1}
+          schHeight={2.4}
+        />
+      ) : (
+        <MSPM0G3507SPMR
+          {...controlSection}
+          name="U_MAIN"
+          supplierPartNumbers={{ jlcpcb: ["C22389960"] }}
+          footprint="lqfp64_w10_h10_p0.5mm"
+          cadModel={{ glbUrl: "./src/models/mspm0g3507spmr.glb" }}
+          pcbX={-4}
+          pcbY={1}
+          pcbRotation={0}
+          schX={1}
+          schY={1}
+          schHeight={3.5}
+        />
+      )}
+      {isNativeUsbMspm0 && (
+        <VerticalCapacitor
+          {...controlSection}
+          name="C_MCU_VUSB"
+          capacitance="100nF"
+          footprint="0402"
+          pcbX={-5}
+          pcbY={-8}
+          pcbRotation={0}
+          schX={-4}
+          schY={7}
+        />
+      )}
       <VerticalCapacitor
         {...controlSection}
         name="C_MCU_VDD"
@@ -1492,7 +1544,7 @@ export const Mspm0SensorBoard = ({
         footprint="0402"
         pcbX={14}
         pcbY={9}
-        pcbRotation={0}
+        pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={8}
         schY={9}
       />
@@ -1503,7 +1555,7 @@ export const Mspm0SensorBoard = ({
         footprint="0402"
         pcbX={18}
         pcbY={9}
-        pcbRotation={0}
+        pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={11}
         schY={9}
       />
@@ -1768,37 +1820,52 @@ export const Mspm0SensorBoard = ({
         maxViaCount={0}
         pcbStraightLine
       />
-      {/*
-        The CH340N changes the pair from vertical to horizontal pad ordering.
-        Fixed top-layer fan-outs keep this short full-speed USB section
-        deterministic, via-free, and closely length matched.
-      */}
-      <trace
-        name="usb-dp-uart"
-        from=".R_USB_DP_LINK > .pin2"
-        to={port("U_USB_UART", "UD_POS")}
-        thickness="0.25mm"
-        maxViaCount={0}
-        pcbPathRelativeTo=".R_USB_DP_LINK > .pin2"
-        pcbPath={[
-          { x: 1.15, y: 0 },
-          { x: 1.15, y: 0.87 },
-          { x: 2, y: 0.87 },
-          { x: 2, y: -0.45 },
-        ]}
-      />
-      <trace
-        name="usb-dm-uart"
-        from=".R_USB_DM_LINK > .pin2"
-        to={port("U_USB_UART", "UD_NEG")}
-        thickness="0.25mm"
-        maxViaCount={0}
-        pcbPathRelativeTo=".R_USB_DM_LINK > .pin2"
-        pcbPath={[
-          { x: 2.05, y: -1.15 },
-          { x: 3.865, y: -1.15 },
-        ]}
-      />
+      {isNativeUsbMspm0 ? (
+        <>
+          <trace
+            name="usb-dp-mcu"
+            from=".R_USB_DP_LINK > .pin2"
+            to={p("U_MAIN", mspm0UsbLqfp64Pins.usbDp)}
+            thickness="0.25mm"
+          />
+          <trace
+            name="usb-dm-mcu"
+            from=".R_USB_DM_LINK > .pin2"
+            to={p("U_MAIN", mspm0UsbLqfp64Pins.usbDm)}
+            thickness="0.25mm"
+          />
+        </>
+      ) : (
+        <>
+          {/* The CH340N changes the pair from vertical to horizontal pad ordering. */}
+          <trace
+            name="usb-dp-uart"
+            from=".R_USB_DP_LINK > .pin2"
+            to={port("U_USB_UART", "UD_POS")}
+            thickness="0.25mm"
+            maxViaCount={0}
+            pcbPathRelativeTo=".R_USB_DP_LINK > .pin2"
+            pcbPath={[
+              { x: 1.15, y: 0 },
+              { x: 1.15, y: 0.87 },
+              { x: 2, y: 0.87 },
+              { x: 2, y: -0.45 },
+            ]}
+          />
+          <trace
+            name="usb-dm-uart"
+            from=".R_USB_DM_LINK > .pin2"
+            to={port("U_USB_UART", "UD_NEG")}
+            thickness="0.25mm"
+            maxViaCount={0}
+            pcbPathRelativeTo=".R_USB_DM_LINK > .pin2"
+            pcbPath={[
+              { x: 2.05, y: -1.15 },
+              { x: 3.865, y: -1.15 },
+            ]}
+          />
+        </>
+      )}
       <trace from={p("U_ESD", 5)} to="net.VBUS5" />
       {/* Place the ESD return directly into the bottom ground plane beside pin 2. */}
       <via
@@ -1831,19 +1898,36 @@ export const Mspm0SensorBoard = ({
       <trace from=".C_3V3_BULK > .pin1" to="net.VCC_3V3" />
       <trace from=".C_3V3_BULK > .pin2" to="net.GND" />
 
-      <trace
-        from={port("U_USB_UART", "VCC")}
-        to="net.VCC_3V3"
-        thickness="0.35mm"
-      />
-      <trace from={port("U_USB_UART", "GND")} to="net.GND" thickness="0.35mm" />
-      <trace from={port("U_USB_UART", "V3")} to="net.VCC_3V3" />
-      <trace from=".C_USB_UART_VCC > .pin1" to="net.VCC_3V3" />
-      <trace from=".C_USB_UART_VCC > .pin2" to="net.GND" />
-      <trace from=".C_USB_UART_V33 > .pin1" to="net.VCC_3V3" />
-      <trace from=".C_USB_UART_V33 > .pin2" to="net.GND" />
-      <trace from={port("U_USB_UART", "RXD")} to="net.UART_MSP_TX" />
-      <trace from={port("U_USB_UART", "TXD")} to="net.UART_MSP_RX" />
+      {isNativeUsbMspm0 ? (
+        <>
+          <trace
+            from={p("U_MAIN", mspm0UsbLqfp64Pins.vusb)}
+            to="net.VCC_3V3"
+          />
+          <trace from=".C_MCU_VUSB > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_MCU_VUSB > .pin2" to="net.GND" />
+        </>
+      ) : (
+        <>
+          <trace
+            from={port("U_USB_UART", "VCC")}
+            to="net.VCC_3V3"
+            thickness="0.35mm"
+          />
+          <trace
+            from={port("U_USB_UART", "GND")}
+            to="net.GND"
+            thickness="0.35mm"
+          />
+          <trace from={port("U_USB_UART", "V3")} to="net.VCC_3V3" />
+          <trace from=".C_USB_UART_VCC > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_USB_UART_VCC > .pin2" to="net.GND" />
+          <trace from=".C_USB_UART_V33 > .pin1" to="net.VCC_3V3" />
+          <trace from=".C_USB_UART_V33 > .pin2" to="net.GND" />
+          <trace from={port("U_USB_UART", "RXD")} to="net.UART_MSP_TX" />
+          <trace from={port("U_USB_UART", "TXD")} to="net.UART_MSP_RX" />
+        </>
+      )}
 
       <trace
         from={p("U_MAIN", mspm0Pins.vdd)}
@@ -1869,8 +1953,18 @@ export const Mspm0SensorBoard = ({
       <trace from=".R_MCU_RESET > .pin2" to="net.VCC_3V3" />
       <trace from=".C_MCU_RESET > .pin1" to="net.MAIN_RESET" />
       <trace from=".C_MCU_RESET > .pin2" to="net.GND" />
-      <trace from={p("U_MAIN", mspm0Pins.uartTx)} to="net.UART_MSP_TX" />
-      <trace from={p("U_MAIN", mspm0Pins.uartRx)} to="net.UART_MSP_RX" />
+      {!isNativeUsbMspm0 && (
+        <>
+          <trace
+            from={p("U_MAIN", mspm0g3507Pins.uartTx)}
+            to="net.UART_MSP_TX"
+          />
+          <trace
+            from={p("U_MAIN", mspm0g3507Pins.uartRx)}
+            to="net.UART_MSP_RX"
+          />
+        </>
+      )}
       <trace
         from={p("U_MAIN", mspm0Pins.i2cSda)}
         to="net.MCU_I2C_SDA_LOCAL"
@@ -1954,7 +2048,11 @@ export const Mspm0SensorBoard = ({
         fontSize="0.65mm"
       />
       <silkscreentext
-        text="MSPM0G3507SPMR + CH340N"
+        text={
+          isNativeUsbMspm0
+            ? `${controllerMpn} • NATIVE USB`
+            : "MSPM0G3507SPMR + CH340N"
+        }
         pcbX={-11}
         pcbY={25.5}
         fontSize="0.52mm"
@@ -1966,7 +2064,7 @@ export const Mspm0SensorBoard = ({
         fontSize="0.55mm"
       />
       <silkscreentext
-        text={`I2C ${sensor.defaultI2cAddress} • USB-C UART`}
+        text={`I2C ${sensor.defaultI2cAddress} • ${isNativeUsbMspm0 ? "USB-C FS" : "USB-C UART"}`}
         pcbX={27}
         pcbY={-28}
         fontSize="0.5mm"
