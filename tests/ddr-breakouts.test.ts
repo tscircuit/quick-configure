@@ -131,7 +131,101 @@ describe("DDR breakout artifacts", () => {
       join(projectRoot, "site", "ddr-breakouts", "index.html"),
     ).text()
     expect(page.match(/<select\b/g)).toHaveLength(3)
-    for (const position of ["top", "left", "bottom"])
+    for (const position of ["left", "bottom"])
       expect(page).toContain(`value="${position}" disabled`)
+    expect(page).toContain(
+      'value="top" data-board-id="am62l__mt53e1g16d1zw__top"',
+    )
+    expect(page).toContain('data-routing-status="unrouted"')
+    expect(page).toContain("Top is an unrouted layout")
+  })
+})
+
+describe("Top DDR dataset reference", () => {
+  const configuration = ddrConfigurations.find(
+    (config) => config.position === "top",
+  )!
+  const topViewerDir = join(projectRoot, "public", "viewer", configuration.id)
+
+  test("preserves the dataset geometry, netlist, and upward/downward breakout exits", async () => {
+    const top: AnyCircuitElement[] = await Bun.file(
+      join(topViewerDir, "circuit.json"),
+    ).json()
+    const board = top.find((record) => record.type === "pcb_board")!
+    expect([board.width, board.height, board.num_layers]).toEqual([52, 52, 8])
+    expect(board.min_via_hole_diameter).toBe(0.1)
+    const parts = top.filter((record) => record.type === "pcb_component")
+    expect(parts).toHaveLength(2)
+    const cpu = parts.find((part) => part.center.y === 0)!
+    const ram = parts.find((part) => part.center.y === 17)!
+    expect(cpu.center).toEqual({ x: 0, y: 0 })
+    expect(ram.center).toEqual({ x: 0, y: 17 })
+    expect(ram.rotation).toBe(90)
+    const pads = top.filter((record) => record.type === "pcb_smtpad")
+    expect(
+      pads.filter((pad) => pad.pcb_component_id === cpu.pcb_component_id),
+    ).toHaveLength(373)
+    expect(
+      pads.filter((pad) => pad.pcb_component_id === ram.pcb_component_id),
+    ).toHaveLength(200)
+
+    const traces = top.filter((record) => record.type === "source_trace")
+    expect(traces).toHaveLength(135)
+    expect(
+      traces.filter((trace) => trace.name?.startsWith("U1_VSS_")),
+    ).toHaveLength(97)
+    expect(
+      traces.filter((trace) => trace.name?.startsWith("U1_VDDS_DDR_")),
+    ).toHaveLength(5)
+    const signals = traces.filter(
+      (trace) => trace.connected_source_port_ids.length === 2,
+    )
+    expect(signals).toHaveLength(33)
+    const ports = top.filter((record) => record.type === "source_port")
+    const exits = top.filter((record) => record.type === "pcb_breakout_point")
+    expect(exits).toHaveLength(66)
+    for (const signal of signals) {
+      expect(
+        signal.connected_source_port_ids
+          .map(
+            (id) =>
+              ports.find((port) => port.source_port_id === id)!
+                .source_component_id,
+          )
+          .sort(),
+      ).toEqual([cpu.source_component_id, ram.source_component_id].sort())
+      const signalExits = exits.filter(
+        (exit) => exit.source_trace_id === signal.source_trace_id,
+      )
+      expect(signalExits).toHaveLength(2)
+      expect(
+        signalExits.find((exit) => exit.pcb_group_id === cpu.pcb_group_id)!.y,
+      ).toBeGreaterThan(cpu.center.y + cpu.height / 2)
+      expect(
+        signalExits.find((exit) => exit.pcb_group_id === ram.pcb_group_id)!.y,
+      ).toBeLessThan(ram.center.y - ram.height / 2)
+    }
+    expect(top.filter((record) => record.type === "pcb_trace")).toHaveLength(0)
+    expect(top.filter((record) => record.type.endsWith("_error"))).toHaveLength(
+      0,
+    )
+    expect(
+      top.find((record) => record.type === "pcb_note_text")!.text,
+    ).toContain("Unrouted reference")
+  })
+
+  test("ships matching source with the Top routing limitation documented", async () => {
+    for (const filename of ddrAssetFilenames)
+      expect(Bun.file(join(topViewerDir, filename)).size).toBeGreaterThan(0)
+    const zip = await JSZip.loadAsync(
+      await Bun.file(join(topViewerDir, "source.zip")).arrayBuffer(),
+    )
+    const entry = `src/ddr/${configuration.id}.circuit.tsx`
+    expect(await zip.file(entry)!.async("string")).toBe(
+      await Bun.file(join(projectRoot, entry)).text(),
+    )
+    expect(await zip.file("README.md")!.async("string")).toContain(
+      "Routing status: **unrouted**",
+    )
   })
 })

@@ -9,10 +9,11 @@ routed PCB, schematic, and downloadable fabrication/EDA resources.
 
 The header links to `/ddr-breakouts/`, a separate three-dropdown selector for
 CPU, RAM, and RAM Position. It currently offers **AM62L** with
-**MT53E1G16D1ZW (LPDDR4)** to the **Right**. Top, Left, and Bottom are visible
-but disabled until their layouts are implemented.
+**MT53E1G16D1ZW (LPDDR4)** to the **Right** (routed) or **Top** (unrouted
+reference). Left and Bottom remain disabled. Changing position updates the
+PCB preview, dimensions, routing status, and all three downloads.
 
-The 40 × 20 mm, eight-layer PCB follows core's
+The Right configuration is a 40 × 20 mm, eight-layer PCB that follows core's
 [progressive-fanout reference](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/repros/repro-am62l-lpddr4-progressive-fanout.test.tsx)
 and its
 [board fixture](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/fixtures/create-am62l-lpddr4-fanout.tsx).
@@ -21,13 +22,27 @@ It retains the 373-ball CPU and 200-ball RAM footprints, nine DDR buses,
 decoupling capacitors. The page offers a PCB viewer with pan/zoom plus PCB SVG,
 Circuit JSON, and TSX source downloads.
 
+The Top configuration follows the [02-top-center dataset sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx):
+an eight-layer 52 × 52 mm board with the CPU at (0, 0) and RAM at (0, 17),
+rotated 90°. It preserves all 33 signal connections, nine bus assignments,
+three differential pairs, 102 CPU plane drops, and the dataset's top/bottom
+bus exit directions. It has no decoupling capacitors, matching the dataset.
+The dataset is an unsolved CPU-fanout benchmark; RAM routing and the global
+routing phase are disabled. The Top preview therefore explicitly disables
+routing and displays connection guides instead of PCB traces. Its badge,
+SVG note, and source-bundle README identify it as **unrouted**.
+
 - `src/ddr/am62l__mt53e1g16d1zw__right.circuit.tsx` owns the Right layout and
   its per-chip bus exit directions, signal layers, skew limits, and placements.
   Add a separate TSX file for each future position and register it in
   `src/ddr/configurations.ts`.
+- `src/ddr/am62l__mt53e1g16d1zw__top.circuit.tsx` owns the dataset Top layout.
+  Rendering `Am62lLpddr4Top({ routingDisabled: false })` separately attempts
+  the dataset CPU fanout, which may not converge; RAM and global routing
+  still need implementation before this can become a routed board.
 - `src/ddr/am62l-lpddr4.tsx` shares the reference pin maps, footprints, and
   decoupling inventory.
-- `scripts/build-ddr-artifacts.ts` renders the DDR routes first, then adds the
+- `scripts/build-ddr-artifacts.ts` renders the Right DDR routes first, then adds the
   fixed processor decoupling copper, following core's staged render sequence.
   Use this builder to generate the complete reference, including that second
   TSX group. The core, props, router, and Circuit JSON versions are pinned to
@@ -37,6 +52,8 @@ Like core's reference, the 45 non-DDR processor power balls have logical
 membership in 16 rails whose segmented power planes are left to the host
 board. Their connectivity diagnostics remain in the downloaded Circuit JSON;
 the builder checks them one-for-one and rejects every other circuit error.
+For Top it rejects unexpected circuit errors and ensures no routed traces
+are included in the unrouted reference.
 This is a DDR breakout reference, not a complete powered processor design.
 
 To rebuild the DDR artifacts and pages using the checked-in sensor/display
@@ -48,6 +65,8 @@ npm run assemble-site -- --from-public
 npm test
 npm run typecheck
 ```
+
+Use `npm run build:ddr -- top` to regenerate only the Top reference.
 
 The full `npm run build` also generates DDR artifacts before assembling both
 pages. DDR circuits live under `src/ddr/` so the existing sensor/display batch

@@ -8,33 +8,55 @@ import { validateDdrCircuit } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
 
-for (const configuration of ddrConfigurations) {
+const requestedPosition = process.argv[2]
+const configurations = requestedPosition
+  ? ddrConfigurations.filter(
+      (configuration) => configuration.position === requestedPosition,
+    )
+  : ddrConfigurations
+if (!configurations.length)
+  throw new Error(`Unknown DDR position: ${requestedPosition}`)
+
+for (const configuration of configurations) {
   const circuit = new Circuit({
     platform: { placementDrcChecksDisabled: true },
   })
   circuit.add(configuration.Board())
-  console.log(`Routing ${configuration.id}`)
+  console.log(`Rendering ${configuration.id} (${configuration.routingStatus})`)
   await circuit.renderUntilSettled()
 
   // Core's reference routes DDR before introducing the 60 fixed decouplers.
   // Stage the new subtree through source trace creation before refreshing the
   // board's connectivity map and emitting its authored PCB copper.
-  const board = circuit._getBoard() as Board
-  board.add(configuration.DirectDecoupling())
-  const decouplingGroup = board.children[board.children.length - 1]!
-  const sourcePhaseIndex = orderedRenderPhases.indexOf("SourceTraceRender")
-  for (const phase of orderedRenderPhases.slice(0, sourcePhaseIndex + 1)) {
-    decouplingGroup.runRenderPhaseForChildren(phase)
-    decouplingGroup.runRenderPhase(phase)
+  if (configuration.DirectDecoupling) {
+    const board = circuit._getBoard() as Board
+    board.add(configuration.DirectDecoupling())
+    const decouplingGroup = board.children[board.children.length - 1]!
+    const sourcePhaseIndex = orderedRenderPhases.indexOf("SourceTraceRender")
+    for (const phase of orderedRenderPhases.slice(0, sourcePhaseIndex + 1)) {
+      decouplingGroup.runRenderPhaseForChildren(phase)
+      decouplingGroup.runRenderPhase(phase)
+    }
+    board.doInitialSourceAddConnectivityMapKey()
+    await circuit.renderUntilSettled()
+    board._drcChecksComplete = false
+    board._markDirty("PcbDesignRuleChecks")
+    await circuit.renderUntilSettled()
   }
-  board.doInitialSourceAddConnectivityMapKey()
-  await circuit.renderUntilSettled()
-  board._drcChecksComplete = false
-  board._markDirty("PcbDesignRuleChecks")
-  await circuit.renderUntilSettled()
 
   const circuitJson = circuit.getCircuitJson()
-  validateDdrCircuit(circuitJson)
+  if (configuration.routingStatus === "routed") validateDdrCircuit(circuitJson)
+  else {
+    const errors = circuitJson.filter((record) =>
+      record.type.endsWith("_error"),
+    )
+    if (errors.length)
+      throw new Error(`Unexpected reference errors: ${JSON.stringify(errors)}`)
+    if (circuitJson.some((record) => record.type === "pcb_trace"))
+      throw new Error(
+        "The unrouted Top reference unexpectedly contains routed copper",
+      )
+  }
   const outputDir = join(projectRoot, "dist", configuration.id)
   await mkdir(outputDir, { recursive: true })
   await Bun.write(
@@ -45,6 +67,7 @@ for (const configuration of ddrConfigurations) {
     join(outputDir, "pcb.svg"),
     convertCircuitJsonToPcbSvg(circuitJson, {
       showDebugObjects: true,
+      shouldDrawRatsNest: configuration.routingStatus === "unrouted",
       // Match the reference: translucent power planes leave signal copper clear.
       colorOverrides: {
         copper: {
@@ -78,7 +101,7 @@ for (const configuration of ddrConfigurations) {
   )
   sourceZip.file(
     "README.md",
-    "# DDR Breakouts\n\nInstall with `npm ci --force`, then run `bun scripts/build-ddr-artifacts.ts`.\n\nThe Right configuration preserves the staged DDR fanout and fixed decoupling copper from tscircuit/core's progressive-fanout reference.\n",
+    `# DDR Breakouts · ${configuration.position}\n\nRouting status: **${configuration.routingStatus}**.\n\nInstall with \`npm ci --force\`, then run \`bun scripts/build-ddr-artifacts.ts ${configuration.position}\`.\n\nThe Right configuration preserves the staged DDR fanout and fixed decoupling copper from tscircuit/core's progressive-fanout reference.\n\nTop preserves the 02-top-center placement, netlist, and bus directions from https://github.com/tscircuit/dataset-fanout31-am62l/tree/8c73befb36b125c84651c07454a9b940b3c6500a. It is an unrouted reference: the preview shows connection guides, not PCB traces. The dataset disables RAM routing and board-level routing; CPU fanout is an unsolved benchmark. To attempt CPU fanout, render Am62lLpddr4Top({ routingDisabled: false }) separately. This does not produce a fully routed board.\n`,
   )
   await Bun.write(
     join(outputDir, "source.zip"),

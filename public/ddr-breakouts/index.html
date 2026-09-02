@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tscircuit Quick Configure · DDR Breakouts</title>
-  <meta name="description" content="Inspect an AM62L and MT53E1G16D1ZW LPDDR4 breakout with RAM positioned to the right of the CPU." />
-  <link rel="stylesheet" href="../assets/site.css" />
+  <meta name="description" content="Inspect an AM62L and MT53E1G16D1ZW LPDDR4 breakout with RAM positioned to the right of or above the CPU." />
+  <link rel="stylesheet" href="../assets/site.css?v=ddr-top" />
 </head>
 <body class="ddr-page">
-  <div class="utility-bar">DDR breakout reference · AM62L + LPDDR4 · Routed PCB view</div>
+  <div class="utility-bar">DDR breakout reference · AM62L + LPDDR4 · PCB view</div>
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="../" aria-label="tscircuit Quick Configure home">
@@ -41,33 +41,33 @@
             <div class="pan-help">Drag to pan · Scroll to zoom</div>
             <div class="asset-loading" id="drawing-loading" role="status"><span>Loading PCB</span></div>
           </div>
-          <div class="gallery-caption"><span><b>AM62L · MT53E1G16D1ZW · Right</b></span><span>40 × 20 mm · 8 layers</span></div>
+          <div class="gallery-caption"><span><b id="caption-title">AM62L · MT53E1G16D1ZW · Right</b></span><span id="caption-dimensions">40 × 20 mm · 8 layers</span></div>
         </section>
         <aside class="product-info">
           <p class="category">DDR Breakout</p>
           <h1>DDR Breakouts</h1>
-          <div class="sku-line"><span>AM62L + LPDDR4</span><span class="ready">Ready to inspect</span></div>
-          <p class="description">An AM62L processor paired with MT53E1G16D1ZW LPDDR4 memory. Inspect the routed breakout with RAM to the right, including the data, address, clock, and control connections.</p>
+          <div class="sku-line"><span>AM62L + LPDDR4</span><span class="ready" id="routing-status" aria-live="polite">Routed reference</span></div>
+          <p class="description">An AM62L processor paired with MT53E1G16D1ZW LPDDR4 memory. Choose RAM to the right of or above the CPU to inspect the data, address, clock, and control connections.</p>
           <section class="config-card" aria-labelledby="configure-title">
             <h2 id="configure-title">Configure this board</h2>
             <div class="field"><label for="cpu">CPU</label><select id="cpu"><option value="am62l">AM62L</option></select></div>
             <div class="field"><label for="ram">RAM</label><select id="ram"><option value="mt53e1g16d1zw">MT53E1G16D1ZW (LPDDR4)</option></select></div>
-            <div class="field"><label for="ram-position">RAM Position</label><select id="ram-position" aria-describedby="selection-note"><option value="right">Right</option><option value="top" disabled>Top</option><option value="left" disabled>Left</option><option value="bottom" disabled>Bottom</option></select></div>
-            <p class="selection-note" id="selection-note">Right is available. Top, Left, and Bottom are coming later.</p>
+            <div class="field"><label for="ram-position">RAM Position</label><select id="ram-position" aria-describedby="selection-note"><option value="right" data-board-id="am62l__mt53e1g16d1zw__right" data-dimensions="40 × 20 mm · 8 layers" data-routing-status="routed">Right</option><option value="top" data-board-id="am62l__mt53e1g16d1zw__top" data-dimensions="52 × 52 mm · 8 layers" data-routing-status="unrouted">Top</option><option value="left" disabled>Left</option><option value="bottom" disabled>Bottom</option></select></div>
+            <p class="selection-note" id="selection-note">Right is routed. Top is an unrouted layout from the fanout dataset; its lines show intended connections. Left and Bottom are coming later.</p>
           </section>
         </aside>
       </div>
       <section class="resources" aria-labelledby="resources-title">
         <h2 id="resources-title">Resources</h2>
         <ul class="resource-list">
-          <li><a href="../viewer/am62l__mt53e1g16d1zw__right/pcb.svg" download="am62l__mt53e1g16d1zw__right-pcb.svg">PCB Drawing (.svg)</a></li>
-          <li><a href="../viewer/am62l__mt53e1g16d1zw__right/circuit.json" download="am62l__mt53e1g16d1zw__right.circuit.json">Circuit JSON</a></li>
-          <li><a href="../viewer/am62l__mt53e1g16d1zw__right/source.zip" download="am62l__mt53e1g16d1zw__right-source.zip">TSX Source (.zip)</a></li>
+          <li><a data-board-file="pcb.svg" href="../viewer/am62l__mt53e1g16d1zw__right/pcb.svg" download="am62l__mt53e1g16d1zw__right-pcb.svg">PCB Drawing (.svg)</a></li>
+          <li><a data-board-file="circuit.json" href="../viewer/am62l__mt53e1g16d1zw__right/circuit.json" download="am62l__mt53e1g16d1zw__right.circuit.json">Circuit JSON</a></li>
+          <li><a data-board-file="source.zip" href="../viewer/am62l__mt53e1g16d1zw__right/source.zip" download="am62l__mt53e1g16d1zw__right-source.zip">TSX Source (.zip)</a></li>
         </ul>
       </section>
     </div>
   </main>
   <footer><div class="footer-inner"><span><b>tscircuit Quick Configure</b> · DDR breakout reference</span><span>Designed and rendered with tscircuit</span></div></footer>
-  <script src="../assets/ddr-breakouts.js" defer></script>
+  <script src="../assets/ddr-breakouts.js?v=top" defer></script>
 </body>
 </html>

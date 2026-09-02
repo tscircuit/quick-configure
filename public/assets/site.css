@@ -81,3 +81,6 @@
 .ddr-page .viewer-toolbar { position:static }
 .pcb-view-label { display:flex; align-items:center; cursor:default; color:var(--red) }
 .asset-loading[hidden] { display:none }
+
+    .ddr-page .ready.unrouted { color:#8a570c }
+    .ddr-page .ready.unrouted::before { content:"i"; background:#8a570c }
