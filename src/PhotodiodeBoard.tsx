@@ -66,9 +66,9 @@ export const PhotodiodeBoard = ({
   const usbController = needsUsbBridge ? "U_USB" : "U_MAIN";
   const usbDpPin = needsUsbBridge ? 14 : mcu.nativeUsb?.dpPin;
   const usbDmPin = needsUsbBridge ? 15 : mcu.nativeUsb?.dmPin;
-  const mainX = needsUsbBridge ? 0 : -4;
   const isMspm33 = mcuId === "mspm33c321a";
   const isLargeMcu = mcuId === "msp430f5529";
+  const mainX = needsUsbBridge ? 0 : isLargeMcu ? -3.25 : -4;
   const mainDecouplingX = isLargeMcu
     ? -11.5
     : isMspm33
@@ -77,14 +77,14 @@ export const PhotodiodeBoard = ({
         ? 7.5
         : mainX;
   const mainDecouplingY = isLargeMcu
-    ? 16
+    ? 17.4
     : isMspm33
       ? -4.2
       : needsUsbBridge
         ? -4.6
         : -7.2;
-  const resetX = isLargeMcu ? -8.5 : isMspm33 ? -5.8 : mainX + 3;
-  const resetY = isLargeMcu ? 16 : isMspm33 ? -3 : -7.2;
+  const resetX = isLargeMcu ? -8.5 : isMspm33 ? mainX - 8 : mainX + 3;
+  const resetY = isLargeMcu ? 17.4 : isMspm33 ? -3 : -7.2;
   const mainSchX = isMspm33
     ? needsUsbBridge
       ? 0.31
@@ -121,13 +121,24 @@ export const PhotodiodeBoard = ({
       : 5.2;
   const boardWidth = isLargeMcu || isMspm33 ? 40.5 : 40;
   const boardHeight = isLargeMcu ? 26 : isMspm33 ? 25 : 21;
-  const ldoX = needsUsbBridge ? -16.25 : -9.5;
-  const ldoY = -(boardHeight / 2 - (needsUsbBridge ? 3.5 : 3));
+  const ldoX = needsUsbBridge ? -16.5 : isLargeMcu ? -14 : -10.5;
+  const ldoY = needsUsbBridge
+    ? -(boardHeight / 2 - 3.5)
+    : isLargeMcu
+      ? -8.5
+      : -6.5;
+  const ldoInX = needsUsbBridge ? -19 : isLargeMcu ? -17.5 : -14;
+  const ldoOutX = needsUsbBridge ? -13.5 : -10.5;
+  const ldoOutY = needsUsbBridge
+    ? -(boardHeight / 2) + 0.8
+    : isLargeMcu
+      ? -(boardHeight / 2) + 1.5
+      : -9.7;
   const connectorX =
     connector === "usb-c"
       ? -(boardWidth / 2) + 5
       : connector === "usb-micro"
-        ? -(boardWidth / 2) + 4.4
+        ? -(boardWidth / 2) + 5
         : -(boardWidth / 2) + 3.55;
   const boardTitle = `${connectorInfo.displayName} + ${mcu.displayName}`;
 
@@ -139,7 +150,6 @@ export const PhotodiodeBoard = ({
       layers={4}
       solderMaskColor="red"
       schSheetName="Main"
-      placementDrcChecksDisabled
     >
       <schematicsheet name="Main" displayName={boardTitle} sheetIndex={0} />
       <schematicsection name="Interface" displayName="Connector & Power" />
@@ -214,7 +224,7 @@ export const PhotodiodeBoard = ({
             supplierPartNumbers={{ jlcpcb: ["C7519"] }}
             footprint="kicad:Package_TO_SOT_SMD/SOT-23-6"
             pinLabels={usblc6Pins}
-            pcbX={needsUsbBridge ? -16.5 : compactPhotodiodeX(-17)}
+            pcbX={needsUsbBridge ? -15.5 : compactPhotodiodeX(-17)}
             pcbY={compactPhotodiodeY(9.5)}
             pcbRotation={-90}
             schX={-10}
@@ -238,7 +248,7 @@ export const PhotodiodeBoard = ({
             name="C_LDO_IN"
             capacitance="1uF"
             footprint="0603"
-            pcbX={ldoX - 0.95}
+            pcbX={ldoInX}
             pcbY={-(boardHeight / 2) + 1.5}
             pcbRotation={90}
             schX={-12}
@@ -250,12 +260,8 @@ export const PhotodiodeBoard = ({
             name="C_LDO_OUT"
             capacitance="1uF"
             footprint="0603"
-            pcbX={needsUsbBridge ? -10.9 : -6}
-            pcbY={
-              needsUsbBridge
-                ? -(boardHeight / 2) + 0.5
-                : -(boardHeight / 2 - 1.5)
-            }
+            pcbX={ldoOutX}
+            pcbY={ldoOutY}
             pcbRotation={needsUsbBridge ? 180 : 0}
             schX={-8}
             schY={-6}
@@ -298,8 +304,8 @@ export const PhotodiodeBoard = ({
             supplierPartNumbers={{ jlcpcb: ["C111367"] }}
             footprint="kicad:Package_SO/TSSOP-20_4.4x6.5mm_P0.65mm"
             pinLabels={ch552tPinLabels}
-            pcbX={-7}
-            pcbY={-(boardHeight / 2 - 3.25)}
+            pcbX={-8}
+            pcbY={-(boardHeight / 2 - 3.5)}
             pcbRotation={180}
             schX={usbBridgeSchX}
             schY={3}
@@ -321,7 +327,7 @@ export const PhotodiodeBoard = ({
             name="C_USB_V33"
             capacitance="100nF"
             footprint="0402"
-            pcbX={-6.5}
+            pcbX={-7.5}
             pcbY={compactPhotodiodeY(8.5)}
             schX={-2.7}
             schY={6.5}
@@ -331,8 +337,8 @@ export const PhotodiodeBoard = ({
             name="R_USB_RST"
             resistance="100k"
             footprint="0402"
-            pcbX={-14}
-            pcbY={5.3}
+            pcbX={-12.5}
+            pcbY={6.5}
             schX={-7}
             schY={6.5}
           />
@@ -345,7 +351,7 @@ export const PhotodiodeBoard = ({
           name="U_MAIN"
           pinLabels={mcu.pinLabels as any}
           pcbX={compactPhotodiodeX(mainX)}
-          pcbY={compactPhotodiodeY(needsUsbBridge ? 2 : 1.5)}
+          pcbY={compactPhotodiodeY(needsUsbBridge ? 2.4 : 1.5)}
           pcbRotation={180}
           schX={mainSchX}
           schY={1}
@@ -360,7 +366,7 @@ export const PhotodiodeBoard = ({
           footprint={mcu.footprint}
           pinLabels={mcu.pinLabels}
           pcbX={compactPhotodiodeX(mainX)}
-          pcbY={compactPhotodiodeY(needsUsbBridge ? 2 : 1.5)}
+          pcbY={compactPhotodiodeY(needsUsbBridge ? 2.4 : 1.5)}
           pcbRotation={mcu.pinCount >= 48 ? 45 : 180}
           schX={mainSchX}
           schY={1}
@@ -400,8 +406,8 @@ export const PhotodiodeBoard = ({
             name="C_MAIN_2"
             capacitance="100nF"
             footprint="0402"
-            pcbX={compactPhotodiodeX(mainX + 5.25)}
-            pcbY={compactPhotodiodeY(5)}
+            pcbX={compactPhotodiodeX(mainX + 6)}
+            pcbY={5}
             pcbRotation={90}
             schX={-1}
             schY={8}
@@ -413,7 +419,7 @@ export const PhotodiodeBoard = ({
             capacitance="10uF"
             footprint="0603"
             pcbX={compactPhotodiodeX(mainX)}
-            pcbY={compactPhotodiodeY(8.4)}
+            pcbY={8.5}
             schX={1.5}
             schY={8}
           />
@@ -423,8 +429,8 @@ export const PhotodiodeBoard = ({
             name="C_MSPM33_VBAT"
             capacitance="1uF"
             footprint="0603"
-            pcbX={compactPhotodiodeX(mainX - 5.4)}
-            pcbY={compactPhotodiodeY(-0.4)}
+            pcbX={compactPhotodiodeX(mainX - 6.3)}
+            pcbY={-1}
             pcbRotation={90}
             schX={4}
             schY={8}
@@ -435,8 +441,8 @@ export const PhotodiodeBoard = ({
             name="C_MSPM33_VCORE"
             capacitance="2.2uF"
             footprint="0603"
-            pcbX={compactPhotodiodeX(mainX - 5.4)}
-            pcbY={compactPhotodiodeY(2.2)}
+            pcbX={compactPhotodiodeX(mainX - 6.3)}
+            pcbY={2.8}
             pcbRotation={90}
             schX={6.19}
             schY={8}
@@ -458,7 +464,7 @@ export const PhotodiodeBoard = ({
             resistance="47k"
             footprint="0402"
             pcbX={compactPhotodiodeX(mainX + 2.8)}
-            pcbY={compactPhotodiodeY(7)}
+            pcbY={8.4}
             schX={9.31}
             schY={8}
           />
@@ -468,8 +474,8 @@ export const PhotodiodeBoard = ({
             name="C_MSPM33_VREF"
             capacitance="1uF"
             footprint="0603"
-            pcbX={compactPhotodiodeX(mainX - 3)}
-            pcbY={compactPhotodiodeY(6.9)}
+            pcbX={compactPhotodiodeX(mainX - 3.2)}
+            pcbY={8.5}
             schX={11.5}
             schY={8}
           />
@@ -499,8 +505,7 @@ export const PhotodiodeBoard = ({
             capacitance="470nF"
             footprint="0603"
             pcbX={compactPhotodiodeX(-5.5)}
-            pcbY={compactPhotodiodeY(16)}
-            pcbRotation={90}
+            pcbY={12}
             schX={-1}
             schY={8}
           />
@@ -511,8 +516,7 @@ export const PhotodiodeBoard = ({
             capacitance="1uF"
             footprint="0603"
             pcbX={compactPhotodiodeX(-2.5)}
-            pcbY={compactPhotodiodeY(16)}
-            pcbRotation={90}
+            pcbY={12}
             schX={1}
             schY={8}
           />
@@ -523,8 +527,7 @@ export const PhotodiodeBoard = ({
             capacitance="220nF"
             footprint="0603"
             pcbX={compactPhotodiodeX(0.5)}
-            pcbY={compactPhotodiodeY(16)}
-            pcbRotation={90}
+            pcbY={12}
             schX={3}
             schY={8}
           />
@@ -534,7 +537,7 @@ export const PhotodiodeBoard = ({
             resistance="1.4k"
             footprint="0402"
             pcbX={compactPhotodiodeX(3.5)}
-            pcbY={compactPhotodiodeY(16)}
+            pcbY={compactPhotodiodeY(17.4)}
             schX={-1}
             schY={9.5}
           />
@@ -587,8 +590,8 @@ export const PhotodiodeBoard = ({
         name="R_REF_TOP"
         resistance="56k"
         footprint="0402"
-        pcbX={compactPhotodiodeX(8)}
-        pcbY={compactPhotodiodeY(-5.2)}
+        pcbX={compactPhotodiodeX(8.8)}
+        pcbY={-6}
         schX={6}
         schY={-4}
       />
@@ -609,7 +612,7 @@ export const PhotodiodeBoard = ({
         capacitance="1uF"
         footprint="0603"
         pcbX={compactPhotodiodeX(14)}
-        pcbY={compactPhotodiodeY(-7.5)}
+        pcbY={-6}
         schX={10}
         schY={-4}
       />
@@ -618,8 +621,8 @@ export const PhotodiodeBoard = ({
         name="R_FB"
         resistance="330k"
         footprint="0402"
-        pcbX={compactPhotodiodeX(16)}
-        pcbY={compactPhotodiodeY(6.5)}
+        pcbX={compactPhotodiodeX(14.5)}
+        pcbY={8.5}
         schX={11}
         schY={2}
       />
@@ -629,8 +632,8 @@ export const PhotodiodeBoard = ({
         name="C_FB"
         capacitance="10pF"
         footprint="0402"
-        pcbX={compactPhotodiodeX(16)}
-        pcbY={compactPhotodiodeY(4.7)}
+        pcbX={compactPhotodiodeX(14.5)}
+        pcbY={6.6}
         schX={11}
         schY={3}
       />
@@ -689,7 +692,7 @@ export const PhotodiodeBoard = ({
         }
         showSilkscreenPinLabels
         pcbX={needsUsbBridge ? 6 : compactPhotodiodeX(0)}
-        pcbY={compactPhotodiodeY(-12)}
+        pcbY={isLargeMcu ? -(boardHeight / 2) + 1.25 : compactPhotodiodeY(-12)}
         pcbOrientation="horizontal"
         pcbRotation={needsUsbBridge ? 180 : 0}
         schX={1}
@@ -729,64 +732,6 @@ export const PhotodiodeBoard = ({
         pcbX={boardWidth / 2 - 2.25}
         pcbY={boardHeight / 2 - 3}
       />
-
-      {needsUsbBridge && (
-        <via
-          name="V_LDO_OUT_GND"
-          pcbX={-12.5}
-          pcbY={-(boardHeight / 2) + 0.5}
-          fromLayer="top"
-          toLayer="inner1"
-          holeDiameter="0.2mm"
-          outerDiameter="0.45mm"
-          connectsTo="net.GND"
-        />
-      )}
-
-      {isMspm33 && (
-        <>
-          <via
-            name="V_MSPM33_EP_1"
-            pcbX={compactPhotodiodeX(mainX - 0.9)}
-            pcbY={compactPhotodiodeY(0.6)}
-            fromLayer="top"
-            toLayer="bottom"
-            holeDiameter="0.2mm"
-            outerDiameter="0.45mm"
-            connectsTo="net.GND"
-          />
-          <via
-            name="V_MSPM33_EP_2"
-            pcbX={compactPhotodiodeX(mainX + 0.9)}
-            pcbY={compactPhotodiodeY(0.6)}
-            fromLayer="top"
-            toLayer="bottom"
-            holeDiameter="0.2mm"
-            outerDiameter="0.45mm"
-            connectsTo="net.GND"
-          />
-          <via
-            name="V_MSPM33_EP_3"
-            pcbX={compactPhotodiodeX(mainX - 0.9)}
-            pcbY={compactPhotodiodeY(2.4)}
-            fromLayer="top"
-            toLayer="bottom"
-            holeDiameter="0.2mm"
-            outerDiameter="0.45mm"
-            connectsTo="net.GND"
-          />
-          <via
-            name="V_MSPM33_EP_4"
-            pcbX={compactPhotodiodeX(mainX + 0.9)}
-            pcbY={compactPhotodiodeY(2.4)}
-            fromLayer="top"
-            toLayer="bottom"
-            holeDiameter="0.2mm"
-            outerDiameter="0.45mm"
-            connectsTo="net.GND"
-          />
-        </>
-      )}
 
       {connector === "usb-c" && (
         <>
@@ -859,10 +804,6 @@ export const PhotodiodeBoard = ({
             from=".U_LDO > .pin3"
             to=".U_LDO > .pin1"
             thickness="0.1mm"
-            pcbRouteHints={[
-              { x: ldoX + 0.95, y: -(boardHeight / 2) + 0.7 },
-              { x: ldoX - 0.95, y: -(boardHeight / 2) + 0.7 },
-            ]}
           />
           <trace from=".U_LDO > .pin2" to="net.GND" thickness="0.1mm" />
           <trace from=".U_LDO > .pin5" to="net.VCC_3V3" thickness="0.3mm" />
@@ -873,7 +814,7 @@ export const PhotodiodeBoard = ({
               from=".C_LDO_OUT > .pin1"
               to=".U_USB > .pin19"
               thickness="0.1mm"
-              maxLength="3mm"
+              maxLength="6mm"
             />
           ) : (
             <trace
@@ -882,7 +823,7 @@ export const PhotodiodeBoard = ({
               thickness="0.1mm"
             />
           )}
-          <trace from=".C_LDO_OUT > .pin2" to="net.GND" maxLength="3mm" />
+          <trace from=".C_LDO_OUT > .pin2" to="net.GND" maxLength="6mm" />
         </>
       )}
 

@@ -95,8 +95,7 @@ describe("MSPM33 photodiode target", () => {
 
     expect(source).toContain('to="net.MSPM33_VCORE"')
     expect(source).toContain('to="net.MSPM33_BSL_INVOKE"')
-    expect(source).toContain('name="V_MSPM33_EP_1"')
-    expect(source).toContain('name="V_MSPM33_EP_4"')
+    expect(source).toContain("mcu.gndPins.map")
     expect(source).toContain('["VCC_3V3", "GND", "RESET", "ADC_IN", "SWDIO", "SWCLK"]')
   })
 
