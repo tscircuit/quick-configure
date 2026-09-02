@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { expectedConfigurationIds } from "../scripts/configuration-ids";
+import { ddrConfigurations } from "../src/ddr/configurations";
 import { mspm0SensorIds, mspm0Sensors } from "../src/mspm0-sensor-data";
 
 const projectRoot = join(import.meta.dir, "..");
@@ -130,7 +131,10 @@ describe("Static deployment assets", () => {
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    expect(deployedBoardIds).toEqual([...expectedConfigurationIds].sort());
+    expect(deployedBoardIds).toEqual([
+      ...expectedConfigurationIds,
+      ...ddrConfigurations.map(configuration => configuration.id),
+    ].sort());
 
     const requiredFiles = [
       "3d.glb",

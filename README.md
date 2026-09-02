@@ -5,6 +5,54 @@ environmental, motion, orientation, distance, light, and thermal sensing plus
 raw BuyDisplay panels. Every configuration includes an interactive 3D model,
 routed PCB, schematic, and downloadable fabrication/EDA resources.
 
+## DDR Breakouts
+
+The header links to `/ddr-breakouts/`, a separate three-dropdown selector for
+CPU, RAM, and RAM Position. It currently offers **AM62L** with
+**MT53E1G16D1ZW (LPDDR4)** to the **Right**. Top, Left, and Bottom are visible
+but disabled until their layouts are implemented.
+
+The 40 × 20 mm, eight-layer PCB follows core's
+[progressive-fanout reference](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/repros/repro-am62l-lpddr4-progressive-fanout.test.tsx)
+and its
+[board fixture](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/fixtures/create-am62l-lpddr4-fanout.tsx).
+It retains the 373-ball CPU and 200-ball RAM footprints, nine DDR buses,
+33 signals, clock/DQS differential pairs, power-plane fanout, and 68 processor
+decoupling capacitors. The page offers a PCB viewer with pan/zoom plus PCB SVG,
+Circuit JSON, and TSX source downloads.
+
+- `src/ddr/am62l__mt53e1g16d1zw__right.circuit.tsx` owns the Right layout and
+  its per-chip bus exit directions, signal layers, skew limits, and placements.
+  Add a separate TSX file for each future position and register it in
+  `src/ddr/configurations.ts`.
+- `src/ddr/am62l-lpddr4.tsx` shares the reference pin maps, footprints, and
+  decoupling inventory.
+- `scripts/build-ddr-artifacts.ts` renders the DDR routes first, then adds the
+  fixed processor decoupling copper, following core's staged render sequence.
+  Use this builder to generate the complete reference, including that second
+  TSX group. The core, props, router, and Circuit JSON versions are pinned to
+  support the reference's fanout and render APIs.
+
+Like core's reference, the 45 non-DDR processor power balls have logical
+membership in 16 rails whose segmented power planes are left to the host
+board. Their connectivity diagnostics remain in the downloaded Circuit JSON;
+the builder checks them one-for-one and rejects every other circuit error.
+This is a DDR breakout reference, not a complete powered processor design.
+
+To rebuild the DDR artifacts and pages using the checked-in sensor/display
+artifacts:
+
+```sh
+npm run build:ddr
+npm run assemble-site -- --from-public
+npm test
+npm run typecheck
+```
+
+The full `npm run build` also generates DDR artifacts before assembling both
+pages. DDR circuits live under `src/ddr/` so the existing sensor/display batch
+and schematic-placement gate continue to operate on their 72 configurations.
+
 ## Configuration catalog
 
 The photodiode matrix supports:

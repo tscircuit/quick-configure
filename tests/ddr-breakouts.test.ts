@@ -1,0 +1,137 @@
+import { describe, expect, test } from "bun:test"
+import type { AnyCircuitElement } from "circuit-json"
+import { join } from "node:path"
+import JSZip from "jszip"
+import { ddrAssetFilenames, ddrConfigurations } from "../src/ddr/configurations"
+import { validateDdrCircuit } from "../src/ddr/validate-ddr-circuit"
+
+const projectRoot = join(import.meta.dir, "..")
+const boardId = ddrConfigurations[0].id
+const viewerDir = join(projectRoot, "public", "viewer", boardId)
+const circuit: AnyCircuitElement[] = await Bun.file(
+  join(viewerDir, "circuit.json"),
+).json()
+
+describe("DDR breakout artifacts", () => {
+  test("preserves the reference packages and places LPDDR4 to the right", () => {
+    const components = circuit.filter(
+      (record) => record.type === "source_component",
+    )
+    const cpu = components.find((component) => component.name === "U1")!
+    const ram = components.find((component) => component.name === "U2")!
+    expect(cpu.manufacturer_part_number).toBe("AM62L32BOGHAANBR")
+    expect(ram.manufacturer_part_number).toBe("MT53E1G16D1ZW")
+    const pcbComponents = circuit.filter(
+      (record) => record.type === "pcb_component",
+    )
+    const cpuPcb = pcbComponents.find(
+      (component) => component.source_component_id === cpu.source_component_id,
+    )!
+    const ramPcb = pcbComponents.find(
+      (component) => component.source_component_id === ram.source_component_id,
+    )!
+    expect(ramPcb.center.x).toBeGreaterThan(cpuPcb.center.x)
+    expect(ramPcb.rotation).toBe(90)
+    const pads = circuit.filter((record) => record.type === "pcb_smtpad")
+    expect(
+      pads.filter((pad) => pad.pcb_component_id === cpuPcb.pcb_component_id),
+    ).toHaveLength(373)
+    expect(
+      pads.filter((pad) => pad.pcb_component_id === ramPcb.pcb_component_id),
+    ).toHaveLength(200)
+    expect(
+      components.filter((component) => component.ftype === "simple_capacitor"),
+    ).toHaveLength(68)
+    const board = circuit.find((record) => record.type === "pcb_board")!
+    expect([board.width, board.height, board.num_layers]).toEqual([40, 20, 8])
+  })
+
+  test("routes all 33 DDR signals through both fanouts and preserves pair skew", () => {
+    const signalNames = [
+      ...Array.from({ length: 16 }, (_, index) => `DQ${index}`),
+      ...Array.from({ length: 6 }, (_, index) => `CA${index}`),
+      "CS",
+      "CKE",
+      "CK_t",
+      "CK_c",
+      "DQS0_t",
+      "DQS0_c",
+      "DQS1_t",
+      "DQS1_c",
+      "RESET_n",
+      "DMI0",
+      "DMI1",
+    ]
+    const sourceTraces = circuit.filter(
+      (record) => record.type === "source_trace",
+    )
+    const pcbTraces = circuit.filter((record) => record.type === "pcb_trace")
+    const lengths = new Map<string, number>()
+    for (const name of signalNames) {
+      const sourceTrace = sourceTraces.find((trace) => trace.name === name)!
+      expect(sourceTrace.connected_source_port_ids).toHaveLength(2)
+      const routes = pcbTraces.filter(
+        (trace) => trace.source_trace_id === sourceTrace.source_trace_id,
+      )
+      expect(routes).toHaveLength(3)
+      let length = 0
+      for (const trace of routes) {
+        for (const [index, point] of trace.route.entries()) {
+          if (point.route_type === "wire")
+            expect(["inner1", "inner2", "inner3"]).not.toContain(point.layer)
+          const previous = trace.route[index - 1]
+          if (previous && "x" in previous && "x" in point)
+            length += Math.hypot(point.x - previous.x, point.y - previous.y)
+        }
+      }
+      lengths.set(name, length)
+    }
+    for (const pair of ["CK", "DQS0", "DQS1"]) {
+      expect(
+        Math.abs(lengths.get(`${pair}_t`)! - lengths.get(`${pair}_c`)!),
+      ).toBeLessThanOrEqual(0.5)
+    }
+    expect(() => validateDdrCircuit(circuit)).not.toThrow()
+  })
+
+  test("rejects an unrouted DDR signal rather than hiding it with expected PDN notices", () => {
+    const existing = circuit.find(
+      (record) => record.type === "pcb_port_not_connected_error",
+    )!
+    expect(() =>
+      validateDdrCircuit([
+        ...circuit,
+        { ...existing, message: "Port [U1.F4] is not connected to U2.DQ0" },
+      ]),
+    ).toThrow("Unexpected DDR circuit error")
+  })
+
+  test("publishes the DDR page, shared assets, and a reproducible source bundle", async () => {
+    for (const path of [
+      "index.html",
+      "ddr-breakouts/index.html",
+      "assets/site.css",
+      "assets/ddr-breakouts.js",
+    ]) {
+      expect(await Bun.file(join(projectRoot, "public", path)).text()).toBe(
+        await Bun.file(join(projectRoot, "site", path)).text(),
+      )
+    }
+    for (const filename of ddrAssetFilenames)
+      expect(Bun.file(join(viewerDir, filename)).size).toBeGreaterThan(0)
+    const zip = await JSZip.loadAsync(
+      await Bun.file(join(viewerDir, "source.zip")).arrayBuffer(),
+    )
+    const entry = `src/ddr/${boardId}.circuit.tsx`
+    expect(await zip.file(entry)!.async("string")).toBe(
+      await Bun.file(join(projectRoot, entry)).text(),
+    )
+    expect(zip.file("scripts/build-ddr-artifacts.ts")).not.toBeNull()
+    const page = await Bun.file(
+      join(projectRoot, "site", "ddr-breakouts", "index.html"),
+    ).text()
+    expect(page.match(/<select\b/g)).toHaveLength(3)
+    for (const position of ["top", "left", "bottom"])
+      expect(page).toContain(`value="${position}" disabled`)
+  })
+})
