@@ -1,0 +1,455 @@
+// Right-hand configuration from core's progressive-fanout reference.
+// Keep placements and bus exit directions here; other positions get separate files.
+import { Fragment } from "react"
+import { directDdrAutorouter } from "./direct-ddr-autorouter"
+import {
+  DDR_SIGNAL_CONNECTIONS,
+  Am62l32,
+  Mt53e1g16d1zw,
+  AM62L_POWER_BALLS,
+  LPDDR4_POWER_BALLS,
+  LPDDR4_VDD1_ASSIGNMENTS,
+  AM62L_DIRECT_POWER_BALLS,
+  AM62L_DIRECT_RAIL_NET_NAMES,
+  AM62L_DDR_DECOUPLING_CAPACITORS,
+  AM62L_DDR_MAX_DECOUPLING_DISTANCE,
+  AM62L_DIRECT_DECOUPLING_CAPACITORS,
+  AM62L_PIN_ATTRIBUTES,
+} from "./am62l-lpddr4"
+
+const GROUND_PLANE_LAYER = "inner1"
+const LPDDR4_POWER_PLANE_LAYER = "inner2"
+const LPDDR4_VDD1_PLANE_LAYER = "inner3"
+const LPDDR4_POWER_NET = "VDD_LPDDR4"
+const LPDDR4_VDD1_NET = "SOC_DVDD1V8"
+const SOC_PCB_X = -9.5
+const SOC_PCB_Y = 0
+const POWER_FANOUT_SIGNAL_LAYERS = [
+  "top",
+  "inner4",
+  "inner5",
+  "inner6",
+  "bottom",
+] as const
+
+const createPlaneDrops = (
+  componentName: "U1" | "U2",
+  fanoutPhaseIndex: 0 | 1,
+  netName: "GND" | typeof LPDDR4_POWER_NET | typeof LPDDR4_VDD1_NET,
+  layer:
+    | typeof GROUND_PLANE_LAYER
+    | typeof LPDDR4_POWER_PLANE_LAYER
+    | typeof LPDDR4_VDD1_PLANE_LAYER,
+  ballAssignments: readonly {
+    ballName: string
+    pinNumber: number
+    pinSignal: string
+  }[],
+) =>
+  ballAssignments.map(({ ballName, pinNumber, pinSignal }) => ({
+    ballName,
+    componentName,
+    fanoutPhaseIndex,
+    fromLayer: "top" as const,
+    layer,
+    netName,
+    pinNumber,
+    pinSignal,
+    traceName: `${componentName}_${pinSignal}_${ballName}_DROP`,
+  }))
+
+const SOC_PLANE_DROPS = [
+  ...createPlaneDrops(
+    "U1",
+    0,
+    "GND",
+    GROUND_PLANE_LAYER,
+    AM62L_POWER_BALLS.filter(({ pinSignal }) => pinSignal === "VSS"),
+  ),
+  ...createPlaneDrops(
+    "U1",
+    0,
+    LPDDR4_POWER_NET,
+    LPDDR4_POWER_PLANE_LAYER,
+    AM62L_POWER_BALLS.filter(({ pinSignal }) => pinSignal === "VDDS_DDR"),
+  ),
+]
+const DRAM_PLANE_DROPS = [
+  ...createPlaneDrops(
+    "U2",
+    1,
+    "GND",
+    GROUND_PLANE_LAYER,
+    LPDDR4_POWER_BALLS.filter(({ pinSignal }) => pinSignal === "VSS"),
+  ),
+  ...createPlaneDrops(
+    "U2",
+    1,
+    LPDDR4_POWER_NET,
+    LPDDR4_POWER_PLANE_LAYER,
+    LPDDR4_POWER_BALLS.filter(
+      ({ pinSignal }) => pinSignal === "VDDQ" || pinSignal === "VDD2",
+    ),
+  ),
+  ...createPlaneDrops(
+    "U2",
+    1,
+    LPDDR4_VDD1_NET,
+    LPDDR4_VDD1_PLANE_LAYER,
+    LPDDR4_VDD1_ASSIGNMENTS,
+  ),
+]
+const traceNames = (
+  busName: (typeof DDR_SIGNAL_CONNECTIONS)[number]["busName"],
+) =>
+  DDR_SIGNAL_CONNECTIONS.filter(
+    (connection) => connection.busName === busName,
+  ).map((connection) => connection.traceName)
+const BYTE0_MAX_FANOUT_SKEW = 8
+const BYTE1_MAX_FANOUT_SKEW = 14.5
+const ADDR_CTRL_MAX_FANOUT_SKEW = 15
+const CLOCK_MAX_FANOUT_SKEW = 0.25
+const DQS0_MAX_FANOUT_SKEW = 0.25
+const DQS1_MAX_FANOUT_SKEW = 0.25
+const FANOUT_BUSES = [
+  {
+    name: "DDR_BYTE0",
+    connections: traceNames("DDR_BYTE0"),
+    preferredLayers: ["top", "inner4"],
+    maxLengthSkew: BYTE0_MAX_FANOUT_SKEW,
+  },
+  {
+    name: "DDR_BYTE1",
+    connections: traceNames("DDR_BYTE1"),
+    preferredLayers: ["inner5", "bottom"],
+    maxLengthSkew: BYTE1_MAX_FANOUT_SKEW,
+  },
+  {
+    name: "DDR_ADDR_CTRL",
+    connections: traceNames("DDR_ADDR_CTRL"),
+    preferredLayers: ["inner6"],
+    maxLengthSkew: ADDR_CTRL_MAX_FANOUT_SKEW,
+  },
+  {
+    name: "DDR_CLOCK",
+    connections: traceNames("DDR_CLOCK"),
+    preferredLayers: ["inner5"],
+    maxLengthSkew: CLOCK_MAX_FANOUT_SKEW,
+  },
+  {
+    name: "DDR_DQS0",
+    connections: traceNames("DDR_DQS0"),
+    preferredLayers: ["inner5"],
+    maxLengthSkew: DQS0_MAX_FANOUT_SKEW,
+  },
+  {
+    name: "DDR_DQS1",
+    connections: traceNames("DDR_DQS1"),
+    preferredLayers: ["inner5"],
+    maxLengthSkew: DQS1_MAX_FANOUT_SKEW,
+  },
+  {
+    name: "DDR_RESET",
+    connections: traceNames("DDR_RESET"),
+    preferredLayers: ["inner6"],
+    maxLengthSkew: undefined,
+  },
+  {
+    name: "DDR_DMI0",
+    connections: traceNames("DDR_DMI0"),
+    preferredLayers: ["inner5"],
+    maxLengthSkew: undefined,
+  },
+  {
+    name: "DDR_DMI1",
+    connections: traceNames("DDR_DMI1"),
+    preferredLayers: ["inner5"],
+    maxLengthSkew: undefined,
+  },
+] as const
+
+// Board-space exits for RAM to the right. Other positions need their own TSX.
+const socBusFanoutDirections = {
+  DDR_BYTE0: "rightside_top",
+  DDR_BYTE1: "rightside_bottom",
+  DDR_ADDR_CTRL: "rightside_center",
+  DDR_CLOCK: "rightside_top",
+  DDR_DQS0: "rightside_top",
+  DDR_DQS1: "rightside_center",
+  DDR_RESET: "rightside_center",
+  DDR_DMI0: "rightside_top",
+  DDR_DMI1: "rightside_bottom",
+} as const
+const dramBusFanoutDirections = {
+  DDR_BYTE0: "leftside_center",
+  DDR_BYTE1: "leftside_center",
+  DDR_ADDR_CTRL: "leftside_center",
+  DDR_CLOCK: "leftside_top",
+  DDR_DQS0: "leftside_top",
+  DDR_DQS1: "leftside_center",
+  DDR_RESET: "leftside_top",
+  DDR_DMI0: "leftside_top",
+  DDR_DMI1: "leftside_center",
+} as const
+
+export default function Am62lLpddr4Right() {
+  return (
+    <board
+      name="AM62L_LPDDR4_RIGHT"
+      width="40mm"
+      height="20mm"
+      layers={8}
+      defaultTraceWidth="0.08128mm"
+      minTraceWidth="0.08128mm"
+      minTraceToPadEdgeClearance="0.05mm"
+      minViaEdgeToPadEdgeClearance="0.08128mm"
+      minViaHoleEdgeToViaHoleEdgeClearance="0.1016mm"
+      minViaHoleDiameter="0.15mm"
+      minViaPadDiameter="0.24mm"
+      pcbStyle={{ viaHoleDiameter: "0.15mm", viaPadDiameter: "0.24mm" }}
+      allowBlindAndBuriedVias={false}
+      isViaInPadAllowed={false}
+      autorouter="default"
+      schematicDisabled
+    >
+      {AM62L_DIRECT_RAIL_NET_NAMES.map((name) => (
+        <Fragment key={name}>
+          <net name={name} />
+        </Fragment>
+      ))}
+      <autoroutingphase autorouter={{ algorithmFn: directDdrAutorouter }} />
+      <copperpour layer={GROUND_PLANE_LAYER} connectsTo="net.GND" />
+      <copperpour
+        layer={LPDDR4_POWER_PLANE_LAYER}
+        connectsTo={`net.${LPDDR4_POWER_NET}`}
+      />
+      <copperpour
+        layer={LPDDR4_VDD1_PLANE_LAYER}
+        connectsTo={`net.${LPDDR4_VDD1_NET}`}
+      />
+      <breakout
+        name="SOC_FANOUT"
+        pcbX={SOC_PCB_X}
+        pcbY={SOC_PCB_Y}
+        padding="3mm"
+        pcbGap="0.2mm"
+        autorouter="fanout"
+        fanoutRoutingLayers={[...POWER_FANOUT_SIGNAL_LAYERS]}
+        busFanoutDirections={socBusFanoutDirections}
+      >
+        <Am62l32
+          name="U1"
+          noSchematicRepresentation
+          pinAttributes={AM62L_PIN_ATTRIBUTES}
+        />
+        {SOC_PLANE_DROPS.map((drop) => (
+          <trace
+            key={drop.traceName}
+            name={drop.traceName}
+            from={`.U1 > .${drop.ballName}`}
+            to={`net.${drop.netName}`}
+          />
+        ))}
+      </breakout>
+      <breakout
+        name="DRAM_FANOUT"
+        pcbX={9.616917}
+        pcbY={1.81916}
+        padding="3mm"
+        pcbGap="0.2mm"
+        autorouter="fanout"
+        fanoutRoutingLayers={[...POWER_FANOUT_SIGNAL_LAYERS]}
+        busFanoutDirections={dramBusFanoutDirections}
+      >
+        <Mt53e1g16d1zw name="U2" pcbRotation={90} noSchematicRepresentation />
+        {DRAM_PLANE_DROPS.map((drop) => (
+          <trace
+            key={drop.traceName}
+            name={drop.traceName}
+            from={`.U2 > .${drop.ballName}`}
+            to={`net.${drop.netName}`}
+          />
+        ))}
+      </breakout>
+      {AM62L_DDR_DECOUPLING_CAPACITORS.map((capacitor) => (
+        <Fragment key={capacitor.name}>
+          <capacitor
+            name={capacitor.name}
+            capacitance={capacitor.capacitance}
+            footprint="cap0201_nosilkscreen"
+            layer="bottom"
+            maxDecouplingTraceLength={`${AM62L_DDR_MAX_DECOUPLING_DISTANCE}mm`}
+            pcbX={SOC_PCB_X + capacitor.pcbX}
+            pcbY={SOC_PCB_Y + capacitor.pcbY}
+            pcbRotation={capacitor.pcbRotation}
+          />
+          <trace
+            name={`${capacitor.name}_VDD_DROP`}
+            from={`.${capacitor.name} > .pin1`}
+            to={`net.${LPDDR4_POWER_NET}`}
+          />
+          <trace
+            name={`${capacitor.name}_GND_DROP`}
+            from={`.${capacitor.name} > .pin2`}
+            to="net.GND"
+          />
+        </Fragment>
+      ))}
+      {FANOUT_BUSES.map(
+        ({ name, connections, preferredLayers, maxLengthSkew }) => (
+          <Fragment key={name}>
+            <bus
+              name={name}
+              connections={connections}
+              preferredLayers={[...preferredLayers]}
+              maxLengthSkew={maxLengthSkew}
+            />
+          </Fragment>
+        ),
+      )}
+      <differentialpair
+        name="DDR_CLOCK_PAIR"
+        positiveConnection="CK_t"
+        negativeConnection="CK_c"
+        maxLengthSkew={CLOCK_MAX_FANOUT_SKEW}
+      />
+      <differentialpair
+        name="DDR_DQS0_PAIR"
+        positiveConnection="DQS0_t"
+        negativeConnection="DQS0_c"
+        maxLengthSkew={DQS0_MAX_FANOUT_SKEW}
+      />
+      <differentialpair
+        name="DDR_DQS1_PAIR"
+        positiveConnection="DQS1_t"
+        negativeConnection="DQS1_c"
+        maxLengthSkew={DQS1_MAX_FANOUT_SKEW}
+      />
+      {DDR_SIGNAL_CONNECTIONS.map(({ traceName, socSignal, memorySignal }) => (
+        <trace
+          key={traceName}
+          name={traceName}
+          from={`U1.${socSignal}`}
+          to={`U2.${memorySignal}`}
+        />
+      ))}
+    </board>
+  )
+}
+
+const getDirectDecouplingViaPosition = (
+  capacitor: (typeof AM62L_DIRECT_DECOUPLING_CAPACITORS)[number],
+  viaOffset: { x: number; y: number },
+) => {
+  const angle = (capacitor.pcbRotation * Math.PI) / 180
+  const rotatedOffset = {
+    x: viaOffset.x * Math.cos(angle) - viaOffset.y * Math.sin(angle),
+    y: viaOffset.x * Math.sin(angle) + viaOffset.y * Math.cos(angle),
+  }
+  return {
+    x: SOC_PCB_X + capacitor.pcbX + rotatedOffset.x,
+    y: SOC_PCB_Y + capacitor.pcbY + rotatedOffset.y,
+  }
+}
+
+export const DirectDecoupling = () => (
+  <group name="SOC_DIRECT_DECOUPLING">
+    {/* The full board would join these rail members through segmented power
+        planes. Keep that logical membership explicit without drawing unsafe
+        post-solve chords across the BGA; the local cap-to-PDN handoff traces
+        and vias below remain fully authored and DRC-checked PCB copper. */}
+    <group name="SOC_DIRECT_RAIL_MEMBERSHIP" routingDisabled>
+      {AM62L_DIRECT_POWER_BALLS.map((powerBall) => (
+        <Fragment key={powerBall.ballName}>
+          <trace
+            name={`U1_${powerBall.ballName}_PDN_MEMBERSHIP`}
+            from={`.U1 > .${powerBall.ballName}`}
+            to={`net.${powerBall.railNetName}`}
+          />
+        </Fragment>
+      ))}
+    </group>
+    {AM62L_DIRECT_DECOUPLING_CAPACITORS.map((capacitor) => {
+      const powerViaName = `V_${capacitor.name}_POWER`
+      const groundViaName = `V_${capacitor.name}_GND`
+      const powerViaPosition = getDirectDecouplingViaPosition(
+        capacitor,
+        capacitor.powerViaOffset,
+      )
+      const groundViaPosition = getDirectDecouplingViaPosition(
+        capacitor,
+        capacitor.groundViaOffset,
+      )
+      return (
+        <Fragment key={capacitor.name}>
+          <capacitor
+            name={capacitor.name}
+            capacitance={capacitor.capacitance}
+            footprint={capacitor.footprint}
+            layer="bottom"
+            maxDecouplingTraceLength={`${capacitor.maxDecouplingTraceLength}mm`}
+            pcbX={SOC_PCB_X + capacitor.pcbX}
+            pcbY={SOC_PCB_Y + capacitor.pcbY}
+            pcbRotation={capacitor.pcbRotation}
+          />
+          <via
+            name={powerViaName}
+            pcbX={powerViaPosition.x}
+            pcbY={powerViaPosition.y}
+            fromLayer="top"
+            toLayer="bottom"
+            layers={[
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom",
+            ]}
+            holeDiameter="0.15mm"
+            outerDiameter="0.24mm"
+            connectsTo={`net.${capacitor.railNetName}`}
+          />
+          <trace
+            name={`${capacitor.name}_POWER_DROP`}
+            from={`.${capacitor.name} > .pin1`}
+            to={`net.${capacitor.railNetName}`}
+            maxLength={`${capacitor.maxDecouplingTraceLength}mm`}
+            pcbPathRelativeTo={`.${capacitor.name} > .pin1`}
+            pcbPath={[`.${powerViaName} > .bottom`]}
+          />
+          <via
+            name={groundViaName}
+            pcbX={groundViaPosition.x}
+            pcbY={groundViaPosition.y}
+            fromLayer="top"
+            toLayer="bottom"
+            layers={[
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom",
+            ]}
+            holeDiameter="0.15mm"
+            outerDiameter="0.24mm"
+            connectsTo="net.GND"
+          />
+          <trace
+            name={`${capacitor.name}_GND_DROP`}
+            from={`.${capacitor.name} > .pin2`}
+            to="net.GND"
+            maxLength={`${capacitor.maxDecouplingTraceLength}mm`}
+            pcbPathRelativeTo={`.${capacitor.name} > .pin2`}
+            pcbPath={[`.${groundViaName} > .bottom`]}
+          />
+        </Fragment>
+      )
+    })}
+  </group>
+)

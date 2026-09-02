@@ -1,1 +1,2 @@
 *.step binary
+public/viewer/** linguist-generated=true

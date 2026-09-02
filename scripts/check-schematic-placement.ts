@@ -28,6 +28,8 @@ async function findCircuitFiles(directory = projectRoot): Promise<string[]> {
   for (const entry of entries) {
     const absolutePath = join(directory, entry.name);
     if (entry.isDirectory()) {
+      // DDR configurations are PCB-only and use their own staged artifact build.
+      if (absolutePath === join(projectRoot, "src", "ddr")) continue;
       if (!ignoredDirectories.has(entry.name)) {
         files.push(...(await findCircuitFiles(absolutePath)));
       }
