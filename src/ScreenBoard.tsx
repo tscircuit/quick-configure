@@ -76,6 +76,19 @@ const controlSection = { schSectionName: "Control" } as const;
 const displaySection = { schSectionName: "Display" } as const;
 const verticalCapacitorSymbol = { schOrientation: "vertical" } as const;
 
+// Pull the interface and display zones toward the controller while leaving
+// footprint-local coordinates untouched.
+function compactScreenX(x: number) {
+  if (x <= -20) return x + 8;
+  if (x > 5) return x - 8;
+  return x;
+}
+
+function compactScreenY(y: number) {
+  if (Math.abs(y) <= 14) return y;
+  return Math.sign(y) * (14 + (Math.abs(y) - 14) * 0.1);
+}
+
 const OledSupport = () => (
   <>
     <capacitor
@@ -84,8 +97,8 @@ const OledSupport = () => (
       name="C_OLED_C2"
       capacitance="1uF"
       footprint="0603"
-      pcbX={31.5}
-      pcbY={6.5}
+      pcbX={compactScreenX(31.5)}
+      pcbY={compactScreenY(6.5)}
       pcbRotation={90}
       schX={20}
       schY={7}
@@ -96,8 +109,8 @@ const OledSupport = () => (
       name="C_OLED_C1"
       capacitance="1uF"
       footprint="0603"
-      pcbX={28.5}
-      pcbY={6}
+      pcbX={compactScreenX(28.5)}
+      pcbY={compactScreenY(6)}
       pcbRotation={90}
       schX={24}
       schY={7}
@@ -108,8 +121,8 @@ const OledSupport = () => (
       name="C_OLED_VBAT"
       capacitance="1uF"
       footprint="0603"
-      pcbX={25.5}
-      pcbY={7.5}
+      pcbX={compactScreenX(25.5)}
+      pcbY={compactScreenY(7.5)}
       schX={28}
       schY={7}
     />
@@ -119,8 +132,8 @@ const OledSupport = () => (
       name="C_OLED_VDD"
       capacitance="100nF"
       footprint="0402"
-      pcbX={25.5}
-      pcbY={4.5}
+      pcbX={compactScreenX(25.5)}
+      pcbY={compactScreenY(4.5)}
       schX={32}
       schY={7}
     />
@@ -129,8 +142,8 @@ const OledSupport = () => (
       name="R_OLED_IREF"
       resistance="390k"
       footprint="0402"
-      pcbX={28}
-      pcbY={-2}
+      pcbX={compactScreenX(28)}
+      pcbY={compactScreenY(-2)}
       schX={8}
       schY={-5}
     />
@@ -141,8 +154,8 @@ const OledSupport = () => (
       capacitance="2.2uF"
       maxDecouplingTraceLength="6mm"
       footprint="0603"
-      pcbX={32.2}
-      pcbY={-4}
+      pcbX={compactScreenX(32.2)}
+      pcbY={compactScreenY(-4)}
       schX={24}
       schY={-5}
     />
@@ -153,8 +166,8 @@ const OledSupport = () => (
       capacitance="4.7uF"
       maxDecouplingTraceLength="6mm"
       footprint="0805"
-      pcbX={32}
-      pcbY={-8.3}
+      pcbX={compactScreenX(32)}
+      pcbY={compactScreenY(-8.3)}
       schX={30}
       schY={-5}
     />
@@ -170,8 +183,8 @@ const BacklightSwitch = () => (
       supplierPartNumbers={{ jlcpcb: ["C20917"] }}
       footprint="kicad:Package_TO_SOT_SMD/SOT-23"
       pinLabels={backlightMosfetPins}
-      pcbX={14}
-      pcbY={-16}
+      pcbX={compactScreenX(14)}
+      pcbY={compactScreenY(-16)}
       pcbRotation={90}
       schX={22}
       schY={-6}
@@ -182,8 +195,8 @@ const BacklightSwitch = () => (
       name="R_BL_GATE"
       resistance="100"
       footprint="0402"
-      pcbX={9}
-      pcbY={-16}
+      pcbX={compactScreenX(9)}
+      pcbY={compactScreenY(-16)}
       schX={18}
       schY={-6}
     />
@@ -192,8 +205,8 @@ const BacklightSwitch = () => (
       name="R_BL_GATE_PD"
       resistance="100k"
       footprint="0402"
-      pcbX={11.5}
-      pcbY={-19}
+      pcbX={compactScreenX(11.5)}
+      pcbY={compactScreenY(-11)}
       schX={22}
       schY={-9}
     />
@@ -208,8 +221,8 @@ const Tft020Support = () => (
       name="R_BL1"
       resistance="47"
       footprint="1206"
-      pcbX={24}
-      pcbY={-17}
+      pcbX={compactScreenX(24)}
+      pcbY={compactScreenY(-17)}
       schX={28}
       schY={-6}
     />
@@ -219,8 +232,8 @@ const Tft020Support = () => (
       name="C_TFT_VDD"
       capacitance="1uF"
       footprint="0603"
-      pcbX={22}
-      pcbY={10}
+      pcbX={compactScreenX(22)}
+      pcbY={compactScreenY(10)}
       schX={20}
       schY={7}
     />
@@ -230,8 +243,8 @@ const Tft020Support = () => (
       name="C_TFT_IOVDD"
       capacitance="100nF"
       footprint="0402"
-      pcbX={26}
-      pcbY={10}
+      pcbX={compactScreenX(26)}
+      pcbY={compactScreenY(10)}
       schX={26}
       schY={7}
     />
@@ -248,8 +261,8 @@ const Tft028Support = () => (
         name={`R_BL${index}`}
         resistance="100"
         footprint="0805"
-        pcbX={20 + (index - 1) * 4}
-        pcbY={-18}
+        pcbX={compactScreenX(20 + (index - 1) * 4)}
+        pcbY={compactScreenY(-18)}
         schX={28 + (index - 1) * 5}
         schY={-6}
       />
@@ -260,8 +273,8 @@ const Tft028Support = () => (
       name="C_TFT_VDDI1"
       capacitance="100nF"
       footprint="0402"
-      pcbX={22}
-      pcbY={12}
+      pcbX={compactScreenX(22)}
+      pcbY={compactScreenY(12)}
       schX={20}
       schY={7}
     />
@@ -271,8 +284,8 @@ const Tft028Support = () => (
       name="C_TFT_VDDI2"
       capacitance="100nF"
       footprint="0402"
-      pcbX={25}
-      pcbY={12}
+      pcbX={compactScreenX(25)}
+      pcbY={compactScreenY(12)}
       schX={26}
       schY={7}
     />
@@ -282,8 +295,8 @@ const Tft028Support = () => (
       name="C_TFT_VCI"
       capacitance="1uF"
       footprint="0603"
-      pcbX={28}
-      pcbY={12}
+      pcbX={compactScreenX(28)}
+      pcbY={compactScreenY(12)}
       schX={32}
       schY={7}
     />
@@ -300,8 +313,8 @@ const EpaperSupport = () => (
       inductance="10uH"
       maxCurrentRating="1.2A"
       footprint="kicad:Inductor_SMD/L_1008_2520Metric"
-      pcbX={17}
-      pcbY={13}
+      pcbX={compactScreenX(17)}
+      pcbY={compactScreenY(13)}
       pcbRotation={0}
       schX={20}
       schY={5}
@@ -313,8 +326,8 @@ const EpaperSupport = () => (
       supplierPartNumbers={{ jlcpcb: ["C469327"] }}
       footprint="kicad:Package_TO_SOT_SMD/SOT-323_SC-70"
       pinLabels={epaperMosfetPins}
-      pcbX={22}
-      pcbY={13}
+      pcbX={compactScreenX(22)}
+      pcbY={compactScreenY(13)}
       pcbRotation={90}
       schX={25}
       schY={4}
@@ -327,8 +340,8 @@ const EpaperSupport = () => (
       supplierPartNumbers={{ jlcpcb: ["C2907355"] }}
       resistance="0.47"
       footprint="1206"
-      pcbX={26}
-      pcbY={13}
+      pcbX={compactScreenX(26)}
+      pcbY={compactScreenY(13)}
       pcbRotation={90}
       schX={30}
       schY={3}
@@ -338,8 +351,8 @@ const EpaperSupport = () => (
       name="R_EPD_GATE_PD"
       resistance="10k"
       footprint="0402"
-      pcbX={22}
-      pcbY={16}
+      pcbX={compactScreenX(22)}
+      pcbY={compactScreenY(10.5)}
       pcbRotation={0}
       schX={25}
       schY={2}
@@ -354,8 +367,8 @@ const EpaperSupport = () => (
         supplierPartNumbers={{ jlcpcb: ["C82046"] }}
         footprint="kicad:Diode_SMD/D_SOD-123"
         pinLabels={epaperSchottkyPins}
-        pcbX={30 - index * 5}
-        pcbY={7}
+        pcbX={compactScreenX(30 - index * 5)}
+        pcbY={compactScreenY(7)}
         pcbRotation={index === 3 ? 180 : 0}
         schX={20 + (index - 1) * 5}
         schY={0}
@@ -372,8 +385,8 @@ const EpaperSupport = () => (
       maxVoltageRating="25V"
       maxDecouplingTraceLength="12mm"
       footprint="1206"
-      pcbX={18.5}
-      pcbY={10.5}
+      pcbX={compactScreenX(17)}
+      pcbY={compactScreenY(9.5)}
       pcbRotation={0}
       schX={35}
       schY={1}
@@ -388,8 +401,8 @@ const EpaperSupport = () => (
       maxVoltageRating="25V"
       maxDecouplingTraceLength="12mm"
       footprint="1206"
-      pcbX={10}
-      pcbY={16}
+      pcbX={compactScreenX(10)}
+      pcbY={compactScreenY(16)}
       pcbRotation={0}
       schX={16}
       schY={5}
@@ -416,8 +429,8 @@ const EpaperSupport = () => (
         maxVoltageRating="50V"
         maxDecouplingTraceLength="12mm"
         footprint="0805"
-        pcbX={pcbX as number}
-        pcbY={pcbY as number}
+        pcbX={compactScreenX(pcbX as number)}
+        pcbY={compactScreenY(pcbY as number)}
         pcbRotation={180}
         schX={schX as number}
         schY={schY as number}
@@ -433,8 +446,8 @@ const EpaperSupport = () => (
       maxVoltageRating="50V"
       maxDecouplingTraceLength="12mm"
       footprint="0603"
-      pcbX={32.5}
-      pcbY={1.5}
+      pcbX={compactScreenX(32.5)}
+      pcbY={compactScreenY(1.5)}
       pcbRotation={180}
       schX={28}
       schY={8}
@@ -468,8 +481,8 @@ export const ScreenBoard = ({
       : isTft028
         ? 5.2
         : 2.6;
-  const boardWidth = 82;
-  const boardHeight = 52;
+  const boardWidth = 64;
+  const boardHeight = 33;
   const boardTitle = `USB-C + ${controllerLabel} + ${screen.displayName}`;
   const displaySignalPins = Array.from(
     { length: screen.connector.positionCount },
@@ -500,7 +513,7 @@ export const ScreenBoard = ({
       name={`usb-c_${controller}_${screenId}`}
       width={boardWidth}
       height={boardHeight}
-      layers={2}
+      layers={4}
       solderMaskColor="red"
       schSheetName="Main"
     >
@@ -518,8 +531,8 @@ export const ScreenBoard = ({
       <SmdUsbC
         {...interfaceSection}
         name="J_USB"
-        pcbX={-36}
-        pcbY={0}
+        pcbX={compactScreenX(-36)}
+        pcbY={compactScreenY(0)}
         pcbRotation={-90}
         schX={-16}
         schY={5}
@@ -531,8 +544,8 @@ export const ScreenBoard = ({
         supplierPartNumbers={{ jlcpcb: ["C7519"] }}
         footprint="kicad:Package_TO_SOT_SMD/SOT-23-6"
         pinLabels={usbEsdPins}
-        pcbX={-29}
-        pcbY={0}
+        pcbX={compactScreenX(-29)}
+        pcbY={compactScreenY(0)}
         pcbRotation={0}
         schX={-11}
         schY={5.2}
@@ -543,8 +556,8 @@ export const ScreenBoard = ({
         manufacturerPartNumber="TLV75533PDBVR"
         footprint="kicad:Package_TO_SOT_SMD/SOT-23-5"
         pinLabels={ldoPins}
-        pcbX={-28}
-        pcbY={-8}
+        pcbX={compactScreenX(-28)}
+        pcbY={compactScreenY(-8)}
         pcbRotation={90}
         schX={-11}
         schY={-4}
@@ -555,8 +568,8 @@ export const ScreenBoard = ({
         name="R_USB_DP"
         resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
-        pcbX={-3.8}
-        pcbY={9}
+        pcbX={compactScreenX(-3.8)}
+        pcbY={compactScreenY(9)}
         pcbRotation={-90}
         schX={-7}
         schY={5}
@@ -566,8 +579,8 @@ export const ScreenBoard = ({
         name="R_USB_DM"
         resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
-        pcbX={-5}
-        pcbY={9}
+        pcbX={compactScreenX(-5)}
+        pcbY={compactScreenY(9)}
         pcbRotation={-90}
         schX={-7}
         schY={3}
@@ -577,8 +590,8 @@ export const ScreenBoard = ({
         name="R_CC1"
         resistance="5.1k"
         footprint="0402"
-        pcbX={-31}
-        pcbY={12}
+        pcbX={compactScreenX(-31)}
+        pcbY={compactScreenY(12)}
         schX={-14}
         schY={8}
       />
@@ -587,8 +600,8 @@ export const ScreenBoard = ({
         name="R_CC2"
         resistance="5.1k"
         footprint="0402"
-        pcbX={-27}
-        pcbY={12}
+        pcbX={compactScreenX(-27)}
+        pcbY={compactScreenY(12)}
         schX={-12}
         schY={8}
       />
@@ -598,8 +611,8 @@ export const ScreenBoard = ({
         name="C_LDO_IN"
         capacitance="1uF"
         footprint="0603"
-        pcbX={-32}
-        pcbY={-11}
+        pcbX={compactScreenX(-32)}
+        pcbY={compactScreenY(-11)}
         schX={-13}
         schY={-7}
       />
@@ -609,8 +622,8 @@ export const ScreenBoard = ({
         name="C_LDO_OUT"
         capacitance="1uF"
         footprint="0603"
-        pcbX={-24}
-        pcbY={-11}
+        pcbX={compactScreenX(-24)}
+        pcbY={compactScreenY(-11)}
         schX={-9}
         schY={-7}
       />
@@ -620,8 +633,8 @@ export const ScreenBoard = ({
         name="C_3V3_BULK"
         capacitance="4.7uF"
         footprint="0805"
-        pcbX={-20}
-        pcbY={-11}
+        pcbX={compactScreenX(-20)}
+        pcbY={compactScreenY(-11)}
         schX={-7}
         schY={-7}
       />
@@ -630,8 +643,8 @@ export const ScreenBoard = ({
         <NativeUsbMspm0
           {...controlSection}
           name="U_MAIN"
-          pcbX={-9}
-          pcbY={0}
+          pcbX={compactScreenX(-9)}
+          pcbY={compactScreenY(0)}
           pcbRotation={0}
           schX={0}
           schY={1}
@@ -644,8 +657,8 @@ export const ScreenBoard = ({
           supplierPartNumbers={mcu.supplierPartNumbers}
           footprint={mcu.footprint}
           pinLabels={mcu.pinLabels}
-          pcbX={-9}
-          pcbY={0}
+          pcbX={compactScreenX(-9)}
+          pcbY={compactScreenY(0)}
           pcbRotation={0}
           schX={0}
           schY={1}
@@ -659,8 +672,8 @@ export const ScreenBoard = ({
             name="C_MCU_VDD"
             capacitance="100nF"
             footprint="0402"
-            pcbX={0}
-            pcbY={-0.25}
+            pcbX={compactScreenX(0)}
+            pcbY={compactScreenY(-0.25)}
             pcbRotation={0}
             schX={-4}
             schY={7}
@@ -671,8 +684,8 @@ export const ScreenBoard = ({
             name="C_MCU_BULK"
             capacitance="10uF"
             footprint="0805"
-            pcbX={-18}
-            pcbY={-3.75}
+            pcbX={compactScreenX(-18)}
+            pcbY={compactScreenY(-3.75)}
             pcbRotation={180}
             schX={-1}
             schY={7}
@@ -686,8 +699,8 @@ export const ScreenBoard = ({
             name="C_MCU_DVCC1"
             capacitance="100nF"
             footprint="0402"
-            pcbX={-18}
-            pcbY={-3.75}
+            pcbX={compactScreenX(-18)}
+            pcbY={compactScreenY(-3.75)}
             pcbRotation={180}
             schX={-4}
             schY={7}
@@ -698,8 +711,8 @@ export const ScreenBoard = ({
             name="C_MCU_DVCC2"
             capacitance="100nF"
             footprint="0402"
-            pcbX={0}
-            pcbY={-0.25}
+            pcbX={compactScreenX(0)}
+            pcbY={compactScreenY(-0.25)}
             pcbRotation={0}
             schX={-2}
             schY={7}
@@ -710,8 +723,8 @@ export const ScreenBoard = ({
             name="C_MCU_AVCC"
             capacitance="1uF"
             footprint="0603"
-            pcbX={-19}
-            pcbY={-0.25}
+            pcbX={compactScreenX(-19)}
+            pcbY={compactScreenY(10.5)}
             pcbRotation={180}
             schX={0}
             schY={7}
@@ -724,9 +737,9 @@ export const ScreenBoard = ({
         name="C_VCORE"
         capacitance="470nF"
         footprint="0603"
-        pcbX={-18}
-        pcbY={-6.5}
-        pcbRotation={180}
+        pcbX={compactScreenX(isNativeUsbMspm0 ? -12 : -4)}
+        pcbY={compactScreenY(isNativeUsbMspm0 ? -8 : -11)}
+        pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={2}
         schY={7}
       />
@@ -736,8 +749,8 @@ export const ScreenBoard = ({
         name="C_VBUS"
         capacitance="4.7uF"
         footprint="0805"
-        pcbX={-3.5}
-        pcbY={12.5}
+        pcbX={compactScreenX(-3.5)}
+        pcbY={compactScreenY(12.5)}
         pcbRotation={90}
         schX={4}
         schY={8}
@@ -749,8 +762,8 @@ export const ScreenBoard = ({
           name="C_V18"
           capacitance="220nF"
           footprint="0603"
-          pcbX={-10.3}
-          pcbY={12.75}
+          pcbX={compactScreenX(-10.3)}
+          pcbY={compactScreenY(12.75)}
           pcbRotation={90}
           schX={7}
           schY={8}
@@ -762,8 +775,8 @@ export const ScreenBoard = ({
         name="C_VUSB"
         capacitance={isNativeUsbMspm0 ? "100nF" : "220nF"}
         footprint="0603"
-        pcbX={-8}
-        pcbY={12.75}
+        pcbX={compactScreenX(-8)}
+        pcbY={compactScreenY(12.75)}
         pcbRotation={90}
         schX={10}
         schY={8}
@@ -774,8 +787,8 @@ export const ScreenBoard = ({
           name="R_USB_PULLUP"
           resistance="1.4k"
           footprint="0402"
-          pcbX={-1}
-          pcbY={9.5}
+          pcbX={compactScreenX(-1)}
+          pcbY={compactScreenY(9.5)}
           pcbRotation={0}
           schX={-3}
           schY={9}
@@ -786,8 +799,8 @@ export const ScreenBoard = ({
         name="R_MCU_RESET"
         resistance="47k"
         footprint="0402"
-        pcbX={-13}
-        pcbY={9}
+        pcbX={compactScreenX(-13)}
+        pcbY={compactScreenY(9)}
         pcbRotation={0}
         schX={2}
         schY={9}
@@ -798,8 +811,8 @@ export const ScreenBoard = ({
         name="C_MCU_RESET"
         capacitance={isNativeUsbMspm0 ? "10nF" : "2.2nF"}
         footprint="0402"
-        pcbX={-15.25}
-        pcbY={9}
+        pcbX={compactScreenX(-15.25)}
+        pcbY={compactScreenY(9)}
         pcbRotation={0}
         schX={4}
         schY={10}
@@ -813,8 +826,8 @@ export const ScreenBoard = ({
           resistance="100k"
           tolerance="0.1%"
           footprint="0402"
-          pcbX={-8.5}
-          pcbY={9.5}
+          pcbX={compactScreenX(-8.5)}
+          pcbY={compactScreenY(9.5)}
           schX={-1}
           schY={-5}
         />
@@ -831,24 +844,24 @@ export const ScreenBoard = ({
             <footprint>
               <smtpad
                 portHints={["1"]}
-                pcbX={0}
-                pcbY={-1.5}
+                pcbX={compactScreenX(0)}
+                pcbY={compactScreenY(-1.5)}
                 width={2.6}
                 height={0.4}
                 shape="rect"
               />
               <smtpad
                 portHints={["2"]}
-                pcbX={0}
-                pcbY={0}
+                pcbX={compactScreenX(0)}
+                pcbY={compactScreenY(0)}
                 width={2.6}
                 height={0.4}
                 shape="rect"
               />
               <smtpad
                 portHints={["3"]}
-                pcbX={0}
-                pcbY={1.5}
+                pcbX={compactScreenX(0)}
+                pcbY={compactScreenY(1.5)}
                 width={2.6}
                 height={0.4}
                 shape="rect"
@@ -865,12 +878,17 @@ export const ScreenBoard = ({
                   { x: 1.1, y: 2.35 },
                 ]}
               />
-              <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
+              <courtyardrect
+                pcbX={compactScreenX(0)}
+                pcbY={compactScreenY(0)}
+                width={2.8}
+                height={4.9}
+              />
             </footprint>
           }
           cadModel={null}
-          pcbX={-8.5}
-          pcbY={9.5}
+          pcbX={compactScreenX(-8.5)}
+          pcbY={compactScreenY(9.5)}
           pcbRotation={90}
           schX={-1}
           schY={-5}
@@ -881,8 +899,8 @@ export const ScreenBoard = ({
         name="R_DISPLAY_CS"
         resistance="10k"
         footprint="0402"
-        pcbX={10}
-        pcbY={12}
+        pcbX={compactScreenX(10)}
+        pcbY={compactScreenY(12)}
         schX={10}
         schY={10}
       />
@@ -891,8 +909,8 @@ export const ScreenBoard = ({
         name="R_DISPLAY_RESET"
         resistance="10k"
         footprint="0402"
-        pcbX={13}
-        pcbY={12}
+        pcbX={compactScreenX(13)}
+        pcbY={compactScreenY(12)}
         schX={14}
         schY={10}
       />
@@ -906,8 +924,8 @@ export const ScreenBoard = ({
         pinLabels={screen.connector.pinLabels}
         noConnect={isEpaper ? ["NC", "NC_2", "TSCL", "TSDA", "VPP"] : undefined}
         schPortArrangement={displayPortArrangement}
-        pcbX={35}
-        pcbY={0}
+        pcbX={compactScreenX(35)}
+        pcbY={compactScreenY(0)}
         pcbRotation={-90}
         schX={45}
         schY={1}
@@ -981,27 +999,25 @@ export const ScreenBoard = ({
               }
         }
         showSilkscreenPinLabels
-        pcbX={-6}
-        pcbY={-20}
+        pcbX={compactScreenX(-14)}
+        pcbY={compactScreenY(-20)}
         pcbOrientation="horizontal"
         schX={0}
         schY={-8}
         schWidth={0.96}
       />
 
-      <hole name="H1" diameter="2.4mm" pcbX={-38} pcbY={23} />
-      <hole name="H2" diameter="2.4mm" pcbX={38} pcbY={23} />
-      <hole name="H3" diameter="2.4mm" pcbX={-38} pcbY={-23} />
-      <hole name="H4" diameter="2.4mm" pcbX={38} pcbY={-23} />
-
-      <differentialpair
-        name="USB_PHY_PAIR"
-        positiveConnection="usb-dp-phy"
-        negativeConnection="usb-dm-phy"
-        maxLengthSkew="0.2mm"
-        targetDifferentialImpedance="90ohm"
-        pcbTraceGap="0.15mm"
-        maxUncoupledLength="3mm"
+      <hole
+        name="H1"
+        diameter="2.4mm"
+        pcbX={compactScreenX(-38)}
+        pcbY={compactScreenY(23)}
+      />
+      <hole
+        name="H2"
+        diameter="2.4mm"
+        pcbX={compactScreenX(-38)}
+        pcbY={compactScreenY(-23)}
       />
 
       <trace from=".J_USB > .pin3" to="net.VBUS5" thickness="0.5mm" />
@@ -1136,7 +1152,7 @@ export const ScreenBoard = ({
               key={`mcu-vcc-${pin}`}
               from={p("U_MAIN", pin)}
               to={`.${capacitor} > .pin1`}
-              thickness="0.35mm"
+              thickness="0.3mm"
               maxViaCount={0}
             />
           ))}
@@ -1148,28 +1164,23 @@ export const ScreenBoard = ({
               thickness="0.35mm"
             />
           ))}
-          {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map(
-            (component) => (
-              <Fragment key={`${component}-rails`}>
-                <trace
-                  key={`${component}-vcc`}
-                  from={`.${component} > .pin1`}
-                  to="net.VCC_3V3"
-                />
-                <trace
-                  key={`${component}-gnd`}
-                  from={`.${component} > .pin2`}
-                  to="net.GND"
-                />
-              </Fragment>
-            ),
-          )}
+          {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map((component) => (
+            <Fragment key={`${component}-rails`}>
+              <trace
+                key={`${component}-vcc`}
+                from={`.${component} > .pin1`}
+                to="net.VCC_3V3"
+              />
+              <trace
+                key={`${component}-gnd`}
+                from={`.${component} > .pin2`}
+                to="net.GND"
+              />
+            </Fragment>
+          ))}
         </>
       )}
-      <trace
-        from={p("U_MAIN", controllerPins.vcore)}
-        to="net.MSP_VCORE"
-      />
+      <trace from={p("U_MAIN", controllerPins.vcore)} to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin1" to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin2" to="net.GND" />
       {!isNativeUsbMspm0 && (
@@ -1583,26 +1594,26 @@ export const ScreenBoard = ({
 
       <silkscreentext
         text="QUICK CONFIGURE • SCREEN"
-        pcbX={0}
-        pcbY={24}
+        pcbX={compactScreenX(0)}
+        pcbY={compactScreenY(24)}
         fontSize="0.72mm"
       />
       <silkscreentext
         text={screen.id.toUpperCase()}
-        pcbX={15}
-        pcbY={22.5}
+        pcbX={compactScreenX(15)}
+        pcbY={compactScreenY(22.5)}
         fontSize="0.58mm"
       />
       <silkscreentext
         text={`${screen.connector.mpn} • 4-WIRE SPI`}
-        pcbX={18}
-        pcbY={-24}
+        pcbX={compactScreenX(18)}
+        pcbY={compactScreenY(-24)}
         fontSize="0.55mm"
       />
       <silkscreentext
-        text="2L • BOTTOM GND POUR"
-        pcbX={-18}
-        pcbY={-24}
+        text="4L • BOTTOM GND POUR"
+        pcbX={compactScreenX(-18)}
+        pcbY={compactScreenY(-24)}
         fontSize="0.48mm"
       />
     </board>

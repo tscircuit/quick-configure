@@ -61,7 +61,7 @@ device mode; see the
 
 Four display reference designs add USB-C power/data and a selectable
 MSP430F5529, native-USB MSPM0G5117, or native-USB MSPM0G5187 with four-wire SPI
-on a two-layer board with a bottom-side ground pour. Each uses the panel
+on a four-layer board with a bottom-side ground pour. Each uses the panel
 manufacturer's exact recommended mating FPC connector.
 
 | Panel                                                                                                                 | Controller / resolution             | Exact connector                                                                                                                  | Selection rationale                                                 |

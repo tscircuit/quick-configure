@@ -79,22 +79,23 @@ describe("MSPM33 photodiode target", () => {
       join(projectRoot, "src", "PhotodiodeBoard.tsx"),
     ).text()
 
-    for (const component of [
-      'name="C_MAIN_2" capacitance="100nF"',
-      'name="C_MSPM33_VDD_BULK" capacitance="10uF"',
-      'name="C_MSPM33_VBAT" capacitance="1uF"',
-      'name="C_MSPM33_VCORE" capacitance="2.2uF"',
-      'name="C_MSPM33_VREF" capacitance="1uF"',
-      'name="C_MSPM33_RESET" capacitance="10nF"',
-      'name="R_MSPM33_BSL" resistance="47k"',
+    for (const [name, valueProperty, value] of [
+      ["C_MAIN_2", "capacitance", "100nF"],
+      ["C_MSPM33_VDD_BULK", "capacitance", "10uF"],
+      ["C_MSPM33_VBAT", "capacitance", "1uF"],
+      ["C_MSPM33_VCORE", "capacitance", "2.2uF"],
+      ["C_MSPM33_VREF", "capacitance", "1uF"],
+      ["C_MSPM33_RESET", "capacitance", "10nF"],
+      ["R_MSPM33_BSL", "resistance", "47k"],
     ]) {
-      expect(source).toContain(component)
+      expect(source).toMatch(
+        new RegExp(`name="${name}"[\\s\\S]*?${valueProperty}="${value}"`),
+      )
     }
 
     expect(source).toContain('to="net.MSPM33_VCORE"')
     expect(source).toContain('to="net.MSPM33_BSL_INVOKE"')
-    expect(source).toContain('name="V_MSPM33_EP_1"')
-    expect(source).toContain('name="V_MSPM33_EP_4"')
+    expect(source).toContain("mcu.gndPins.map")
     expect(source).toContain('["VCC_3V3", "GND", "RESET", "ADC_IN", "SWDIO", "SWCLK"]')
   })
 

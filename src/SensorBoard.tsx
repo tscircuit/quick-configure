@@ -56,13 +56,26 @@ const controlSection = { schSectionName: "Control" } as const;
 const sensorSection = { schSectionName: "Sensor" } as const;
 const verticalCapacitor = { schOrientation: "vertical" } as const;
 
+// Pull the interface and sensor zones toward the controller while leaving
+// footprint-local coordinates untouched.
+function compactSensorX(x: number) {
+  if (x <= -20) return x + 8;
+  if (x > 5) return x - 8;
+  return x;
+}
+
+function compactSensorY(y: number) {
+  if (Math.abs(y) <= 14) return y;
+  return Math.sign(y) * (14 + (Math.abs(y) - 14) * 0.1);
+}
+
 const Bme280Circuit = () => (
   <>
     <BME280
       {...sensorSection}
       name="U_SENSOR"
-      pcbX={30}
-      pcbY={0}
+      pcbX={compactSensorX(30)}
+      pcbY={compactSensorY(0)}
       pcbRotation={0}
       schX={12}
       schY={1}
@@ -73,8 +86,8 @@ const Bme280Circuit = () => (
       name="C_SENSOR_VDD"
       capacitance="100nF"
       footprint="0402"
-      pcbX={26}
-      pcbY={-5}
+      pcbX={compactSensorX(26)}
+      pcbY={compactSensorY(-5)}
       schX={9}
       schY={6}
     />
@@ -84,8 +97,8 @@ const Bme280Circuit = () => (
       name="C_SENSOR_VDDIO"
       capacitance="100nF"
       footprint="0402"
-      pcbX={32}
-      pcbY={-5}
+      pcbX={compactSensorX(32)}
+      pcbY={compactSensorY(-5)}
       schX={12}
       schY={6}
     />
@@ -110,8 +123,8 @@ const Mpu6050Circuit = () => (
     <MPU_6050
       {...sensorSection}
       name="U_SENSOR"
-      pcbX={30}
-      pcbY={0}
+      pcbX={compactSensorX(30)}
+      pcbY={compactSensorY(0)}
       pcbRotation={0}
       schX={12}
       schY={1}
@@ -123,8 +136,8 @@ const Mpu6050Circuit = () => (
       name="C_SENSOR_VDD"
       capacitance="100nF"
       footprint="0402"
-      pcbX={24}
-      pcbY={-5}
+      pcbX={compactSensorX(24)}
+      pcbY={compactSensorY(-5)}
       schX={8}
       schY={6}
     />
@@ -134,8 +147,8 @@ const Mpu6050Circuit = () => (
       name="C_SENSOR_VLOGIC"
       capacitance="10nF"
       footprint="0402"
-      pcbX={27}
-      pcbY={-7}
+      pcbX={compactSensorX(27)}
+      pcbY={compactSensorY(-7)}
       schX={11}
       schY={6}
     />
@@ -145,8 +158,8 @@ const Mpu6050Circuit = () => (
       name="C_SENSOR_REGOUT"
       capacitance="100nF"
       footprint="0402"
-      pcbX={32}
-      pcbY={-7}
+      pcbX={compactSensorX(32)}
+      pcbY={compactSensorY(-7)}
       schX={11}
       schY={-5}
     />
@@ -156,8 +169,8 @@ const Mpu6050Circuit = () => (
       name="C_SENSOR_CPOUT"
       capacitance="2.2nF"
       footprint="0402"
-      pcbX={35}
-      pcbY={4.5}
+      pcbX={compactSensorX(35)}
+      pcbY={compactSensorY(4.5)}
       schX={14}
       schY={-5}
     />
@@ -190,8 +203,8 @@ const Mlx90640Circuit = () => (
     <MLX90640ESF_BAA_000_TU
       {...sensorSection}
       name="U_SENSOR"
-      pcbX={30}
-      pcbY={0}
+      pcbX={compactSensorX(30)}
+      pcbY={compactSensorY(0)}
       pcbRotation={0}
       schX={12}
       schY={1}
@@ -202,8 +215,8 @@ const Mlx90640Circuit = () => (
       name="C_SENSOR_VDD"
       capacitance="100nF"
       footprint="0402"
-      pcbX={30}
-      pcbY={-8}
+      pcbX={compactSensorX(30)}
+      pcbY={compactSensorY(-8)}
       schX={10}
       schY={6}
     />
@@ -213,8 +226,8 @@ const Mlx90640Circuit = () => (
       name="C_SENSOR_BULK"
       capacitance="10uF"
       footprint="1206"
-      pcbX={35}
-      pcbY={-8}
+      pcbX={compactSensorX(35)}
+      pcbY={compactSensorY(-8)}
       schX={14}
       schY={6}
     />
@@ -246,8 +259,8 @@ export const SensorBoard = ({
   const NativeUsbMspm0 = isMspm0g5187 ? MSPM0G5187SPMR : MSPM0G5117SPMR;
   const controllerPins = isNativeUsbMspm0 ? mspm0UsbLqfp64Pins : f5529;
   const i2cPullupResistance = sensorId === "mlx90640" ? "1k" : "4.7k";
-  const boardWidth = 82;
-  const boardHeight = 52;
+  const boardWidth = 64;
+  const boardHeight = 33;
   const boardTitle = `USB-C + ${controllerLabel} + ${sensor.manufacturerPartNumber}`;
 
   return (
@@ -273,8 +286,8 @@ export const SensorBoard = ({
       <SmdUsbC
         {...interfaceSection}
         name="J_USB"
-        pcbX={-36}
-        pcbY={0}
+        pcbX={compactSensorX(-36)}
+        pcbY={compactSensorY(0)}
         pcbRotation={-90}
         schX={-16}
         schY={5}
@@ -287,8 +300,8 @@ export const SensorBoard = ({
         supplierPartNumbers={{ jlcpcb: ["C7519"] }}
         footprint="kicad:Package_TO_SOT_SMD/SOT-23-6"
         pinLabels={usbEsdPins}
-        pcbX={-29}
-        pcbY={0}
+        pcbX={compactSensorX(-29)}
+        pcbY={compactSensorY(0)}
         pcbRotation={0}
         schX={-11}
         schY={5.2}
@@ -299,8 +312,8 @@ export const SensorBoard = ({
         manufacturerPartNumber="TLV75533PDBVR"
         footprint="kicad:Package_TO_SOT_SMD/SOT-23-5"
         pinLabels={ldoPins}
-        pcbX={-28}
-        pcbY={-8}
+        pcbX={compactSensorX(-28)}
+        pcbY={compactSensorY(-8)}
         pcbRotation={90}
         schX={-11}
         schY={-4}
@@ -311,8 +324,8 @@ export const SensorBoard = ({
         name="R_USB_DP"
         resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
-        pcbX={-3.8}
-        pcbY={9}
+        pcbX={compactSensorX(-3.8)}
+        pcbY={compactSensorY(9)}
         pcbRotation={-90}
         schX={-7}
         schY={5}
@@ -322,8 +335,8 @@ export const SensorBoard = ({
         name="R_USB_DM"
         resistance={isNativeUsbMspm0 ? "0" : "27"}
         footprint="0402"
-        pcbX={-5}
-        pcbY={9}
+        pcbX={compactSensorX(-5)}
+        pcbY={compactSensorY(9)}
         pcbRotation={-90}
         schX={-7}
         schY={3}
@@ -333,8 +346,8 @@ export const SensorBoard = ({
         name="R_CC1"
         resistance="5.1k"
         footprint="0402"
-        pcbX={-31}
-        pcbY={12}
+        pcbX={compactSensorX(-31)}
+        pcbY={compactSensorY(12)}
         schX={-14}
         schY={8}
       />
@@ -343,8 +356,8 @@ export const SensorBoard = ({
         name="R_CC2"
         resistance="5.1k"
         footprint="0402"
-        pcbX={-27}
-        pcbY={12}
+        pcbX={compactSensorX(-27)}
+        pcbY={compactSensorY(12)}
         schX={-12}
         schY={8}
       />
@@ -354,8 +367,8 @@ export const SensorBoard = ({
         name="C_LDO_IN"
         capacitance="1uF"
         footprint="0603"
-        pcbX={-32}
-        pcbY={-11}
+        pcbX={compactSensorX(-32)}
+        pcbY={compactSensorY(-11)}
         schX={-13}
         schY={-7}
       />
@@ -365,8 +378,8 @@ export const SensorBoard = ({
         name="C_LDO_OUT"
         capacitance="1uF"
         footprint="0603"
-        pcbX={-24}
-        pcbY={-11}
+        pcbX={compactSensorX(-24)}
+        pcbY={compactSensorY(-11)}
         schX={-9}
         schY={-7}
       />
@@ -376,8 +389,8 @@ export const SensorBoard = ({
         name="C_3V3_BULK"
         capacitance="4.7uF"
         footprint="0805"
-        pcbX={-20}
-        pcbY={-11}
+        pcbX={compactSensorX(-20)}
+        pcbY={compactSensorY(-11)}
         schX={-7}
         schY={-7}
       />
@@ -386,8 +399,8 @@ export const SensorBoard = ({
         <NativeUsbMspm0
           {...controlSection}
           name="U_MAIN"
-          pcbX={-9}
-          pcbY={0}
+          pcbX={compactSensorX(-9)}
+          pcbY={compactSensorY(0)}
           pcbRotation={0}
           schX={0}
           schY={1}
@@ -400,8 +413,8 @@ export const SensorBoard = ({
           supplierPartNumbers={mcu.supplierPartNumbers}
           footprint={mcu.footprint}
           pinLabels={mcu.pinLabels}
-          pcbX={-9}
-          pcbY={0}
+          pcbX={compactSensorX(-9)}
+          pcbY={compactSensorY(0)}
           pcbRotation={0}
           schX={0}
           schY={1}
@@ -415,8 +428,8 @@ export const SensorBoard = ({
             name="C_MCU_VDD"
             capacitance="100nF"
             footprint="0402"
-            pcbX={0}
-            pcbY={-0.25}
+            pcbX={compactSensorX(0)}
+            pcbY={compactSensorY(-0.25)}
             pcbRotation={0}
             schX={-4}
             schY={7}
@@ -427,8 +440,8 @@ export const SensorBoard = ({
             name="C_MCU_BULK"
             capacitance="10uF"
             footprint="0805"
-            pcbX={-18}
-            pcbY={-3.75}
+            pcbX={compactSensorX(-18)}
+            pcbY={compactSensorY(-3.75)}
             pcbRotation={180}
             schX={-1}
             schY={7}
@@ -442,8 +455,8 @@ export const SensorBoard = ({
             name="C_MCU_DVCC1"
             capacitance="100nF"
             footprint="0402"
-            pcbX={-18}
-            pcbY={-3.75}
+            pcbX={compactSensorX(-18)}
+            pcbY={compactSensorY(-3.75)}
             pcbRotation={180}
             schX={-4}
             schY={7}
@@ -454,8 +467,8 @@ export const SensorBoard = ({
             name="C_MCU_DVCC2"
             capacitance="100nF"
             footprint="0402"
-            pcbX={0}
-            pcbY={-0.25}
+            pcbX={compactSensorX(0)}
+            pcbY={compactSensorY(-0.25)}
             pcbRotation={0}
             schX={-2}
             schY={7}
@@ -466,8 +479,8 @@ export const SensorBoard = ({
             name="C_MCU_AVCC"
             capacitance="1uF"
             footprint="0603"
-            pcbX={-19}
-            pcbY={-0.25}
+            pcbX={compactSensorX(-19)}
+            pcbY={compactSensorY(10.5)}
             pcbRotation={180}
             schX={0}
             schY={7}
@@ -480,9 +493,9 @@ export const SensorBoard = ({
         name="C_VCORE"
         capacitance="470nF"
         footprint="0603"
-        pcbX={isNativeUsbMspm0 ? -3.5 : -18}
-        pcbY={isNativeUsbMspm0 ? -10.5 : -6.5}
-        pcbRotation={isNativeUsbMspm0 ? -90 : 180}
+        pcbX={compactSensorX(isNativeUsbMspm0 ? -3.5 : -4)}
+        pcbY={compactSensorY(isNativeUsbMspm0 ? -10.5 : -11)}
+        pcbRotation={isNativeUsbMspm0 ? -90 : 0}
         schX={1.9}
         schY={7}
       />
@@ -492,8 +505,8 @@ export const SensorBoard = ({
         name="C_VBUS"
         capacitance="4.7uF"
         footprint="0805"
-        pcbX={-3.5}
-        pcbY={12.5}
+        pcbX={compactSensorX(-3.5)}
+        pcbY={compactSensorY(12.5)}
         pcbRotation={90}
         schX={2.93}
         schY={8}
@@ -505,8 +518,8 @@ export const SensorBoard = ({
           name="C_V18"
           capacitance="220nF"
           footprint="0603"
-          pcbX={-10.3}
-          pcbY={12.75}
+          pcbX={compactSensorX(-10.3)}
+          pcbY={compactSensorY(12.75)}
           pcbRotation={90}
           schX={4.33}
           schY={8}
@@ -518,8 +531,8 @@ export const SensorBoard = ({
         name="C_VUSB"
         capacitance={isNativeUsbMspm0 ? "100nF" : "220nF"}
         footprint="0603"
-        pcbX={isNativeUsbMspm0 ? -8.5 : -8}
-        pcbY={isNativeUsbMspm0 ? -10.5 : 12.75}
+        pcbX={compactSensorX(isNativeUsbMspm0 ? -8.5 : -8)}
+        pcbY={compactSensorY(isNativeUsbMspm0 ? -10.5 : 12.75)}
         pcbRotation={isNativeUsbMspm0 ? -90 : 90}
         schX={6}
         schY={8}
@@ -530,8 +543,8 @@ export const SensorBoard = ({
           name="R_USB_PULLUP"
           resistance="1.4k"
           footprint="0402"
-          pcbX={-1}
-          pcbY={9.5}
+          pcbX={compactSensorX(-1)}
+          pcbY={compactSensorY(9.5)}
           pcbRotation={0}
           schX={-3}
           schY={9}
@@ -542,8 +555,8 @@ export const SensorBoard = ({
         name="R_MCU_RESET"
         resistance="47k"
         footprint="0402"
-        pcbX={-13}
-        pcbY={9}
+        pcbX={compactSensorX(-13)}
+        pcbY={compactSensorY(9)}
         pcbRotation={0}
         schX={1.37}
         schY={9}
@@ -554,8 +567,8 @@ export const SensorBoard = ({
         name="C_MCU_RESET"
         capacitance={isNativeUsbMspm0 ? "10nF" : "2.2nF"}
         footprint="0402"
-        pcbX={-15.25}
-        pcbY={9}
+        pcbX={compactSensorX(-15.25)}
+        pcbY={compactSensorY(9)}
         pcbRotation={0}
         schX={3.5}
         schY={9}
@@ -569,8 +582,8 @@ export const SensorBoard = ({
           resistance="100k"
           tolerance="0.1%"
           footprint="0402"
-          pcbX={-8.5}
-          pcbY={9.5}
+          pcbX={compactSensorX(-8.5)}
+          pcbY={compactSensorY(9.5)}
           schX={-1}
           schY={-5}
         />
@@ -587,24 +600,24 @@ export const SensorBoard = ({
             <footprint>
               <smtpad
                 portHints={["1"]}
-                pcbX={0}
-                pcbY={-1.5}
+                pcbX={compactSensorX(0)}
+                pcbY={compactSensorY(-1.5)}
                 width={2.6}
                 height={0.4}
                 shape="rect"
               />
               <smtpad
                 portHints={["2"]}
-                pcbX={0}
-                pcbY={0}
+                pcbX={compactSensorX(0)}
+                pcbY={compactSensorY(0)}
                 width={2.6}
                 height={0.4}
                 shape="rect"
               />
               <smtpad
                 portHints={["3"]}
-                pcbX={0}
-                pcbY={1.5}
+                pcbX={compactSensorX(0)}
+                pcbY={compactSensorY(1.5)}
                 width={2.6}
                 height={0.4}
                 shape="rect"
@@ -621,12 +634,17 @@ export const SensorBoard = ({
                   { x: 1.1, y: 2.35 },
                 ]}
               />
-              <courtyardrect pcbX={0} pcbY={0} width={2.8} height={4.9} />
+              <courtyardrect
+                pcbX={compactSensorX(0)}
+                pcbY={compactSensorY(0)}
+                width={2.8}
+                height={4.9}
+              />
             </footprint>
           }
           cadModel={null}
-          pcbX={-8.5}
-          pcbY={9.5}
+          pcbX={compactSensorX(-8.5)}
+          pcbY={compactSensorY(9.5)}
           pcbRotation={90}
           schX={-1}
           schY={-5}
@@ -638,8 +656,8 @@ export const SensorBoard = ({
         name="R_I2C_SDA"
         resistance={i2cPullupResistance}
         footprint="0402"
-        pcbX={12}
-        pcbY={9}
+        pcbX={compactSensorX(12)}
+        pcbY={compactSensorY(9)}
         pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={8}
         schY={9}
@@ -649,8 +667,8 @@ export const SensorBoard = ({
         name="R_I2C_SCL"
         resistance={i2cPullupResistance}
         footprint="0402"
-        pcbX={15}
-        pcbY={9}
+        pcbX={compactSensorX(15)}
+        pcbY={compactSensorY(9)}
         pcbRotation={isNativeUsbMspm0 ? 180 : 0}
         schX={11}
         schY={9}
@@ -722,8 +740,8 @@ export const SensorBoard = ({
               }
         }
         showSilkscreenPinLabels
-        pcbX={-6}
-        pcbY={-18}
+        pcbX={compactSensorX(-6)}
+        pcbY={compactSensorY(-18)}
         pcbOrientation="horizontal"
         schX={0}
         schY={-8}
@@ -735,8 +753,8 @@ export const SensorBoard = ({
         name="TP_SDA"
         footprintVariant="pad"
         padDiameter="1.5mm"
-        pcbX={18}
-        pcbY={-12}
+        pcbX={compactSensorX(18)}
+        pcbY={compactSensorY(-12)}
         schX={6}
         schY={-7}
       />
@@ -745,16 +763,36 @@ export const SensorBoard = ({
         name="TP_SCL"
         footprintVariant="pad"
         padDiameter="1.5mm"
-        pcbX={22}
-        pcbY={-12}
+        pcbX={compactSensorX(22)}
+        pcbY={compactSensorY(-12)}
         schX={9}
         schY={-7}
       />
 
-      <hole name="H1" diameter="2.4mm" pcbX={-38} pcbY={23} />
-      <hole name="H2" diameter="2.4mm" pcbX={38} pcbY={23} />
-      <hole name="H3" diameter="2.4mm" pcbX={-38} pcbY={-23} />
-      <hole name="H4" diameter="2.4mm" pcbX={38} pcbY={-23} />
+      <hole
+        name="H1"
+        diameter="2.4mm"
+        pcbX={compactSensorX(-38)}
+        pcbY={compactSensorY(23)}
+      />
+      <hole
+        name="H2"
+        diameter="2.4mm"
+        pcbX={compactSensorX(38)}
+        pcbY={compactSensorY(23)}
+      />
+      <hole
+        name="H3"
+        diameter="2.4mm"
+        pcbX={compactSensorX(-38)}
+        pcbY={compactSensorY(-23)}
+      />
+      <hole
+        name="H4"
+        diameter="2.4mm"
+        pcbX={compactSensorX(38)}
+        pcbY={compactSensorY(-23)}
+      />
 
       <differentialpair
         name="USB_PHY_PAIR"
@@ -910,20 +948,15 @@ export const SensorBoard = ({
               thickness="0.35mm"
             />
           ))}
-          {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map(
-            (component) => (
-              <Fragment key={`${component}-rails`}>
-                <trace from={`.${component} > .pin1`} to="net.VCC_3V3" />
-                <trace from={`.${component} > .pin2`} to="net.GND" />
-              </Fragment>
-            ),
-          )}
+          {["C_MCU_DVCC1", "C_MCU_DVCC2", "C_MCU_AVCC"].map((component) => (
+            <Fragment key={`${component}-rails`}>
+              <trace from={`.${component} > .pin1`} to="net.VCC_3V3" />
+              <trace from={`.${component} > .pin2`} to="net.GND" />
+            </Fragment>
+          ))}
         </>
       )}
-      <trace
-        from={p("U_MAIN", controllerPins.vcore)}
-        to="net.MSP_VCORE"
-      />
+      <trace from={p("U_MAIN", controllerPins.vcore)} to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin1" to="net.MSP_VCORE" />
       <trace from=".C_VCORE > .pin2" to="net.GND" />
       {!isNativeUsbMspm0 && (
@@ -1029,26 +1062,26 @@ export const SensorBoard = ({
 
       <silkscreentext
         text="QUICK CONFIGURE • SENSOR"
-        pcbX={0}
-        pcbY={24}
+        pcbX={compactSensorX(0)}
+        pcbY={compactSensorY(24)}
         fontSize="0.72mm"
       />
       <silkscreentext
         text={sensor.manufacturerPartNumber}
-        pcbX={22}
-        pcbY={22.5}
+        pcbX={compactSensorX(22)}
+        pcbY={compactSensorY(22.5)}
         fontSize="0.58mm"
       />
       <silkscreentext
         text={`I2C ${sensor.defaultI2cAddress} • USB-C`}
-        pcbX={19}
-        pcbY={-24}
+        pcbX={compactSensorX(19)}
+        pcbY={compactSensorY(-24)}
         fontSize="0.55mm"
       />
       <silkscreentext
         text="2L • BOTTOM GND POUR"
-        pcbX={-19}
-        pcbY={-24}
+        pcbX={compactSensorX(-19)}
+        pcbY={compactSensorY(-24)}
         fontSize="0.48mm"
       />
     </board>
