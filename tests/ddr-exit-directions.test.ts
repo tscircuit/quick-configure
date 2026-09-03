@@ -20,7 +20,7 @@ test.each([
     ramSide: "rightside_",
   },
   {
-    position: "RAM Below",
+    position: "Bottom",
     rotation: 270,
     socBusFanoutDirections: belowCpuDirections,
     dramBusFanoutDirections: belowRamDirections,

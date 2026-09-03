@@ -138,13 +138,30 @@ describe("DDR breakout artifacts", () => {
     ).text()
     expect(page.match(/<select\b/g)).toHaveLength(3)
     expect(page).not.toMatch(/<option[^>]*\bdisabled\b/)
-    expect(page).toContain(">RAM Below</option>")
+    expect(page).toContain(">Bottom</option>")
     for (const position of ["top", "left", "bottom"])
       expect(page).toContain(
         `value="${position}" data-board-id="am62l__mt53e1g16d1zw__${position}"`,
       )
     expect(page).toContain('data-routing-status="routed"')
     expect(page).toContain("All four RAM positions are routed")
+  })
+
+  test("omits routing debug objects from every PCB drawing", async () => {
+    for (const configuration of ddrConfigurations) {
+      const svg = await Bun.file(
+        join(projectRoot, "public", "viewer", configuration.id, "pcb.svg"),
+      ).text()
+      const records = (await Bun.file(
+        join(projectRoot, "public", "viewer", configuration.id, "circuit.json"),
+      ).json()) as Array<{ type: string; label?: string }>
+      const debugLabels = records
+        .filter((record) => record.type === "pcb_debug_object")
+        .map((record) => record.label)
+        .filter((label): label is string => Boolean(label))
+      expect(debugLabels.length).toBeGreaterThan(0)
+      for (const label of debugLabels) expect(svg).not.toContain(label)
+    }
   })
 })
 
