@@ -99,7 +99,7 @@ for (const configuration of configurations) {
   await Bun.write(
     join(outputDir, "pcb.svg"),
     convertCircuitJsonToPcbSvg(circuitJson, {
-      showDebugObjects: true,
+      showDebugObjects: false,
       shouldDrawRatsNest: false,
       // Match the reference: translucent power planes leave signal copper clear.
       colorOverrides: {

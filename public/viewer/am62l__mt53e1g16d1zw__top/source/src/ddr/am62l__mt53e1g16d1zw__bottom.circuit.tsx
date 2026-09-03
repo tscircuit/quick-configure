@@ -1,5 +1,5 @@
 import { bottomDdrWindingSolver } from "./rotated-ddr-winding-solver"
-// RAM Below reproduces the core progressive-fanout topology with package placement
+// Bottom reproduces the core progressive-fanout topology with package placement
 // and bus directions rotated 270 degrees. Both fanouts are solved from this TSX;
 // core coordinates the actual exits before the global DDR connections are joined.
 import { Fragment } from "react"
@@ -365,7 +365,7 @@ export default function Am62lLpddr4Bottom({
         pcbX={0}
         pcbY={-24}
         fontSize={0.7}
-        text="AM62L · LPDDR4 · RAM Below · Coordinated fanouts"
+        text="AM62L · LPDDR4 · Bottom · Coordinated fanouts"
       />
     </board>
   )
