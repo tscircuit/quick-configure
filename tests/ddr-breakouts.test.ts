@@ -137,208 +137,235 @@ describe("DDR breakout artifacts", () => {
       join(projectRoot, "site", "ddr-breakouts", "index.html"),
     ).text()
     expect(page.match(/<select\b/g)).toHaveLength(3)
-    for (const position of ["bottom"])
-      expect(page).toContain(`value="${position}" disabled`)
-    for (const position of ["top", "left"])
+    expect(page).not.toMatch(/<option[^>]*\bdisabled\b/)
+    expect(page).toContain(">RAM Below</option>")
+    for (const position of ["top", "left", "bottom"])
       expect(page).toContain(
         `value="${position}" data-board-id="am62l__mt53e1g16d1zw__${position}"`,
       )
     expect(page).toContain('data-routing-status="routed"')
-    expect(page).toContain("Right, Top, and Left are routed")
+    expect(page).toContain("All four RAM positions are routed")
   })
 })
 
-describe.each(["top", "left"] as const)("%s DDR reference", (position) => {
-  const configuration = ddrConfigurations.find(
-    (config) => config.position === position,
-  )!
-  const topViewerDir = join(projectRoot, "public", "viewer", configuration.id)
+describe.each(["top", "left", "bottom"] as const)(
+  "%s DDR reference",
+  (position) => {
+    const configuration = ddrConfigurations.find(
+      (config) => config.position === position,
+    )!
+    const layout = {
+      top: {
+        dimensions: [32, 54, 8],
+        cpu: { x: 0, y: -9.5 },
+        ram: { x: -1.81916, y: 9.616917 },
+        cpuRotation: 90,
+        ramRotation: 180,
+      },
+      left: {
+        dimensions: [54, 32, 8],
+        cpu: { x: 9.5, y: 0 },
+        ram: { x: -9.616917, y: -1.81916 },
+        cpuRotation: 180,
+        ramRotation: 270,
+      },
+      bottom: {
+        dimensions: [32, 54, 8],
+        cpu: { x: 0, y: 9.5 },
+        ram: { x: 1.81916, y: -9.616917 },
+        cpuRotation: 270,
+        ramRotation: 0,
+      },
+    }[position]
+    const topViewerDir = join(projectRoot, "public", "viewer", configuration.id)
 
-  test("routes both fanouts with exits facing the other package", async () => {
-    const top: AnyCircuitElement[] = await Bun.file(
-      join(topViewerDir, "circuit.json"),
-    ).json()
-    const board = top.find((record) => record.type === "pcb_board")!
-    expect([board.width, board.height, board.num_layers]).toEqual(
-      position === "top" ? [32, 54, 8] : [54, 32, 8],
-    )
-    expect(board.min_via_hole_diameter).toBe(0.15)
-    const parts = top.filter((record) => record.type === "pcb_component")
-    expect(parts).toHaveLength(10)
-    const cpuSource = top
-      .filter((record) => record.type === "source_component")
-      .find(
-        (record) => record.type === "source_component" && record.name === "U1",
-      )!
-    const ramSource = top
-      .filter((record) => record.type === "source_component")
-      .find(
-        (record) => record.type === "source_component" && record.name === "U2",
-      )!
-    const cpu = parts.find(
-      (part) => part.source_component_id === cpuSource.source_component_id,
-    )!
-    const ram = parts.find(
-      (part) => part.source_component_id === ramSource.source_component_id,
-    )!
-    expect(cpu.center).toEqual(
-      position === "top" ? { x: 0, y: -9.5 } : { x: 9.5, y: 0 },
-    )
-    expect(ram.center).toEqual(
-      position === "top"
-        ? { x: -1.81916, y: 9.616917 }
-        : { x: -9.616917, y: -1.81916 },
-    )
-    expect(cpu.rotation).toBe(position === "top" ? 90 : 180)
-    expect(ram.rotation).toBe(position === "top" ? 180 : 270)
-    const pads = top.filter((record) => record.type === "pcb_smtpad")
-    expect(
-      pads.filter((pad) => pad.pcb_component_id === cpu.pcb_component_id),
-    ).toHaveLength(373)
-    expect(
-      pads.filter((pad) => pad.pcb_component_id === ram.pcb_component_id),
-    ).toHaveLength(200)
-
-    const traces = top.filter((record) => record.type === "source_trace")
-    expect(traces).toHaveLength(261)
-    expect(
-      traces.filter((trace) => trace.name?.startsWith("U1_VSS_")),
-    ).toHaveLength(97)
-    expect(
-      traces.filter((trace) => trace.name?.startsWith("U1_VDDS_DDR_")),
-    ).toHaveLength(5)
-    const signals = traces.filter(
-      (trace) => trace.connected_source_port_ids.length === 2,
-    )
-    expect(signals).toHaveLength(33)
-    const ports = top.filter((record) => record.type === "source_port")
-    const exits = top.filter((record) => record.type === "pcb_breakout_point")
-    expect(exits).toHaveLength(66)
-    for (const signal of signals) {
-      expect(
-        signal.connected_source_port_ids
-          .map(
-            (id) =>
-              ports.find((port) => port.source_port_id === id)!
-                .source_component_id,
-          )
-          .sort(),
-      ).toEqual([cpu.source_component_id, ram.source_component_id].sort())
-      const signalExits = exits.filter(
-        (exit) => exit.source_trace_id === signal.source_trace_id,
+    test("routes both fanouts with exits facing the other package", async () => {
+      const top: AnyCircuitElement[] = await Bun.file(
+        join(topViewerDir, "circuit.json"),
+      ).json()
+      const board = top.find((record) => record.type === "pcb_board")!
+      expect([board.width, board.height, board.num_layers]).toEqual(
+        layout.dimensions,
       )
-      expect(signalExits).toHaveLength(2)
-      const cpuExit = signalExits.find(
-        (exit) => exit.pcb_group_id === cpu.pcb_group_id,
-      )!
-      const ramExit = signalExits.find(
-        (exit) => exit.pcb_group_id === ram.pcb_group_id,
-      )!
-      if (position === "top") {
-        expect(cpuExit.y).toBeGreaterThan(cpu.center.y + cpu.height / 2)
-        expect(ramExit.y).toBeLessThan(ram.center.y - ram.height / 2)
-        expect(cpuExit.y).toBeLessThan(ramExit.y)
-      } else {
-        expect(cpuExit.x).toBeLessThan(cpu.center.x - cpu.width / 2)
-        expect(ramExit.x).toBeGreaterThan(ram.center.x + ram.width / 2)
-        expect(cpuExit.x).toBeGreaterThan(ramExit.x)
-        expect(cpuExit.layer).toBe(ramExit.layer)
-      }
-    }
-    expect(() => validateCoordinatedDdrCircuit(top)).not.toThrow()
-    expect(() => validateDdrGlobalRouting(top)).not.toThrow()
-    expect(() => validateDdrViaLocations(top)).not.toThrow()
-    const withOutsideVia = structuredClone(top)
-    const displacedVia = withOutsideVia.find(
-      (record) => record.type === "pcb_via",
-    )!
-    displacedVia.x = position === "top" ? 14 : 0
-    displacedVia.y = position === "top" ? 0 : 14
-    expect(() => validateDdrViaLocations(withOutsideVia)).toThrow(
-      "outside the fanouts",
-    )
-    const phases = top.filter((record) => record.type === "pcb_debug_object")
-    expect(phases).toHaveLength(3)
-    const pcbTraces = top.filter((record) => record.type === "pcb_trace")
-    expect(pcbTraces).toHaveLength(327)
-    for (const signal of signals) {
-      const routes = pcbTraces.filter(
-        (trace) => trace.source_trace_id === signal.source_trace_id,
-      )
-      expect(routes).toHaveLength(3)
-      for (const part of [cpu, ram]) {
-        const exit = exits.find(
-          (exit) =>
-            exit.source_trace_id === signal.source_trace_id &&
-            exit.pcb_group_id === part.pcb_group_id,
+      expect(board.min_via_hole_diameter).toBe(0.15)
+      const parts = top.filter((record) => record.type === "pcb_component")
+      expect(parts).toHaveLength(10)
+      const cpuSource = top
+        .filter((record) => record.type === "source_component")
+        .find(
+          (record) =>
+            record.type === "source_component" && record.name === "U1",
         )!
-        // Both a local fanout and the global trace must meet at this same
-        // coordinate on the same copper layer, regardless of trace IDs.
-        const endsAtExit = routes.filter((trace) =>
-          [trace.route[0], trace.route.at(-1)].some(
-            (point) =>
-              point?.route_type === "wire" &&
-              point.layer === exit.layer &&
-              Math.hypot(point.x - exit.x, point.y - exit.y) < 1e-6,
-          ),
-        )
-        expect(endsAtExit).toHaveLength(2)
-      }
-      for (const trace of routes)
-        for (const point of trace.route) {
-          if (point.route_type === "wire")
-            expect(["inner1", "inner2", "inner3"]).not.toContain(point.layer)
-        }
-    }
-    expect(top.filter((record) => record.type.endsWith("_error"))).toHaveLength(
-      0,
-    )
-    expect(
-      top.find((record) => record.type === "pcb_note_text")!.text,
-    ).toContain("Coordinated fanouts")
-    const withBrokenJoin = structuredClone(top)
-    const globalTrace = withBrokenJoin.find(
-      (record) =>
-        record.type === "pcb_trace" &&
-        record.pcb_trace_id.includes("ddr_coordinated_global"),
-    )!
-    if (globalTrace.type !== "pcb_trace")
-      throw new Error("Missing global trace")
-    // Move the entire global segment off the board. Moving only one endpoint
-    // along a horizontal trace can leave it overlapping its fanout copper.
-    for (const point of globalTrace.route) {
-      if (point.route_type !== "wire") throw new Error("Expected a global wire")
-      point.x += 100
-      point.y += 100
-    }
-    expect(() => validateCoordinatedDdrCircuit(withBrokenJoin)).toThrow(
-      "Disconnected DDR copper",
-    )
-    const unexpected = circuit.find(
-      (record) => record.type === "pcb_port_not_connected_error",
-    )!
-    expect(() => validateCoordinatedDdrCircuit([...top, unexpected])).toThrow(
-      "Unexpected coordinated DDR circuit error",
-    )
-  })
+      const ramSource = top
+        .filter((record) => record.type === "source_component")
+        .find(
+          (record) =>
+            record.type === "source_component" && record.name === "U2",
+        )!
+      const cpu = parts.find(
+        (part) => part.source_component_id === cpuSource.source_component_id,
+      )!
+      const ram = parts.find(
+        (part) => part.source_component_id === ramSource.source_component_id,
+      )!
+      expect(cpu.center).toEqual(layout.cpu)
+      expect(ram.center).toEqual(layout.ram)
+      expect(cpu.rotation).toBe(layout.cpuRotation)
+      expect(ram.rotation).toBe(layout.ramRotation)
+      const pads = top.filter((record) => record.type === "pcb_smtpad")
+      expect(
+        pads.filter((pad) => pad.pcb_component_id === cpu.pcb_component_id),
+      ).toHaveLength(373)
+      expect(
+        pads.filter((pad) => pad.pcb_component_id === ram.pcb_component_id),
+      ).toHaveLength(200)
 
-  test("ships browsable source files instead of a ZIP", async () => {
-    for (const filename of ddrAssetFilenames)
-      expect(Bun.file(join(topViewerDir, filename)).size).toBeGreaterThan(0)
-    const entry = `src/ddr/${configuration.id}.circuit.tsx`
-    expect(await Bun.file(join(topViewerDir, "source", entry)).text()).toBe(
-      await Bun.file(join(projectRoot, entry)).text(),
-    )
-    const index = await Bun.file(
-      join(topViewerDir, "source", "index.html"),
-    ).text()
-    expect(index).toContain(encodeURIComponent(entry))
-    expect(index).toContain("Download file")
-    expect(await Bun.file(join(topViewerDir, "source.zip")).exists()).toBe(
-      false,
-    )
-  })
-})
+      const traces = top.filter((record) => record.type === "source_trace")
+      expect(traces).toHaveLength(261)
+      expect(
+        traces.filter((trace) => trace.name?.startsWith("U1_VSS_")),
+      ).toHaveLength(97)
+      expect(
+        traces.filter((trace) => trace.name?.startsWith("U1_VDDS_DDR_")),
+      ).toHaveLength(5)
+      const signals = traces.filter(
+        (trace) => trace.connected_source_port_ids.length === 2,
+      )
+      expect(signals).toHaveLength(33)
+      const ports = top.filter((record) => record.type === "source_port")
+      const exits = top.filter((record) => record.type === "pcb_breakout_point")
+      expect(exits).toHaveLength(66)
+      for (const signal of signals) {
+        expect(
+          signal.connected_source_port_ids
+            .map(
+              (id) =>
+                ports.find((port) => port.source_port_id === id)!
+                  .source_component_id,
+            )
+            .sort(),
+        ).toEqual([cpu.source_component_id, ram.source_component_id].sort())
+        const signalExits = exits.filter(
+          (exit) => exit.source_trace_id === signal.source_trace_id,
+        )
+        expect(signalExits).toHaveLength(2)
+        const cpuExit = signalExits.find(
+          (exit) => exit.pcb_group_id === cpu.pcb_group_id,
+        )!
+        const ramExit = signalExits.find(
+          (exit) => exit.pcb_group_id === ram.pcb_group_id,
+        )!
+        if (position === "top") {
+          expect(cpuExit.y).toBeGreaterThan(cpu.center.y + cpu.height / 2)
+          expect(ramExit.y).toBeLessThan(ram.center.y - ram.height / 2)
+          expect(cpuExit.y).toBeLessThan(ramExit.y)
+        } else if (position === "bottom") {
+          expect(cpuExit.y).toBeLessThan(cpu.center.y - cpu.height / 2)
+          expect(ramExit.y).toBeGreaterThan(ram.center.y + ram.height / 2)
+          expect(cpuExit.y).toBeGreaterThan(ramExit.y)
+        } else {
+          expect(cpuExit.x).toBeLessThan(cpu.center.x - cpu.width / 2)
+          expect(ramExit.x).toBeGreaterThan(ram.center.x + ram.width / 2)
+          expect(cpuExit.x).toBeGreaterThan(ramExit.x)
+          expect(cpuExit.layer).toBe(ramExit.layer)
+        }
+      }
+      expect(() => validateCoordinatedDdrCircuit(top)).not.toThrow()
+      expect(() => validateDdrGlobalRouting(top)).not.toThrow()
+      expect(() => validateDdrViaLocations(top)).not.toThrow()
+      const withOutsideVia = structuredClone(top)
+      const displacedVia = withOutsideVia.find(
+        (record) => record.type === "pcb_via",
+      )!
+      displacedVia.x = position === "left" ? 0 : 14
+      displacedVia.y = position === "left" ? 14 : 0
+      expect(() => validateDdrViaLocations(withOutsideVia)).toThrow(
+        "outside the fanouts",
+      )
+      const phases = top.filter((record) => record.type === "pcb_debug_object")
+      expect(phases).toHaveLength(3)
+      const pcbTraces = top.filter((record) => record.type === "pcb_trace")
+      expect(pcbTraces).toHaveLength(327)
+      for (const signal of signals) {
+        const routes = pcbTraces.filter(
+          (trace) => trace.source_trace_id === signal.source_trace_id,
+        )
+        expect(routes).toHaveLength(3)
+        for (const part of [cpu, ram]) {
+          const exit = exits.find(
+            (exit) =>
+              exit.source_trace_id === signal.source_trace_id &&
+              exit.pcb_group_id === part.pcb_group_id,
+          )!
+          // Both a local fanout and the global trace must meet at this same
+          // coordinate on the same copper layer, regardless of trace IDs.
+          const endsAtExit = routes.filter((trace) =>
+            [trace.route[0], trace.route.at(-1)].some(
+              (point) =>
+                point?.route_type === "wire" &&
+                point.layer === exit.layer &&
+                Math.hypot(point.x - exit.x, point.y - exit.y) < 1e-6,
+            ),
+          )
+          expect(endsAtExit).toHaveLength(2)
+        }
+        for (const trace of routes)
+          for (const point of trace.route) {
+            if (point.route_type === "wire")
+              expect(["inner1", "inner2", "inner3"]).not.toContain(point.layer)
+          }
+      }
+      expect(
+        top.filter((record) => record.type.endsWith("_error")),
+      ).toHaveLength(0)
+      expect(
+        top.find((record) => record.type === "pcb_note_text")!.text,
+      ).toContain("Coordinated fanouts")
+      const withBrokenJoin = structuredClone(top)
+      const globalTrace = withBrokenJoin.find(
+        (record) =>
+          record.type === "pcb_trace" &&
+          record.pcb_trace_id.includes("ddr_coordinated_global"),
+      )!
+      if (globalTrace.type !== "pcb_trace")
+        throw new Error("Missing global trace")
+      // Move the entire global segment off the board. Moving only one endpoint
+      // along a horizontal trace can leave it overlapping its fanout copper.
+      for (const point of globalTrace.route) {
+        if (point.route_type !== "wire")
+          throw new Error("Expected a global wire")
+        point.x += 100
+        point.y += 100
+      }
+      expect(() => validateCoordinatedDdrCircuit(withBrokenJoin)).toThrow(
+        "Disconnected DDR copper",
+      )
+      const unexpected = circuit.find(
+        (record) => record.type === "pcb_port_not_connected_error",
+      )!
+      expect(() => validateCoordinatedDdrCircuit([...top, unexpected])).toThrow(
+        "Unexpected coordinated DDR circuit error",
+      )
+    })
+
+    test("ships browsable source files instead of a ZIP", async () => {
+      for (const filename of ddrAssetFilenames)
+        expect(Bun.file(join(topViewerDir, filename)).size).toBeGreaterThan(0)
+      const entry = `src/ddr/${configuration.id}.circuit.tsx`
+      expect(await Bun.file(join(topViewerDir, "source", entry)).text()).toBe(
+        await Bun.file(join(projectRoot, entry)).text(),
+      )
+      const index = await Bun.file(
+        join(topViewerDir, "source", "index.html"),
+      ).text()
+      expect(index).toContain(encodeURIComponent(entry))
+      expect(index).toContain("Download file")
+      expect(await Bun.file(join(topViewerDir, "source.zip")).exists()).toBe(
+        false,
+      )
+    })
+  },
+)
 
 test("all references publish the three captured routing phases", async () => {
   for (const configuration of ddrConfigurations) {

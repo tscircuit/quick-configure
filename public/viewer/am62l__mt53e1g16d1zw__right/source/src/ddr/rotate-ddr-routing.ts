@@ -2,12 +2,17 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "@tscircuit/core"
 import type { FanoutExitPosition } from "@tscircuit/fanout-solver"
 import { applyToPoint, rotateDEG } from "transformation-matrix"
 
+export type DdrReferenceRotation = 90 | 180 | 270
+
+export const inverseDdrRotation = (rotation: DdrReferenceRotation) =>
+  (({ 90: -90, 180: -180, 270: -270 }) as const)[rotation]
+
 // Board-space millimeters, +X right and +Y up. Normalize a rotated
 // reference into the solver's horizontal frame, and invert it for core's
 // phase handoff. IDs, nets, layers, widths and clearances remain unchanged.
 export function rotateDdrRouting(
   input: SimpleRouteJson,
-  degrees: 90 | -90 | 180 | -180,
+  degrees: DdrReferenceRotation | -90 | -180 | -270,
   precision?: number,
 ): SimpleRouteJson {
   const matrix = rotateDEG(degrees)
@@ -40,8 +45,8 @@ export function rotateDdrRouting(
     obstacles: input.obstacles.map((obstacle) => ({
       ...obstacle,
       center: point(obstacle.center),
-      width: Math.abs(degrees) === 90 ? obstacle.height : obstacle.width,
-      height: Math.abs(degrees) === 90 ? obstacle.width : obstacle.height,
+      width: Math.abs(degrees) % 180 === 90 ? obstacle.height : obstacle.width,
+      height: Math.abs(degrees) % 180 === 90 ? obstacle.width : obstacle.height,
     })),
     connections: input.connections.map((connection) => ({
       ...connection,
@@ -83,15 +88,17 @@ const clockwiseExits: Partial<Record<FanoutExitPosition, FanoutExitPosition>> =
   }
 export function rotateDdrExitDirections(
   directions: Readonly<Record<string, FanoutExitPosition>>,
-  referenceRotation: 90 | 180,
+  referenceRotation: DdrReferenceRotation,
 ) {
   return Object.fromEntries(
     Object.entries(directions).map(([bus, direction]) => {
-      const once = clockwiseExits[direction]
-      const rotated =
-        referenceRotation === 90 ? once : once && clockwiseExits[once]
-      if (!rotated)
-        throw new Error(`Unsupported fanout exit direction: ${direction}`)
+      let rotated = direction
+      for (let turn = 0; turn < referenceRotation / 90; turn++) {
+        const next = clockwiseExits[rotated]
+        if (!next)
+          throw new Error(`Unsupported fanout exit direction: ${direction}`)
+        rotated = next
+      }
       return [bus, rotated]
     }),
   )

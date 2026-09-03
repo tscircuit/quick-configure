@@ -8,9 +8,9 @@ import {
 } from "../src/ddr/latest-fanout-autorouter"
 import { createCoordinatedDdrGlobalAutorouter } from "../src/ddr/coordinated-ddr-global-autorouter"
 
-// Exercise the same adapter, preset, and global join used by Top and Left. This small
+// Exercise the same adapter, preset, and global join used by the rotated layouts. This small
 // circuit separates the core handoff contract from the dense AM62L solve.
-test.each([90, 180] as const)(
+test.each([90, 180, 270] as const)(
   "%d degree layout uses core's paired exits without global layer changes",
   async (rotation) => {
     const windingSolver = createRotatedDdrWindingSolver(rotation)
@@ -18,8 +18,8 @@ test.each([90, 180] as const)(
     const circuit = new Circuit()
     circuit.add(
       <board
-        width={rotation === 90 ? 12 : 24}
-        height={rotation === 90 ? 24 : 12}
+        width={rotation === 180 ? 24 : 12}
+        height={rotation === 180 ? 12 : 24}
         layers={8}
         schematicDisabled
         minTraceWidth={0.1}
@@ -34,21 +34,20 @@ test.each([90, 180] as const)(
         />
         {[-5, 5].map((pcbY, index) => {
           const directions = {
-            DATA:
-              rotation === 90
-                ? index === 0
-                  ? ("topside_center" as const)
-                  : ("bottomside_center" as const)
-                : index === 0
-                  ? ("leftside_center" as const)
-                  : ("rightside_center" as const),
+            DATA: (
+              {
+                90: ["topside_center", "bottomside_center"],
+                180: ["leftside_center", "rightside_center"],
+                270: ["bottomside_center", "topside_center"],
+              } as const
+            )[rotation][index]!,
           }
           return (
             <breakout
               key={pcbY}
               name={`FANOUT${index}`}
-              pcbX={rotation === 90 ? 0 : -pcbY}
-              pcbY={rotation === 90 ? pcbY : 0}
+              pcbX={rotation === 180 ? -pcbY : 0}
+              pcbY={rotation === 180 ? 0 : rotation === 90 ? pcbY : -pcbY}
               width={6}
               height={6}
               fanoutRoutingLayers={["bottom"]}
