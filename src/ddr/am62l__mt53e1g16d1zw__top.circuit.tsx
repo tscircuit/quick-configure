@@ -3,12 +3,8 @@
 // problem. The solved CPU configuration (placement, layers, and dense-plane
 // hints) follows fanout-solver's repro04 at 70a2fe5, using version 0.0.52.
 // Like its passing regression, length matching is disabled for this fanout.
-// RAM and board-level routing remain explicit no-ops.
-import type {
-  GenericLocalAutorouter,
-  AutorouterCompleteEvent,
-  SimpleRouteJson,
-} from "@tscircuit/core"
+// RAM escapes downward; a clearance-checked global channel joins both fanouts.
+import { createTopDdrGlobalAutorouter } from "./top-ddr-global-autorouter"
 import {
   createDdrFanoutAutorouter,
   createDdrFanoutState,
@@ -39,16 +35,22 @@ const signalBusExitPositions = {
   DDR_DMI0: "topside_left",
   DDR_DMI1: "topside_right",
 } as const
-const dramBusExitPositions = {
-  DDR_BYTE0: "bottomside_left",
-  DDR_BYTE1: "bottomside_center",
-  DDR_ADDR_CTRL: "bottomside_center",
-  DDR_CLOCK: "bottomside_left",
-  DDR_DQS0: "bottomside_left",
-  DDR_DQS1: "bottomside_center",
-  DDR_RESET: "bottomside_center",
-  DDR_DMI0: "bottomside_left",
-  DDR_DMI1: "bottomside_center",
+const dramBusExitPositions = Object.fromEntries(
+  Object.keys(signalBusExitPositions).map((name) => [
+    name,
+    "bottomside_center" as const,
+  ]),
+)
+const dramBusLayers = {
+  DDR_BYTE0: ["bottom"],
+  DDR_BYTE1: ["inner6"],
+  DDR_ADDR_CTRL: ["inner4"],
+  DDR_CLOCK: ["inner6"],
+  DDR_DQS0: ["inner4"],
+  DDR_DQS1: ["top"],
+  DDR_RESET: ["top"],
+  DDR_DMI0: ["inner4"],
+  DDR_DMI1: ["inner5"],
 } as const
 const planeDrops = AM62L_POWER_BALLS.filter(
   (ball) => ball.pinSignal === "VSS" || ball.pinSignal === "VDDS_DDR",
@@ -377,29 +379,6 @@ const AM62L_DIFFERENTIAL_PAIRS = [
   },
 ] as const
 
-// The source dataset routes only the CPU fanout. Keep its global and RAM
-// phases unrouted until their independent fanout configuration is solved.
-const referenceOnlyAutorouter = async (
-  input: SimpleRouteJson,
-): Promise<GenericLocalAutorouter> => {
-  let complete: ((event: AutorouterCompleteEvent) => void) | undefined
-  const router: GenericLocalAutorouter = {
-    input,
-    isRouting: false,
-    start() {
-      queueMicrotask(() => complete?.({ type: "complete", traces: [] }))
-    },
-    stop() {},
-    on(event, callback) {
-      if (event === "complete") complete = callback as typeof complete
-    },
-    solveSync() {
-      return []
-    },
-  }
-  return router
-}
-
 export default function Am62lLpddr4Top({
   routingState = createDdrFanoutState(),
 }: {
@@ -430,7 +409,9 @@ export default function Am62lLpddr4Top({
         connection="__fanout_metadata_only__"
         autorouter="fanout"
       />
-      <autoroutingphase autorouter={{ algorithmFn: referenceOnlyAutorouter }} />
+      <autoroutingphase
+        autorouter={{ algorithmFn: createTopDdrGlobalAutorouter(routingState) }}
+      />
       <net name="GND" />
       <net name="VDD_LPDDR4" />
       <copperpour layer="inner1" connectsTo="net.GND" />
@@ -498,9 +479,19 @@ export default function Am62lLpddr4Top({
       <breakout
         name="DRAM_FANOUT"
         pcbX={0}
-        pcbY={11.5}
+        pcbY={17.5}
         padding="3mm"
-        autorouter={{ algorithmFn: referenceOnlyAutorouter }}
+        autorouter={{
+          algorithmFn: createDdrFanoutAutorouter(
+            dramBusExitPositions,
+            {
+              matchLengths: false,
+              projectSourceExits: true,
+              busLayers: dramBusLayers,
+            },
+            routingState,
+          ),
+        }}
         fanoutRoutingLayers={[...FANOUT_ROUTING_LAYERS]}
         busFanoutDirections={dramBusExitPositions}
       >
@@ -554,7 +545,7 @@ export default function Am62lLpddr4Top({
         pcbX={0}
         pcbY={-23}
         fontSize={0.7}
-        text="AM62L · CPU fanout · RAM routing and length matching pending"
+        text="AM62L · LPDDR4 · Top · Length matching pending"
       />
     </board>
   )

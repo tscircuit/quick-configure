@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tscircuit Quick Configure · DDR Breakouts</title>
   <meta name="description" content="Inspect an AM62L and MT53E1G16D1ZW LPDDR4 breakout with RAM positioned to the right of or above the CPU." />
-  <link rel="stylesheet" href="../assets/site.css?v=fanout52" />
+  <link rel="stylesheet" href="../assets/site.css?v=top-connected" />
 </head>
 <body class="ddr-page">
   <div class="utility-bar">DDR breakout reference · AM62L + LPDDR4 · PCB view</div>
@@ -52,8 +52,8 @@
             <h2 id="configure-title">Configure this board</h2>
             <div class="field"><label for="cpu">CPU</label><select id="cpu"><option value="am62l">AM62L</option></select></div>
             <div class="field"><label for="ram">RAM</label><select id="ram"><option value="mt53e1g16d1zw">MT53E1G16D1ZW (LPDDR4)</option></select></div>
-            <div class="field"><label for="ram-position">RAM Position</label><select id="ram-position" aria-describedby="selection-note"><option value="right" data-board-id="am62l__mt53e1g16d1zw__right" data-dimensions="40 × 20 mm · 8 layers" data-routing-status="routed">Right</option><option value="top" data-board-id="am62l__mt53e1g16d1zw__top" data-dimensions="32 × 54 mm · 8 layers" data-routing-status="cpu-fanout">Top</option><option value="left" disabled>Left</option><option value="bottom" disabled>Bottom</option></select></div>
-            <p class="selection-note" id="selection-note">Right is routed. Top shows the routed CPU fanout. RAM routing and length matching are still pending. Left and Bottom are coming later.</p>
+            <div class="field"><label for="ram-position">RAM Position</label><select id="ram-position" aria-describedby="selection-note"><option value="right" data-board-id="am62l__mt53e1g16d1zw__right" data-dimensions="40 × 20 mm · 8 layers" data-routing-status="routed">Right</option><option value="top" data-board-id="am62l__mt53e1g16d1zw__top" data-dimensions="32 × 54 mm · 8 layers" data-routing-status="routed-unmatched">Top</option><option value="left" disabled>Left</option><option value="bottom" disabled>Bottom</option></select></div>
+            <p class="selection-note" id="selection-note">Right and Top have both fanouts and all DDR signals connected. Top length matching is still pending. Left and Bottom are coming later.</p>
           </section>
         </aside>
       </div>
@@ -68,6 +68,6 @@
     </div>
   </main>
   <footer><div class="footer-inner"><span><b>tscircuit Quick Configure</b> · DDR breakout reference</span><span>Designed and rendered with tscircuit</span></div></footer>
-  <script src="../assets/ddr-breakouts.js?v=fanout52" defer></script>
+  <script src="../assets/ddr-breakouts.js?v=top-connected" defer></script>
 </body>
 </html>

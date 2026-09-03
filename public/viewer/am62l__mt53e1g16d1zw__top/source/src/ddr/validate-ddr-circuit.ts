@@ -1,3 +1,5 @@
+import { validateOriginalEndpointConnectivity } from "@tscircuit/fanout-solver"
+import type { SimpleRouteJson } from "@tscircuit/capacity-autorouter"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   AM62L_DIRECT_POWER_BALLS,
@@ -30,54 +32,64 @@ export function validateDdrCircuit(circuitJson: AnyCircuitElement[]) {
   }
 }
 
-// Top is a CPU fanout reference. Its only expected errors are the 33
-// deliberately unfinished connections to RAM; keep them in Circuit JSON.
-export function validateDdrCpuFanoutCircuit(circuitJson: AnyCircuitElement[]) {
+// Top's 33 DDR signals must each have CPU, RAM, and global copper, with a
+// physical path all the way between package pads. Reject all DRC errors.
+export function validateTopDdrCircuit(circuitJson: AnyCircuitElement[]) {
+  const errors = circuitJson.filter((record) => record.type.endsWith("_error"))
+  if (errors.length)
+    throw new Error(
+      `Unexpected Top circuit error: ${JSON.stringify(errors[0])}`,
+    )
   const sourceTraces = circuitJson.filter(
     (record) => record.type === "source_trace",
   )
   const pcbTraces = circuitJson.filter((record) => record.type === "pcb_trace")
-  if (sourceTraces.length !== 135 || pcbTraces.length !== 135)
-    throw new Error("Expected all 135 CPU fanout traces")
-  for (const source of sourceTraces) {
+  const ports = circuitJson.filter((record) => record.type === "pcb_port")
+  if (sourceTraces.length !== 135 || pcbTraces.length !== 201)
+    throw new Error("Expected 135 CPU, 33 RAM, and 33 global DDR traces")
+  const connections = DDR_SIGNAL_CONNECTIONS.map((signal) => {
+    const source = sourceTraces.find((trace) => trace.name === signal.traceName)
     if (
+      !source ||
       pcbTraces.filter(
         (trace) => trace.source_trace_id === source.source_trace_id,
-      ).length !== 1
+      ).length !== 3
     )
-      throw new Error(`Missing CPU fanout trace for ${source.name}`)
-  }
-  const expected = new Map(
-    DDR_SIGNAL_CONNECTIONS.map((connection) => {
-      const source = sourceTraces.find(
-        (trace) => trace.name === connection.traceName,
-      )!
-      const pcbTrace = pcbTraces.find(
-        (trace) => trace.source_trace_id === source.source_trace_id,
-      )!
-      return [
-        source.source_trace_id,
-        {
-          pcbTraceId: pcbTrace.pcb_trace_id,
-          suffix: `is missing a connection to smtpad[.U2 > .pin${connection.memoryPinNumber}]`,
-        },
-      ]
-    }),
-  )
-  for (const error of circuitJson.filter((record) =>
-    record.type.endsWith("_error"),
-  )) {
-    const notice =
-      error.type === "pcb_trace_error" && expected.get(error.source_trace_id)
-    if (
-      !notice ||
-      error.type !== "pcb_trace_error" ||
-      error.pcb_trace_id !== notice.pcbTraceId ||
-      !error.message.endsWith(notice.suffix)
-    )
-      throw new Error(`Unexpected Top circuit error: ${JSON.stringify(error)}`)
-    expected.delete(error.source_trace_id)
-  }
-  if (expected.size)
-    throw new Error(`Missing ${expected.size} expected RAM routing diagnostics`)
+      throw new Error(`Missing fanout or global copper for ${signal.traceName}`)
+    if (source.connected_source_port_ids.length !== 2)
+      throw new Error(`Expected CPU and RAM endpoints for ${signal.traceName}`)
+    return {
+      name: source.source_trace_id,
+      pointsToConnect: source.connected_source_port_ids.map((id) => {
+        const port = ports.find((port) => port.source_port_id === id)
+        if (!port) throw new Error(`Missing PCB port ${id}`)
+        return {
+          x: port.x,
+          y: port.y,
+          layer: port.layers[0]!,
+          pointId: port.pcb_port_id,
+        }
+      }),
+    }
+  })
+  const signalIds = new Set(connections.map((connection) => connection.name))
+  const input = {
+    layerCount: 8,
+    minTraceWidth: 0.08128,
+    bounds: { minX: -16, maxX: 16, minY: -27, maxY: 27 },
+    connections,
+    obstacles: [],
+  } as SimpleRouteJson
+  const routed = {
+    ...input,
+    traces: pcbTraces
+      .filter((trace) => signalIds.has(trace.source_trace_id!))
+      .map((trace) => ({ ...trace, connection_name: trace.source_trace_id })),
+  } as SimpleRouteJson
+  const connectivity = validateOriginalEndpointConnectivity({
+    inputSrj: input,
+    routedSrj: routed,
+  })
+  if (!connectivity.valid || connectivity.connectedConnectionCount !== 33)
+    throw new Error(`Disconnected DDR copper: ${JSON.stringify(connectivity)}`)
 }

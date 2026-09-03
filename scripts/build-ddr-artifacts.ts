@@ -6,7 +6,7 @@ import { writeDdrSource } from "./write-ddr-source"
 import { ddrConfigurations } from "../src/ddr/configurations"
 import {
   validateDdrCircuit,
-  validateDdrCpuFanoutCircuit,
+  validateTopDdrCircuit,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -58,12 +58,21 @@ for (const configuration of configurations) {
   const circuitJson = circuit.getCircuitJson()
   if (configuration.routingStatus === "routed") validateDdrCircuit(circuitJson)
   else {
+    const fanouts = routingState?.fanouts.map((fanout) => fanout.validation)
     if (
-      !routingState?.validation?.valid ||
-      routingState.validation.brokenOutConnectionCount !== 135
+      !fanouts ||
+      fanouts.length !== 2 ||
+      !fanouts.every((fanout) => fanout.valid) ||
+      fanouts[0]!.brokenOutConnectionCount !== 135 ||
+      fanouts[1]!.brokenOutConnectionCount !== 33 ||
+      routingState?.globalValidation?.connectedSignalCount !== 33 ||
+      routingState.globalValidation.checkedTraceCount !== 201 ||
+      routingState.globalValidation.copperErrorCount !== 0
     )
-      throw new Error("Top CPU fanout did not route all 135 connections")
-    validateDdrCpuFanoutCircuit(circuitJson)
+      throw new Error(
+        "Top must route both fanouts and all 33 global connections without copper errors",
+      )
+    validateTopDdrCircuit(circuitJson)
     for (const point of circuitJson.filter(
       (record) => record.type === "pcb_breakout_point",
     )) {

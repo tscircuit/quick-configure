@@ -6,4 +6,4 @@ Install with npm ci --force, then run bun scripts/build-ddr-artifacts.ts right.
 
 Routing status: routed.
 
-Right preserves the routed core reference. Top routes the CPU fanout with @tscircuit/fanout-solver 0.0.52; RAM/global routing and length matching are pending. Its capacitor footprints only reserve placement space.
+Right preserves the routed core reference. Top uses @tscircuit/fanout-solver 0.0.52 for both fanouts and joins all 33 DDR signals with a clearance-checked global channel router. Length matching remains pending. Its capacitor footprints only reserve placement space.

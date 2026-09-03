@@ -129,26 +129,69 @@ const createFanoutOptions = (
 
 export interface DdrFanoutState {
   exits: Map<string, SimpleRoutePoint>
+  fanouts: Array<{
+    input: SimpleRouteJson
+    traces: SimplifiedPcbTrace[]
+    validation: ReturnType<FanoutSolver["getOutput"]>["validation"]
+  }>
   validation?: ReturnType<FanoutSolver["getOutput"]>["validation"]
+  globalValidation?: {
+    connectedSignalCount: number
+    checkedTraceCount: number
+    copperErrorCount: number
+  }
 }
-export const createDdrFanoutState = (): DdrFanoutState => ({ exits: new Map() })
+export const createDdrFanoutState = (): DdrFanoutState => ({
+  exits: new Map(),
+  fanouts: [],
+})
 
 export function createDdrFanoutAutorouter(
   busDirections: Readonly<Record<string, FanoutExitPosition>>,
-  options: Partial<FanoutSolverOptions> & { matchLengths?: boolean } = {},
+  options: Partial<FanoutSolverOptions> & {
+    matchLengths?: boolean
+    projectSourceExits?: boolean
+    busLayers?: Readonly<Record<string, readonly string[]>>
+  } = {},
   state = createDdrFanoutState(),
 ) {
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
-    const { matchLengths = true, ...solverOptions } = options
+    const {
+      matchLengths = true,
+      projectSourceExits = false,
+      busLayers,
+      ...solverOptions
+    } = options
     const phaseOptions = createFanoutOptions(input, busDirections)
     if (!matchLengths)
       phaseOptions.buses = phaseOptions.buses?.map((bus) => ({
         ...bus,
         maxLengthSkew: undefined,
       }))
-    const solverInput = matchLengths
-      ? input
-      : { ...input, differentialPairs: [] }
+    // Core supplies guessed opposing exits before either custom solver runs.
+    // RAM must preserve its own pad order; the global router joins the results.
+    if (projectSourceExits) {
+      phaseOptions.buses = phaseOptions.buses?.map(
+        ({ connectionExitTargets, ...bus }) => ({
+          ...bus,
+          allowedLayers: busLayers?.[bus.busId] ?? bus.allowedLayers,
+        }),
+      )
+    }
+    const solverInput = {
+      ...input,
+      differentialPairs: matchLengths ? input.differentialPairs : [],
+      connections: projectSourceExits
+        ? input.connections.map((connection) => ({
+            ...connection,
+            pointsToConnect: connection.pointsToConnect.map((point, index) =>
+              index === 0
+                ? point
+                : { ...point, x: connection.pointsToConnect[0]!.x },
+            ),
+          }))
+        : input.connections,
+    }
     const solver = new FanoutSolver(
       solverInput as unknown as ConstructorParameters<typeof FanoutSolver>[0],
       {
@@ -186,6 +229,18 @@ export function createDdrFanoutAutorouter(
           state.exits.set(originalExit.pointId, exit)
         }
       }
+      if (
+        !output.validation.valid ||
+        output.validation.brokenOutConnectionCount !== input.connections.length
+      )
+        throw new Error(
+          `Incomplete fanout: ${JSON.stringify(output.validation)}`,
+        )
+      state.fanouts.push({
+        input,
+        traces: output.fanoutTraces as unknown as SimplifiedPcbTrace[],
+        validation: output.validation,
+      })
       state.validation = output.validation
       console.log(
         `Fanout solved: ${output.fanoutTraces.length} traces in ${Date.now() - start}ms`,

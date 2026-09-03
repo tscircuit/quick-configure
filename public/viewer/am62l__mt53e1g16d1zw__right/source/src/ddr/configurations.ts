@@ -23,7 +23,7 @@ export const ddrConfigurations = [
     position: "top",
     Board: Am62lLpddr4Top,
     DirectDecoupling: undefined,
-    routingStatus: "cpu-fanout" as const,
+    routingStatus: "routed-unmatched" as const,
     createRoutingState: createDdrFanoutState,
   },
 ] as const
@@ -35,6 +35,7 @@ export const ddrSourceFilenames = [
   "src/ddr/configurations.ts",
   "src/ddr/direct-ddr-autorouter.ts",
   "src/ddr/latest-fanout-autorouter.ts",
+  "src/ddr/top-ddr-global-autorouter.ts",
   "src/ddr/validate-ddr-circuit.ts",
   "scripts/build-ddr-artifacts.ts",
   "scripts/write-ddr-source.ts",

@@ -20,18 +20,22 @@ The 45 non-DDR processor power balls retain logical PDN membership; the
 builder checks their expected connectivity diagnostics individually.
 
 Top starts from the [fanout31 Top sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx)
-and uses the placement, signal layers, and dense-plane hints from the
+and uses the CPU signal layers and dense-plane hints from the
 [fanout-solver Top regression](https://github.com/tscircuit/fanout-solver/blob/70a2fe5/tests/am62l-top-edge-breakout-solved-repro.test.ts).
-Its board is 32 × 54 mm with the CPU at (0, -11), RAM at (0, 11.5), and eight
+Its board is 32 × 54 mm with the CPU at (0, -11), RAM at (0, 17.5), and eight
 bottom-side capacitor footprints reserving the reference's decoupling space.
 The CPU routes **135/135 connections**: 33 DDR escape traces and 102 power/ground
-plane drops. The page displays real routed copper, with ratsnest guides off.
+plane drops. RAM fans all **33/33 signals downward** on its own configured bus
+layers. A bounded A* global channel router connects the two fanouts, using
+full-stack vias and keeping signals off the power-plane layers. The extra
+space above the CPU accommodates entry ramps and layer transitions.
 
-**Top remains a CPU fanout reference. RAM/global routing and length matching
-are pending.** The passing upstream regression disables length matching, so
-Top explicitly passes `matchLengths: false`. The original bus and pair limits
-remain visible in the TSX as design targets. Capacitor footprints reserve space;
-their connections are not routed. Top is not a completed memory interface.
+The build independently validates all **201 PCB traces**, checks every DDR
+signal's physical pad-to-pad connectivity, and rejects copper or routing errors.
+Both fanouts explicitly use `matchLengths: false`; **length matching remains
+pending**. The bus and differential-pair limits in TSX are design targets.
+The eight capacitor footprints reserve placement space; their connections
+remain outside this signal-routing reference.
 
 Each position has a dedicated TSX file under `src/ddr/`. Top explicitly calls
 `new FanoutSolver(...)` from the pinned **@tscircuit/fanout-solver 0.0.52** via

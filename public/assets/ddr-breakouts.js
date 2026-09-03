@@ -10,12 +10,12 @@ function loadBoard() {
   const base = `../viewer/${boardId}`
   drawingLoading.hidden = false
   drawingLoading.querySelector("span").textContent = "Loading PCB"
-  const cpuFanout = option.dataset.routingStatus === "cpu-fanout"
+  const unmatched = option.dataset.routingStatus === "routed-unmatched"
   const status = document.querySelector("#routing-status")
-  status.textContent = cpuFanout ? "CPU fanout" : "Routed reference"
-  status.classList.toggle("unrouted", cpuFanout)
-  drawing.alt = `${cpuFanout ? "CPU fanout of an" : "Routed"} AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
-  drawing.src = `${base}/pcb.svg`
+  status.textContent = unmatched ? "Routed · Length matching pending" : "Routed reference"
+  status.classList.toggle("unrouted", unmatched)
+  drawing.alt = `Routed AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
+  drawing.src = `${base}/pcb.svg?v=top-connected`
   document.querySelector("#caption-title").textContent =
     `AM62L · MT53E1G16D1ZW · ${option.text}`
   document.querySelector("#caption-dimensions").textContent =
