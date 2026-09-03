@@ -12,8 +12,13 @@ function loadBoard() {
   drawingLoading.querySelector("span").textContent = "Loading PCB"
   const status = document.querySelector("#routing-status")
   status.textContent = "Routed reference"
-  drawing.alt = `Routed AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
-  drawing.src = `${base}/pcb.svg?v=coordinated-top-54`
+  const positionDescription = {
+    right: "to the right of",
+    top: "above",
+    left: "to the left of",
+  }[option.value]
+  drawing.alt = `Routed AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${positionDescription} the CPU`
+  drawing.src = `${base}/pcb.svg?v=coordinated-left-54`
   document.querySelector("#caption-title").textContent =
     `AM62L · MT53E1G16D1ZW · ${option.text}`
   document.querySelector("#caption-dimensions").textContent =

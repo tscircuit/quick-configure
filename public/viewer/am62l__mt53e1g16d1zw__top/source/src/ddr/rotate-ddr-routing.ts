@@ -2,12 +2,12 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "@tscircuit/core"
 import type { FanoutExitPosition } from "@tscircuit/fanout-solver"
 import { applyToPoint, rotateDEG } from "transformation-matrix"
 
-// Board-space millimeters, +X right and +Y up. Normalize a quarter-turned
+// Board-space millimeters, +X right and +Y up. Normalize a rotated
 // reference into the solver's horizontal frame, and invert it for core's
 // phase handoff. IDs, nets, layers, widths and clearances remain unchanged.
 export function rotateDdrRouting(
   input: SimpleRouteJson,
-  degrees: 90 | -90,
+  degrees: 90 | -90 | 180 | -180,
   precision?: number,
 ): SimpleRouteJson {
   const matrix = rotateDEG(degrees)
@@ -40,8 +40,8 @@ export function rotateDdrRouting(
     obstacles: input.obstacles.map((obstacle) => ({
       ...obstacle,
       center: point(obstacle.center),
-      width: obstacle.height,
-      height: obstacle.width,
+      width: Math.abs(degrees) === 90 ? obstacle.height : obstacle.width,
+      height: Math.abs(degrees) === 90 ? obstacle.width : obstacle.height,
     })),
     connections: input.connections.map((connection) => ({
       ...connection,
@@ -74,15 +74,24 @@ const clockwiseExits: Partial<Record<FanoutExitPosition, FanoutExitPosition>> =
     bottomside_left: "leftside_top",
     bottomside_center: "leftside_center",
     bottomside_right: "leftside_bottom",
+    rightside_top: "bottomside_right",
+    rightside_center: "bottomside_center",
+    rightside_bottom: "bottomside_left",
+    leftside_top: "topside_right",
+    leftside_center: "topside_center",
+    leftside_bottom: "topside_left",
   }
 export function rotateDdrExitDirections(
   directions: Readonly<Record<string, FanoutExitPosition>>,
+  referenceRotation: 90 | 180,
 ) {
   return Object.fromEntries(
     Object.entries(directions).map(([bus, direction]) => {
-      const rotated = clockwiseExits[direction]
+      const once = clockwiseExits[direction]
+      const rotated =
+        referenceRotation === 90 ? once : once && clockwiseExits[once]
       if (!rotated)
-        throw new Error(`Expected a Top fanout direction, got ${direction}`)
+        throw new Error(`Unsupported fanout exit direction: ${direction}`)
       return [bus, rotated]
     }),
   )

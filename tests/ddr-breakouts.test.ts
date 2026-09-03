@@ -8,9 +8,9 @@ import {
 } from "../src/ddr/configurations"
 import {
   validateDdrCircuit,
-  validateTopDdrCircuit,
-  validateTopDdrGlobalRouting,
-  validateTopDdrViaLocations,
+  validateCoordinatedDdrCircuit,
+  validateDdrGlobalRouting,
+  validateDdrViaLocations,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -137,37 +137,60 @@ describe("DDR breakout artifacts", () => {
       join(projectRoot, "site", "ddr-breakouts", "index.html"),
     ).text()
     expect(page.match(/<select\b/g)).toHaveLength(3)
-    for (const position of ["left", "bottom"])
+    for (const position of ["bottom"])
       expect(page).toContain(`value="${position}" disabled`)
-    expect(page).toContain(
-      'value="top" data-board-id="am62l__mt53e1g16d1zw__top"',
-    )
+    for (const position of ["top", "left"])
+      expect(page).toContain(
+        `value="${position}" data-board-id="am62l__mt53e1g16d1zw__${position}"`,
+      )
     expect(page).toContain('data-routing-status="routed"')
-    expect(page).toContain("Right and Top are routed")
+    expect(page).toContain("Right, Top, and Left are routed")
   })
 })
 
-describe("Top DDR reference", () => {
+describe.each(["top", "left"] as const)("%s DDR reference", (position) => {
   const configuration = ddrConfigurations.find(
-    (config) => config.position === "top",
+    (config) => config.position === position,
   )!
   const topViewerDir = join(projectRoot, "public", "viewer", configuration.id)
 
-  test("routes both fanouts and connects every DDR signal with RAM above the CPU", async () => {
+  test("routes both fanouts with exits facing the other package", async () => {
     const top: AnyCircuitElement[] = await Bun.file(
       join(topViewerDir, "circuit.json"),
     ).json()
     const board = top.find((record) => record.type === "pcb_board")!
-    expect([board.width, board.height, board.num_layers]).toEqual([32, 54, 8])
+    expect([board.width, board.height, board.num_layers]).toEqual(
+      position === "top" ? [32, 54, 8] : [54, 32, 8],
+    )
     expect(board.min_via_hole_diameter).toBe(0.15)
     const parts = top.filter((record) => record.type === "pcb_component")
     expect(parts).toHaveLength(10)
-    const cpu = parts.find((part) => part.center.y === -9.5)!
-    const ram = parts.find((part) => part.center.y === 9.616917)!
-    expect(cpu.center).toEqual({ x: 0, y: -9.5 })
-    expect(ram.center).toEqual({ x: -1.81916, y: 9.616917 })
-    expect(cpu.rotation).toBe(90)
-    expect(ram.rotation).toBe(180)
+    const cpuSource = top
+      .filter((record) => record.type === "source_component")
+      .find(
+        (record) => record.type === "source_component" && record.name === "U1",
+      )!
+    const ramSource = top
+      .filter((record) => record.type === "source_component")
+      .find(
+        (record) => record.type === "source_component" && record.name === "U2",
+      )!
+    const cpu = parts.find(
+      (part) => part.source_component_id === cpuSource.source_component_id,
+    )!
+    const ram = parts.find(
+      (part) => part.source_component_id === ramSource.source_component_id,
+    )!
+    expect(cpu.center).toEqual(
+      position === "top" ? { x: 0, y: -9.5 } : { x: 9.5, y: 0 },
+    )
+    expect(ram.center).toEqual(
+      position === "top"
+        ? { x: -1.81916, y: 9.616917 }
+        : { x: -9.616917, y: -1.81916 },
+    )
+    expect(cpu.rotation).toBe(position === "top" ? 90 : 180)
+    expect(ram.rotation).toBe(position === "top" ? 180 : 270)
     const pads = top.filter((record) => record.type === "pcb_smtpad")
     expect(
       pads.filter((pad) => pad.pcb_component_id === cpu.pcb_component_id),
@@ -205,23 +228,33 @@ describe("Top DDR reference", () => {
         (exit) => exit.source_trace_id === signal.source_trace_id,
       )
       expect(signalExits).toHaveLength(2)
-      expect(
-        signalExits.find((exit) => exit.pcb_group_id === cpu.pcb_group_id)!.y,
-      ).toBeGreaterThan(cpu.center.y + cpu.height / 2)
-      expect(
-        signalExits.find((exit) => exit.pcb_group_id === ram.pcb_group_id)!.y,
-      ).toBeLessThan(ram.center.y - ram.height / 2)
+      const cpuExit = signalExits.find(
+        (exit) => exit.pcb_group_id === cpu.pcb_group_id,
+      )!
+      const ramExit = signalExits.find(
+        (exit) => exit.pcb_group_id === ram.pcb_group_id,
+      )!
+      if (position === "top") {
+        expect(cpuExit.y).toBeGreaterThan(cpu.center.y + cpu.height / 2)
+        expect(ramExit.y).toBeLessThan(ram.center.y - ram.height / 2)
+        expect(cpuExit.y).toBeLessThan(ramExit.y)
+      } else {
+        expect(cpuExit.x).toBeLessThan(cpu.center.x - cpu.width / 2)
+        expect(ramExit.x).toBeGreaterThan(ram.center.x + ram.width / 2)
+        expect(cpuExit.x).toBeGreaterThan(ramExit.x)
+        expect(cpuExit.layer).toBe(ramExit.layer)
+      }
     }
-    expect(() => validateTopDdrCircuit(top)).not.toThrow()
-    expect(() => validateTopDdrGlobalRouting(top)).not.toThrow()
-    expect(() => validateTopDdrViaLocations(top)).not.toThrow()
+    expect(() => validateCoordinatedDdrCircuit(top)).not.toThrow()
+    expect(() => validateDdrGlobalRouting(top)).not.toThrow()
+    expect(() => validateDdrViaLocations(top)).not.toThrow()
     const withOutsideVia = structuredClone(top)
     const displacedVia = withOutsideVia.find(
       (record) => record.type === "pcb_via",
     )!
-    displacedVia.x = 14
-    displacedVia.y = 0
-    expect(() => validateTopDdrViaLocations(withOutsideVia)).toThrow(
+    displacedVia.x = position === "top" ? 14 : 0
+    displacedVia.y = position === "top" ? 0 : 14
+    expect(() => validateDdrViaLocations(withOutsideVia)).toThrow(
       "outside the fanouts",
     )
     const phases = top.filter((record) => record.type === "pcb_debug_object")
@@ -264,26 +297,28 @@ describe("Top DDR reference", () => {
       top.find((record) => record.type === "pcb_note_text")!.text,
     ).toContain("Coordinated fanouts")
     const withBrokenJoin = structuredClone(top)
-    const globalTrace =
-      withBrokenJoin.find(
-        (record) =>
-          record.type === "pcb_trace" &&
-          record.pcb_trace_id.includes("ddr_top_global"),
-      ) ??
-      withBrokenJoin.filter((record) => record.type === "pcb_trace").at(-1)!
+    const globalTrace = withBrokenJoin.find(
+      (record) =>
+        record.type === "pcb_trace" &&
+        record.pcb_trace_id.includes("ddr_coordinated_global"),
+    )!
     if (globalTrace.type !== "pcb_trace")
       throw new Error("Missing global trace")
-    const endpoint = globalTrace.route[0]!
-    if (endpoint.route_type !== "wire") throw new Error("Missing wire endpoint")
-    endpoint.x += 0.3
-    expect(() => validateTopDdrCircuit(withBrokenJoin)).toThrow(
+    // Move the entire global segment off the board. Moving only one endpoint
+    // along a horizontal trace can leave it overlapping its fanout copper.
+    for (const point of globalTrace.route) {
+      if (point.route_type !== "wire") throw new Error("Expected a global wire")
+      point.x += 100
+      point.y += 100
+    }
+    expect(() => validateCoordinatedDdrCircuit(withBrokenJoin)).toThrow(
       "Disconnected DDR copper",
     )
     const unexpected = circuit.find(
       (record) => record.type === "pcb_port_not_connected_error",
     )!
-    expect(() => validateTopDdrCircuit([...top, unexpected])).toThrow(
-      "Unexpected Top circuit error",
+    expect(() => validateCoordinatedDdrCircuit([...top, unexpected])).toThrow(
+      "Unexpected coordinated DDR circuit error",
     )
   })
 
@@ -305,7 +340,7 @@ describe("Top DDR reference", () => {
   })
 })
 
-test("both references publish the three captured routing phases", async () => {
+test("all references publish the three captured routing phases", async () => {
   for (const configuration of ddrConfigurations) {
     const phases = await Bun.file(
       join(

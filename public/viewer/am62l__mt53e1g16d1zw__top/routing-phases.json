@@ -69370,7 +69370,7 @@
     "outputTraces": [
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_0",
+        "pcb_trace_id": "ddr_coordinated_global_0",
         "connection_name": "source_trace_228",
         "route": [
           {
@@ -69391,7 +69391,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_1",
+        "pcb_trace_id": "ddr_coordinated_global_1",
         "connection_name": "source_trace_229",
         "route": [
           {
@@ -69412,7 +69412,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_2",
+        "pcb_trace_id": "ddr_coordinated_global_2",
         "connection_name": "source_trace_230",
         "route": [
           {
@@ -69433,7 +69433,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_3",
+        "pcb_trace_id": "ddr_coordinated_global_3",
         "connection_name": "source_trace_231",
         "route": [
           {
@@ -69454,7 +69454,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_4",
+        "pcb_trace_id": "ddr_coordinated_global_4",
         "connection_name": "source_trace_232",
         "route": [
           {
@@ -69475,7 +69475,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_5",
+        "pcb_trace_id": "ddr_coordinated_global_5",
         "connection_name": "source_trace_233",
         "route": [
           {
@@ -69496,7 +69496,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_6",
+        "pcb_trace_id": "ddr_coordinated_global_6",
         "connection_name": "source_trace_234",
         "route": [
           {
@@ -69517,7 +69517,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_7",
+        "pcb_trace_id": "ddr_coordinated_global_7",
         "connection_name": "source_trace_235",
         "route": [
           {
@@ -69538,7 +69538,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_8",
+        "pcb_trace_id": "ddr_coordinated_global_8",
         "connection_name": "source_trace_236",
         "route": [
           {
@@ -69559,7 +69559,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_9",
+        "pcb_trace_id": "ddr_coordinated_global_9",
         "connection_name": "source_trace_237",
         "route": [
           {
@@ -69580,7 +69580,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_10",
+        "pcb_trace_id": "ddr_coordinated_global_10",
         "connection_name": "source_trace_238",
         "route": [
           {
@@ -69601,7 +69601,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_11",
+        "pcb_trace_id": "ddr_coordinated_global_11",
         "connection_name": "source_trace_239",
         "route": [
           {
@@ -69622,7 +69622,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_12",
+        "pcb_trace_id": "ddr_coordinated_global_12",
         "connection_name": "source_trace_240",
         "route": [
           {
@@ -69643,7 +69643,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_13",
+        "pcb_trace_id": "ddr_coordinated_global_13",
         "connection_name": "source_trace_241",
         "route": [
           {
@@ -69664,7 +69664,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_14",
+        "pcb_trace_id": "ddr_coordinated_global_14",
         "connection_name": "source_trace_242",
         "route": [
           {
@@ -69685,7 +69685,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_15",
+        "pcb_trace_id": "ddr_coordinated_global_15",
         "connection_name": "source_trace_243",
         "route": [
           {
@@ -69706,7 +69706,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_16",
+        "pcb_trace_id": "ddr_coordinated_global_16",
         "connection_name": "source_trace_244",
         "route": [
           {
@@ -69727,7 +69727,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_17",
+        "pcb_trace_id": "ddr_coordinated_global_17",
         "connection_name": "source_trace_245",
         "route": [
           {
@@ -69748,7 +69748,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_18",
+        "pcb_trace_id": "ddr_coordinated_global_18",
         "connection_name": "source_trace_246",
         "route": [
           {
@@ -69769,7 +69769,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_19",
+        "pcb_trace_id": "ddr_coordinated_global_19",
         "connection_name": "source_trace_247",
         "route": [
           {
@@ -69790,7 +69790,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_20",
+        "pcb_trace_id": "ddr_coordinated_global_20",
         "connection_name": "source_trace_248",
         "route": [
           {
@@ -69811,7 +69811,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_21",
+        "pcb_trace_id": "ddr_coordinated_global_21",
         "connection_name": "source_trace_249",
         "route": [
           {
@@ -69832,7 +69832,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_22",
+        "pcb_trace_id": "ddr_coordinated_global_22",
         "connection_name": "source_trace_250",
         "route": [
           {
@@ -69853,7 +69853,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_23",
+        "pcb_trace_id": "ddr_coordinated_global_23",
         "connection_name": "source_trace_251",
         "route": [
           {
@@ -69874,7 +69874,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_24",
+        "pcb_trace_id": "ddr_coordinated_global_24",
         "connection_name": "source_trace_252",
         "route": [
           {
@@ -69895,7 +69895,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_25",
+        "pcb_trace_id": "ddr_coordinated_global_25",
         "connection_name": "source_trace_253",
         "route": [
           {
@@ -69916,7 +69916,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_26",
+        "pcb_trace_id": "ddr_coordinated_global_26",
         "connection_name": "source_trace_254",
         "route": [
           {
@@ -69937,7 +69937,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_27",
+        "pcb_trace_id": "ddr_coordinated_global_27",
         "connection_name": "source_trace_255",
         "route": [
           {
@@ -69958,7 +69958,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_28",
+        "pcb_trace_id": "ddr_coordinated_global_28",
         "connection_name": "source_trace_256",
         "route": [
           {
@@ -69979,7 +69979,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_29",
+        "pcb_trace_id": "ddr_coordinated_global_29",
         "connection_name": "source_trace_257",
         "route": [
           {
@@ -70000,7 +70000,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_30",
+        "pcb_trace_id": "ddr_coordinated_global_30",
         "connection_name": "source_trace_258",
         "route": [
           {
@@ -70021,7 +70021,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_31",
+        "pcb_trace_id": "ddr_coordinated_global_31",
         "connection_name": "source_trace_259",
         "route": [
           {
@@ -70042,7 +70042,7 @@
       },
       {
         "type": "pcb_trace",
-        "pcb_trace_id": "ddr_top_global_32",
+        "pcb_trace_id": "ddr_coordinated_global_32",
         "connection_name": "source_trace_260",
         "route": [
           {

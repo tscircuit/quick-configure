@@ -32,13 +32,15 @@ export function validateDdrCircuit(circuitJson: AnyCircuitElement[]) {
   }
 }
 
-// Top's 33 DDR signals must each have CPU, RAM, and global copper, with a
+// The rotated layouts' 33 DDR signals must each have CPU, RAM, and global copper, with a
 // physical path all the way between package pads. Reject all DRC errors.
-export function validateTopDdrCircuit(circuitJson: AnyCircuitElement[]) {
+export function validateCoordinatedDdrCircuit(
+  circuitJson: AnyCircuitElement[],
+) {
   const errors = circuitJson.filter((record) => record.type.endsWith("_error"))
   if (errors.length)
     throw new Error(
-      `Unexpected Top circuit error: ${JSON.stringify(errors[0])}`,
+      `Unexpected coordinated DDR circuit error: ${JSON.stringify(errors[0])}`,
     )
   const sourceTraces = circuitJson.filter(
     (record) => record.type === "source_trace",
@@ -75,10 +77,18 @@ export function validateTopDdrCircuit(circuitJson: AnyCircuitElement[]) {
     }
   })
   const signalIds = new Set(connections.map((connection) => connection.name))
+  const board = circuitJson.find((record) => record.type === "pcb_board")
+  if (!board?.width || !board.height)
+    throw new Error("Missing DDR board dimensions")
   const input = {
     layerCount: 8,
     minTraceWidth: 0.08128,
-    bounds: { minX: -16, maxX: 16, minY: -27, maxY: 27 },
+    bounds: {
+      minX: board.center.x - board.width / 2,
+      maxX: board.center.x + board.width / 2,
+      minY: board.center.y - board.height / 2,
+      maxY: board.center.y + board.height / 2,
+    },
     connections,
     obstacles: [],
   } as SimpleRouteJson
@@ -98,7 +108,7 @@ export function validateTopDdrCircuit(circuitJson: AnyCircuitElement[]) {
 
 // The global segment is the trace joining the two exported breakout points.
 // Inspect emitted copper, so a later router cannot silently reintroduce vias.
-export function validateTopDdrGlobalRouting(circuitJson: AnyCircuitElement[]) {
+export function validateDdrGlobalRouting(circuitJson: AnyCircuitElement[]) {
   const exits = circuitJson.filter(
     (record) => record.type === "pcb_breakout_point",
   )
@@ -118,7 +128,7 @@ export function validateTopDdrGlobalRouting(circuitJson: AnyCircuitElement[]) {
       pairedExits[0]!.layer !== pairedExits[1]!.layer
     )
       throw new Error(
-        `Top fanout exits must use one layer for ${signal.traceName}`,
+        `DDR fanout exits must use one layer for ${signal.traceName}`,
       )
     const globalTraces = traces.filter(
       (trace) =>
@@ -140,14 +150,14 @@ export function validateTopDdrGlobalRouting(circuitJson: AnyCircuitElement[]) {
       )
     )
       throw new Error(
-        `Top global routing must connect ${signal.traceName} without vias`,
+        `DDR global routing must connect ${signal.traceName} without vias`,
       )
   }
 }
 
 // Use the actual phase regions exported by core, in board coordinates (mm,
 // +X right, +Y up). Every via pad must remain inside one of the two fanouts.
-export function validateTopDdrViaLocations(circuitJson: AnyCircuitElement[]) {
+export function validateDdrViaLocations(circuitJson: AnyCircuitElement[]) {
   const regions = circuitJson.filter(
     (record) =>
       record.type === "pcb_debug_object" &&
