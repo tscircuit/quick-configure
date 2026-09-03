@@ -7,7 +7,7 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import {
   expectedBoardAssetFilenames,
   expectedConfigurationIds,
@@ -94,6 +94,7 @@ for (const { id } of ddrConfigurations) {
   const targetDir = join(viewerDir, id)
   await mkdir(targetDir, { recursive: true })
   for (const filename of ddrAssetFilenames) {
+    await mkdir(dirname(join(targetDir, filename)), { recursive: true })
     await cp(join(distDir, id, filename), join(targetDir, filename))
   }
 }

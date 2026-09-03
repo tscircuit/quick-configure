@@ -10,11 +10,11 @@ function loadBoard() {
   const base = `../viewer/${boardId}`
   drawingLoading.hidden = false
   drawingLoading.querySelector("span").textContent = "Loading PCB"
-  const unrouted = option.dataset.routingStatus === "unrouted"
+  const cpuFanout = option.dataset.routingStatus === "cpu-fanout"
   const status = document.querySelector("#routing-status")
-  status.textContent = unrouted ? "Unrouted reference" : "Routed reference"
-  status.classList.toggle("unrouted", unrouted)
-  drawing.alt = `${unrouted ? "Unrouted" : "Routed"} AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
+  status.textContent = cpuFanout ? "CPU fanout" : "Routed reference"
+  status.classList.toggle("unrouted", cpuFanout)
+  drawing.alt = `${cpuFanout ? "CPU fanout of an" : "Routed"} AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
   drawing.src = `${base}/pcb.svg`
   document.querySelector("#caption-title").textContent =
     `AM62L · MT53E1G16D1ZW · ${option.text}`
@@ -22,7 +22,8 @@ function loadBoard() {
     option.dataset.dimensions
   for (const link of boardFileLinks) {
     link.href = `${base}/${link.dataset.boardFile}`
-    link.download = `${boardId}-${link.dataset.boardFile}`
+    if (link.hasAttribute("download"))
+      link.download = `${boardId}-${link.dataset.boardFile}`
   }
   resetDrawing()
 }

@@ -7,56 +7,44 @@ routed PCB, schematic, and downloadable fabrication/EDA resources.
 
 ## DDR Breakouts
 
-The header links to `/ddr-breakouts/`, a separate three-dropdown selector for
-CPU, RAM, and RAM Position. It currently offers **AM62L** with
-**MT53E1G16D1ZW (LPDDR4)** to the **Right** (routed) or **Top** (unrouted
-reference). Left and Bottom remain disabled. Changing position updates the
-PCB preview, dimensions, routing status, and all three downloads.
+The header links to `/ddr-breakouts/`, a three-dropdown selector for CPU, RAM,
+and RAM Position. AM62L + MT53E1G16D1ZW (LPDDR4) supports **Right** and **Top**.
+Left and Bottom remain disabled. The selector updates the PCB preview,
+dimensions, routing status, and resources.
 
-The Right configuration is a 40 × 20 mm, eight-layer PCB that follows core's
-[progressive-fanout reference](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/repros/repro-am62l-lpddr4-progressive-fanout.test.tsx)
-and its
-[board fixture](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/fixtures/create-am62l-lpddr4-fanout.tsx).
-It retains the 373-ball CPU and 200-ball RAM footprints, nine DDR buses,
-33 signals, clock/DQS differential pairs, power-plane fanout, and 68 processor
-decoupling capacitors. The page offers a PCB viewer with pan/zoom plus PCB SVG,
-Circuit JSON, and TSX source downloads.
+Right is the 40 × 20 mm, eight-layer
+[core progressive-fanout reference](https://github.com/tscircuit/core/blob/25595a9988b542334f1b9a7d1a2c083b8796f633/tests/repros/repro-am62l-lpddr4-progressive-fanout.test.tsx).
+It preserves the complete DDR routing, 373 CPU / 200 RAM pads, nine buses,
+33 signals, differential pairs, and 68 processor decoupling capacitors.
+The 45 non-DDR processor power balls retain logical PDN membership; the
+builder checks their expected connectivity diagnostics individually.
 
-The Top configuration follows the [02-top-center dataset sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx):
-an eight-layer 52 × 52 mm board with the CPU at (0, 0) and RAM at (0, 17),
-rotated 90°. It preserves all 33 signal connections, nine bus assignments,
-three differential pairs, 102 CPU plane drops, and the dataset's top/bottom
-bus exit directions. It has no decoupling capacitors, matching the dataset.
-The dataset is an unsolved CPU-fanout benchmark; RAM routing and the global
-routing phase are disabled. The Top preview therefore explicitly disables
-routing and displays connection guides instead of PCB traces. Its badge,
-SVG note, and source-bundle README identify it as **unrouted**.
+Top starts from the [fanout31 Top sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx)
+and uses the placement, signal layers, and dense-plane hints from the
+[fanout-solver Top regression](https://github.com/tscircuit/fanout-solver/blob/70a2fe5/tests/am62l-top-edge-breakout-solved-repro.test.ts).
+Its board is 32 × 54 mm with the CPU at (0, -11), RAM at (0, 11.5), and eight
+bottom-side capacitor footprints reserving the reference's decoupling space.
+The CPU routes **135/135 connections**: 33 DDR escape traces and 102 power/ground
+plane drops. The page displays real routed copper, with ratsnest guides off.
 
-- `src/ddr/am62l__mt53e1g16d1zw__right.circuit.tsx` owns the Right layout and
-  its per-chip bus exit directions, signal layers, skew limits, and placements.
-  Add a separate TSX file for each future position and register it in
-  `src/ddr/configurations.ts`.
-- `src/ddr/am62l__mt53e1g16d1zw__top.circuit.tsx` owns the dataset Top layout.
-  Rendering `Am62lLpddr4Top({ routingDisabled: false })` separately attempts
-  the dataset CPU fanout, which may not converge; RAM and global routing
-  still need implementation before this can become a routed board.
-- `src/ddr/am62l-lpddr4.tsx` shares the reference pin maps, footprints, and
-  decoupling inventory.
-- `scripts/build-ddr-artifacts.ts` renders the Right DDR routes first, then adds the
-  fixed processor decoupling copper, following core's staged render sequence.
-  Use this builder to generate the complete reference, including that second
-  TSX group. The core, props, router, and Circuit JSON versions are pinned to
-  support the reference's fanout and render APIs.
+**Top remains a CPU fanout reference. RAM/global routing and length matching
+are pending.** The passing upstream regression disables length matching, so
+Top explicitly passes `matchLengths: false`. The original bus and pair limits
+remain visible in the TSX as design targets. Capacitor footprints reserve space;
+their connections are not routed. Top is not a completed memory interface.
 
-Like core's reference, the 45 non-DDR processor power balls have logical
-membership in 16 rails whose segmented power planes are left to the host
-board. Their connectivity diagnostics remain in the downloaded Circuit JSON;
-the builder checks them one-for-one and rejects every other circuit error.
-For Top it rejects unexpected circuit errors and ensures no routed traces
-are included in the unrouted reference.
-This is a DDR breakout reference, not a complete powered processor design.
+Each position has a dedicated TSX file under `src/ddr/`. Top explicitly calls
+`new FanoutSolver(...)` from the pinned **@tscircuit/fanout-solver 0.0.52** via
+an `algorithmFn` adapter; `autorouter="fanout"` would use core's older bundled
+solver. The adapter keeps the solver's actual exits and independent validation
+report. The builder updates the exported breakout markers to those exits.
 
-To rebuild the DDR artifacts and pages using the checked-in sensor/display
+The **Browse TSX Source** resource opens an unzipped file browser for each
+configuration. The `source/` directory contains the entry TSX, shared files,
+build scripts, package manifest, lockfile, and build instructions. Files can
+be read in the browser or downloaded individually; no ZIP is required.
+
+To rebuild the DDR references and the site using the checked-in sensor/display
 artifacts:
 
 ```sh
@@ -66,11 +54,9 @@ npm test
 npm run typecheck
 ```
 
-Use `npm run build:ddr -- top` to regenerate only the Top reference.
-
-The full `npm run build` also generates DDR artifacts before assembling both
-pages. DDR circuits live under `src/ddr/` so the existing sensor/display batch
-and schematic-placement gate continue to operate on their 72 configurations.
+Use `npm run build:ddr -- top` to rebuild only Top. The full `npm run build`
+also generates DDR artifacts. DDR circuits live under `src/ddr/`, keeping the
+existing sensor/display batch and schematic-placement gate at 72 configurations.
 
 ## Configuration catalog
 
