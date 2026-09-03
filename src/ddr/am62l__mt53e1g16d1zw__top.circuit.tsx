@@ -3,7 +3,8 @@
 // problem. The solved CPU configuration (placement, layers, and dense-plane
 // hints) follows fanout-solver's repro04 at 70a2fe5, using version 0.0.52.
 // Like its passing regression, length matching is disabled for this fanout.
-// RAM escapes downward; a clearance-checked global channel joins both fanouts.
+// Core coordinates the CPU exits with the downward RAM fanout before routing
+// the global connections. Both ends must agree on the same copper layer.
 import { createTopDdrGlobalAutorouter } from "./top-ddr-global-autorouter"
 import {
   createDdrFanoutAutorouter,
@@ -41,17 +42,6 @@ const dramBusExitPositions = Object.fromEntries(
     "bottomside_center" as const,
   ]),
 )
-const dramBusLayers = {
-  DDR_BYTE0: ["bottom"],
-  DDR_BYTE1: ["inner6"],
-  DDR_ADDR_CTRL: ["inner4"],
-  DDR_CLOCK: ["inner6"],
-  DDR_DQS0: ["inner4"],
-  DDR_DQS1: ["top"],
-  DDR_RESET: ["top"],
-  DDR_DMI0: ["inner4"],
-  DDR_DMI1: ["inner5"],
-} as const
 const planeDrops = AM62L_POWER_BALLS.filter(
   (ball) => ball.pinSignal === "VSS" || ball.pinSignal === "VDDS_DDR",
 ).map((ball) => ({
@@ -404,12 +394,6 @@ export default function Am62lLpddr4Top({
       autorouter="default"
     >
       <autoroutingphase
-        name="FANOUT_METADATA"
-        phaseIndex={999}
-        connection="__fanout_metadata_only__"
-        autorouter="fanout"
-      />
-      <autoroutingphase
         autorouter={{ algorithmFn: createTopDdrGlobalAutorouter(routingState) }}
       />
       <net name="GND" />
@@ -422,6 +406,7 @@ export default function Am62lLpddr4Top({
         pcbY={-11}
         padding="3mm"
         autorouter={{
+          preset: "fanout",
           algorithmFn: createDdrFanoutAutorouter(
             signalBusExitPositions,
             {
@@ -482,12 +467,11 @@ export default function Am62lLpddr4Top({
         pcbY={17.5}
         padding="3mm"
         autorouter={{
+          preset: "fanout",
           algorithmFn: createDdrFanoutAutorouter(
             dramBusExitPositions,
             {
               matchLengths: false,
-              projectSourceExits: true,
-              busLayers: dramBusLayers,
             },
             routingState,
           ),

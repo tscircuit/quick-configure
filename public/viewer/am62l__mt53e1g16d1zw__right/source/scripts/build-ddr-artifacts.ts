@@ -7,6 +7,7 @@ import { ddrConfigurations } from "../src/ddr/configurations"
 import {
   validateDdrCircuit,
   validateTopDdrCircuit,
+  validateTopDdrGlobalRouting,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -56,6 +57,9 @@ for (const configuration of configurations) {
   }
 
   const circuitJson = circuit.getCircuitJson()
+  const routingErrors = circuit.db.pcb_autorouting_error.list()
+  if (routingErrors.length)
+    throw new Error(routingErrors.map((error) => error.message).join("\n"))
   if (configuration.routingStatus === "routed") validateDdrCircuit(circuitJson)
   else {
     const fanouts = routingState?.fanouts.map((fanout) => fanout.validation)
@@ -73,13 +77,7 @@ for (const configuration of configurations) {
         "Top must route both fanouts and all 33 global connections without copper errors",
       )
     validateTopDdrCircuit(circuitJson)
-    for (const point of circuitJson.filter(
-      (record) => record.type === "pcb_breakout_point",
-    )) {
-      const exit = routingState.exits.get(point.pcb_breakout_point_id)
-      if (exit)
-        Object.assign(point, { x: exit.x, y: exit.y, layer: exit.layer })
-    }
+    validateTopDdrGlobalRouting(circuitJson)
   }
   const outputDir = join(projectRoot, "dist", configuration.id)
   await mkdir(outputDir, { recursive: true })

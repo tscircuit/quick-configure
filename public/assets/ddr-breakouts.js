@@ -10,10 +10,10 @@ function loadBoard() {
   const base = `../viewer/${boardId}`
   drawingLoading.hidden = false
   drawingLoading.querySelector("span").textContent = "Loading PCB"
-  const unmatched = option.dataset.routingStatus === "routed-unmatched"
+  const pending = option.dataset.routingStatus === "coordination-pending"
   const status = document.querySelector("#routing-status")
-  status.textContent = unmatched ? "Routed · Length matching pending" : "Routed reference"
-  status.classList.toggle("unrouted", unmatched)
+  status.textContent = pending ? "Previous preview · Routing update pending" : "Routed reference"
+  status.classList.toggle("unrouted", pending)
   drawing.alt = `Routed AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
   drawing.src = `${base}/pcb.svg?v=top-connected`
   document.querySelector("#caption-title").textContent =

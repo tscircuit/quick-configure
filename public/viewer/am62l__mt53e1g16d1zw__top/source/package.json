@@ -13,13 +13,14 @@
     "check:schematic-placement": "bun run scripts/check-schematic-placement.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build:ddr": "bun run scripts/build-ddr-artifacts.ts"
+    "build:ddr": "bun run scripts/build-ddr-artifacts.ts",
+    "postinstall": "patch-package --error-on-fail"
   },
   "devDependencies": {
     "@jscad/modeling": "2.13.0",
     "@tscircuit/capacity-autorouter": "0.0.866",
     "@tscircuit/core": "0.0.1826",
-    "@tscircuit/fanout-solver": "0.0.52",
+    "@tscircuit/fanout-solver": "0.0.53",
     "@tscircuit/props": "0.0.646",
     "@types/react": "^19.2.18",
     "altiumts": "^0.0.23",
@@ -32,6 +33,7 @@
     "jscad-electronics": "0.0.159",
     "jscad-to-gltf": "0.0.8",
     "jszip": "^3.10.1",
+    "patch-package": "8.0.1",
     "tscircuit": "0.0.2462",
     "typescript": "^5.0.0"
   },

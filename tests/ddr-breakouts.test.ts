@@ -9,6 +9,7 @@ import {
 import {
   validateDdrCircuit,
   validateTopDdrCircuit,
+  validateTopDdrGlobalRouting,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -140,14 +141,12 @@ describe("DDR breakout artifacts", () => {
     expect(page).toContain(
       'value="top" data-board-id="am62l__mt53e1g16d1zw__top"',
     )
-    expect(page).toContain('data-routing-status="routed-unmatched"')
-    expect(page).toContain(
-      "Right and Top have both fanouts and all DDR signals connected",
-    )
+    expect(page).toContain('data-routing-status="coordination-pending"')
+    expect(page).toContain("Top shows the previous preview")
   })
 })
 
-describe("Top DDR routed reference", () => {
+describe("Previous Top DDR preview", () => {
   const configuration = ddrConfigurations.find(
     (config) => config.position === "top",
   )!
@@ -212,6 +211,11 @@ describe("Top DDR routed reference", () => {
       ).toBeLessThan(ram.center.y - ram.height / 2)
     }
     expect(() => validateTopDdrCircuit(top)).not.toThrow()
+    // The previous preview is electrically connected but must not be accepted
+    // as the output of the coordinated build, which forbids global layer changes.
+    expect(() => validateTopDdrGlobalRouting(top)).toThrow(
+      "Top fanout exits must use one layer",
+    )
     const pcbTraces = top.filter((record) => record.type === "pcb_trace")
     expect(pcbTraces).toHaveLength(201)
     for (const signal of signals) {

@@ -5,16 +5,30 @@ the two fanouts on different copper layers. The custom global channel router
 made those disconnected layer assignments physically connect, but that does
 not meet the intended no-via routing between coordinated fanouts.
 
-## Cause in quick-configure
+## Core coordination integration
 
-`am62l__mt53e1g16d1zw__top.circuit.tsx` assigns independent RAM bus layers.
-`projectSourceExits` in `latest-fanout-autorouter.ts` discards
-`connectionExitTargets` and projects exits onto the RAM pad coordinates instead
-of preserving the CPU's tracks. This bypasses the layer and order agreement
-that the winding/breakout handoff should preserve. The A* router then adds
-layer transitions to repair the mismatch. This was introduced by this PR's
-implementation; copper clearance and connectivity tests did not enforce the
-missing no-global-via requirement.
+Both Top breakouts now use `autorouter={{ preset: "fanout", algorithmFn }}`.
+The explicit solver adapter preserves core's paired `connectionExitTargets`.
+The independent RAM bus-layer override, source-projected exits, metadata-only
+phase, manual breakout-marker updates, and layer-changing A* global router
+have been removed. Global routing uses core's actual endpoints and refuses
+layer mismatches. `npm ci --force` applies the unreleased core fix from
+`patches/@tscircuit+core+0.0.1826.patch`.
+
+The full build currently stops with `best layer assignment routed 18/33
+connections` in the RAM solver. The CPU fanout completed 135/135 first. Run
+`npm run build:ddr -- top` for the full integration. No incomplete artifacts
+are written. The small vertical regression in
+`tests/ddr-top-core-coordination.test.tsx` verifies the real adapter's handoff,
+matching exported layers, zero global vias, and rejection of layer mismatches.
+It fails without the core patch and passes after applying it.
+
+The previous implementation had independent RAM bus layers and discarded
+`connectionExitTargets` in `projectSourceExits`. Its A* global router then
+added layer transitions to repair mismatched exits. That caused the 59-via
+preview; its connectivity checks did not enforce the no-global-via requirement.
+The build now checks emitted global copper separately and rejects that preview
+as the result of a coordinated build.
 
 ## Core integration defects
 
@@ -47,7 +61,7 @@ Run from the repository root:
 bun repros/ddr-top-coordination/run.ts
 ```
 
-With `@tscircuit/fanout-solver@0.0.52`, this currently **exits unsuccessfully**:
+With `@tscircuit/fanout-solver@0.0.52` (unchanged routing algorithms in 0.0.53), this currently **exits unsuccessfully**:
 22/33 connections route, with `DDR_DMI0`, `DDR_BYTE1`, and `DDR_CLOCK` failing.
 This reproduces a failing configuration; it does not establish that every
 possible RAM fanout configuration is infeasible.

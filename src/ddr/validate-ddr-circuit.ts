@@ -93,3 +93,52 @@ export function validateTopDdrCircuit(circuitJson: AnyCircuitElement[]) {
   if (!connectivity.valid || connectivity.connectedConnectionCount !== 33)
     throw new Error(`Disconnected DDR copper: ${JSON.stringify(connectivity)}`)
 }
+
+// The global segment is the trace joining the two exported breakout points.
+// Inspect emitted copper, so a later router cannot silently reintroduce vias.
+export function validateTopDdrGlobalRouting(circuitJson: AnyCircuitElement[]) {
+  const exits = circuitJson.filter(
+    (record) => record.type === "pcb_breakout_point",
+  )
+  const traces = circuitJson.filter((record) => record.type === "pcb_trace")
+  for (const signal of DDR_SIGNAL_CONNECTIONS) {
+    const source = circuitJson.find(
+      (record) =>
+        record.type === "source_trace" && record.name === signal.traceName,
+    )
+    if (source?.type !== "source_trace")
+      throw new Error(`Missing DDR signal ${signal.traceName}`)
+    const pairedExits = exits.filter(
+      (exit) => exit.source_trace_id === source.source_trace_id,
+    )
+    if (
+      pairedExits.length !== 2 ||
+      pairedExits[0]!.layer !== pairedExits[1]!.layer
+    )
+      throw new Error(
+        `Top fanout exits must use one layer for ${signal.traceName}`,
+      )
+    const globalTraces = traces.filter(
+      (trace) =>
+        trace.source_trace_id === source.source_trace_id &&
+        pairedExits.every((exit) =>
+          [trace.route[0], trace.route.at(-1)].some(
+            (point) =>
+              point?.route_type === "wire" &&
+              point.layer === exit.layer &&
+              Math.hypot(point.x - exit.x, point.y - exit.y) < 1e-6,
+          ),
+        ),
+    )
+    if (
+      globalTraces.length !== 1 ||
+      globalTraces[0]!.route.some(
+        (point) =>
+          point.route_type !== "wire" || point.layer !== pairedExits[0]!.layer,
+      )
+    )
+      throw new Error(
+        `Top global routing must connect ${signal.traceName} without vias`,
+      )
+  }
+}

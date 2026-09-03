@@ -15,8 +15,8 @@ import type {
   SimplifiedPcbTrace,
 } from "@tscircuit/core"
 
-// Adapt core's phase input to the explicitly imported solver. Core's string
-// autorouter="fanout" uses the older solver bundled inside @tscircuit/core.
+// Keep the solver explicit while core's fanout preset coordinates phase exits.
+// Paired targets supplied by core are preserved when adapting the bus options.
 const signalLayers = ["top", "inner4", "inner5", "inner6", "bottom"]
 const getSourceComponentIdForPoint = (
   input: SimpleRouteJson,
@@ -128,7 +128,6 @@ const createFanoutOptions = (
 }
 
 export interface DdrFanoutState {
-  exits: Map<string, SimpleRoutePoint>
   fanouts: Array<{
     input: SimpleRouteJson
     traces: SimplifiedPcbTrace[]
@@ -142,7 +141,6 @@ export interface DdrFanoutState {
   }
 }
 export const createDdrFanoutState = (): DdrFanoutState => ({
-  exits: new Map(),
   fanouts: [],
 })
 
@@ -150,47 +148,20 @@ export function createDdrFanoutAutorouter(
   busDirections: Readonly<Record<string, FanoutExitPosition>>,
   options: Partial<FanoutSolverOptions> & {
     matchLengths?: boolean
-    projectSourceExits?: boolean
-    busLayers?: Readonly<Record<string, readonly string[]>>
   } = {},
   state = createDdrFanoutState(),
 ) {
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
-    const {
-      matchLengths = true,
-      projectSourceExits = false,
-      busLayers,
-      ...solverOptions
-    } = options
+    const { matchLengths = true, ...solverOptions } = options
     const phaseOptions = createFanoutOptions(input, busDirections)
     if (!matchLengths)
       phaseOptions.buses = phaseOptions.buses?.map((bus) => ({
         ...bus,
         maxLengthSkew: undefined,
       }))
-    // Core supplies guessed opposing exits before either custom solver runs.
-    // RAM must preserve its own pad order; the global router joins the results.
-    if (projectSourceExits) {
-      phaseOptions.buses = phaseOptions.buses?.map(
-        ({ connectionExitTargets, ...bus }) => ({
-          ...bus,
-          allowedLayers: busLayers?.[bus.busId] ?? bus.allowedLayers,
-        }),
-      )
-    }
     const solverInput = {
       ...input,
       differentialPairs: matchLengths ? input.differentialPairs : [],
-      connections: projectSourceExits
-        ? input.connections.map((connection) => ({
-            ...connection,
-            pointsToConnect: connection.pointsToConnect.map((point, index) =>
-              index === 0
-                ? point
-                : { ...point, x: connection.pointsToConnect[0]!.x },
-            ),
-          }))
-        : input.connections,
     }
     const solver = new FanoutSolver(
       solverInput as unknown as ConstructorParameters<typeof FanoutSolver>[0],
@@ -206,7 +177,7 @@ export function createDdrFanoutAutorouter(
     }
     const solve = () => {
       const start = Date.now()
-      console.log(`Fanout 0.0.52: ${input.connections.length} connections`)
+      console.log(`Fanout 0.0.53: ${input.connections.length} connections`)
       while (!solver.solved && !solver.failed && Date.now() - start < 120_000)
         solver.step()
       if (!solver.solved)
@@ -215,20 +186,6 @@ export function createDdrFanoutAutorouter(
             `Fanout timed out after ${Date.now() - start}ms (${solver.progress})`,
         )
       const output = solver.getOutput()
-      for (const connection of input.connections) {
-        const originalExit = connection.pointsToConnect.find((point) =>
-          point.pointId?.startsWith("pcb_breakout_point_"),
-        )
-        const routed = output.simpleRouteJson.connections.find(
-          (routed) => routed.name === connection.name,
-        )
-        const exit = routed?.pointsToConnect.find((point) =>
-          point.pointId?.startsWith("fanout-exit:"),
-        )
-        if (originalExit?.pointId && exit && "layer" in exit) {
-          state.exits.set(originalExit.pointId, exit)
-        }
-      }
       if (
         !output.validation.valid ||
         output.validation.brokenOutConnectionCount !== input.connections.length

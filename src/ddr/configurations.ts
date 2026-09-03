@@ -23,7 +23,7 @@ export const ddrConfigurations = [
     position: "top",
     Board: Am62lLpddr4Top,
     DirectDecoupling: undefined,
-    routingStatus: "routed-unmatched" as const,
+    routingStatus: "coordination-pending" as const,
     createRoutingState: createDdrFanoutState,
   },
 ] as const
@@ -41,6 +41,8 @@ export const ddrSourceFilenames = [
   "scripts/write-ddr-source.ts",
   "package.json",
   "package-lock.json",
+  "patches/@tscircuit+core+0.0.1826.patch",
+  "patches/README.md",
 ] as const
 
 export const ddrAssetFilenames = [

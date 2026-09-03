@@ -19,34 +19,43 @@ It preserves the complete DDR routing, 373 CPU / 200 RAM pads, nine buses,
 The 45 non-DDR processor power balls retain logical PDN membership; the
 builder checks their expected connectivity diagnostics individually.
 
-**Top routing quality is under investigation:** its current global connections
-contain 59 vias caused by incompatible fanout exits. It does not yet meet the
-required no-via connection between fanouts. See the
+**Top now uses core's paired fanout coordination.** Both breakouts declare
+`preset: "fanout"` with an explicit `algorithmFn`, and the adapter retains
+core's `connectionExitTargets`. Core propagates the CPU's actual exit positions
+and layers to RAM and then to the global phase. The global phase joins those
+exits directly on one layer and rejects mismatches; it no longer has an A*
+router, layer changes, or an exit-coordinate repair pass.
+
+The core fix is not released yet. `npm ci --force` applies the committed
+[core patch](patches/README.md) from
+[core PR #3610](https://github.com/tscircuit/core/pull/3610). Top explicitly uses
+**@tscircuit/fanout-solver 0.0.53** for both fanouts. Each position retains its
+own TSX file.
+
+**The full Top build is still blocked at RAM fanout.** The CPU solves 135/135
+connections (33 DDR signals and 102 power/ground drops). With the coordinated
+targets, the current RAM configuration solves only 18/33. The build refuses to
+publish an incomplete circuit or add global vias to compensate. The small
+vertical integration regression passes with matching exit layers and no global
+vias; it does not claim that the full AM62L board is solved.
+
+The PCB currently shown for Top is explicitly labelled as the **previous
+preview**. It is the last connected artifact and still has 59 global vias;
+it has not been replaced with a partial or falsely successful build. See the
 [diagnosis and reproducer](repros/ddr-top-coordination/README.md).
 
 Top starts from the [fanout31 Top sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx)
 and uses the CPU signal layers and dense-plane hints from the
 [fanout-solver Top regression](https://github.com/tscircuit/fanout-solver/blob/70a2fe5/tests/am62l-top-edge-breakout-solved-repro.test.ts).
 Its board is 32 × 54 mm with the CPU at (0, -11), RAM at (0, 17.5), and eight
-bottom-side capacitor footprints reserving the reference's decoupling space.
-The CPU routes **135/135 connections**: 33 DDR escape traces and 102 power/ground
-plane drops. RAM fans all **33/33 signals downward** on its own configured bus
-layers. A bounded A* global channel router connects the two fanouts, using
-full-stack vias and keeping signals off the power-plane layers. The extra
-space above the CPU accommodates entry ramps and layer transitions.
+bottom-side capacitor footprints reserving decoupling space. Both fanouts use
+`matchLengths: false`; length matching remains pending. The bus and
+pair limits in TSX are design targets. The capacitor footprints reserve space;
+their connections remain outside this signal-routing reference.
 
-The build independently validates all **201 PCB traces**, checks every DDR
-signal's physical pad-to-pad connectivity, and rejects copper or routing errors.
-Both fanouts explicitly use `matchLengths: false`; **length matching remains
-pending**. The bus and differential-pair limits in TSX are design targets.
-The eight capacitor footprints reserve placement space; their connections
-remain outside this signal-routing reference.
-
-Each position has a dedicated TSX file under `src/ddr/`. Top explicitly calls
-`new FanoutSolver(...)` from the pinned **@tscircuit/fanout-solver 0.0.52** via
-an `algorithmFn` adapter; `autorouter="fanout"` would use core's older bundled
-solver. The adapter keeps the solver's actual exits and independent validation
-report. The builder updates the exported breakout markers to those exits.
+A successful Top build must pass physical pad-to-pad connectivity, independent
+copper checks, and the emitted-copper check requiring a single layer and zero
+vias for every global DDR connection.
 
 The **Browse TSX Source** resource opens an unzipped file browser for each
 configuration. The `source/` directory contains the entry TSX, shared files,
