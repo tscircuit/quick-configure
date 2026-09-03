@@ -7,13 +7,14 @@ import {
   type ConnectionInput,
   type WindingBreakoutSolverInput,
 } from "@tscircuit/winding-breakout-point-solver"
+import type { DdrReferenceRotation } from "./rotate-ddr-routing"
 import { applyToPoint, rotateDEG } from "transformation-matrix"
 
 // Winding's angular reference and increasing gate axis currently depend on
 // world orientation. Solve the rotated pair in the Right reference's frame,
 // then return board-space endpoints to core's ordinary fanout coordination.
 export function createRotatedDdrWindingSolver(
-  rotation: 90 | 180,
+  rotation: DdrReferenceRotation,
 ): ImplicitBreakoutPointSolverFn {
   return (input) => {
     const toHorizontal = rotateDEG(-rotation)
@@ -31,8 +32,12 @@ export function createRotatedDdrWindingSolver(
     })
     const normalized: WindingBreakoutSolverInput = {
       regions: input.regions.map((r) => {
-        const cpuEdge = rotation === 90 ? "top" : "left"
-        const ramEdge = rotation === 90 ? "bottom" : "right"
+        const cpuEdge = ({ 90: "top", 180: "left", 270: "bottom" } as const)[
+          rotation
+        ]
+        const ramEdge = ({ 90: "bottom", 180: "right", 270: "top" } as const)[
+          rotation
+        ]
         if (r.edge !== cpuEdge && r.edge !== ramEdge)
           throw new Error(
             `Rotated DDR requires facing ${cpuEdge}/${ramEdge} edges`,
@@ -90,3 +95,5 @@ export function createRotatedDdrWindingSolver(
 
 export const topDdrWindingSolver = createRotatedDdrWindingSolver(90)
 export const leftDdrWindingSolver = createRotatedDdrWindingSolver(180)
+
+export const bottomDdrWindingSolver = createRotatedDdrWindingSolver(270)

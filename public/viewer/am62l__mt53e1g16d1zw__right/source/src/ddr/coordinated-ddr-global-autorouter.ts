@@ -1,4 +1,8 @@
-import { rotateDdrRouting } from "./rotate-ddr-routing"
+import {
+  rotateDdrRouting,
+  inverseDdrRotation,
+  type DdrReferenceRotation,
+} from "./rotate-ddr-routing"
 import { routeDirectDdrConnections } from "./direct-ddr-autorouter"
 import {
   validateOriginalEndpointConnectivity,
@@ -45,7 +49,7 @@ function routeCoordinatedExits(input: SimpleRouteJson): SimplifiedPcbTrace[] {
 
 export function createCoordinatedDdrGlobalAutorouter(
   state: DdrFanoutState,
-  referenceRotation: 90 | 180 = 90,
+  referenceRotation: DdrReferenceRotation = 90,
 ) {
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
     if (state.fanouts.length !== 2)
@@ -62,7 +66,7 @@ export function createCoordinatedDdrGlobalAutorouter(
       }
       const capacitorInput = rotateDdrRouting(
         { ...input, connections: capacitorConnections },
-        referenceRotation === 90 ? -90 : -180,
+        inverseDdrRotation(referenceRotation),
       )
       const capacitorTraces =
         rotateDdrRouting(

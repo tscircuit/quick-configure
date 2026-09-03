@@ -3,6 +3,7 @@ import Am62lLpddr4Right, {
 } from "./am62l__mt53e1g16d1zw__right.circuit"
 
 import { createDdrFanoutState } from "./latest-fanout-autorouter"
+import Am62lLpddr4Bottom from "./am62l__mt53e1g16d1zw__bottom.circuit"
 import Am62lLpddr4Left from "./am62l__mt53e1g16d1zw__left.circuit"
 import Am62lLpddr4Top from "./am62l__mt53e1g16d1zw__top.circuit"
 
@@ -37,6 +38,16 @@ export const ddrConfigurations = [
     routingStatus: "routed" as const,
     createRoutingState: createDdrFanoutState,
   },
+  {
+    id: "am62l__mt53e1g16d1zw__bottom",
+    cpu: "AM62L",
+    ram: "MT53E1G16D1ZW",
+    position: "bottom",
+    Board: Am62lLpddr4Bottom,
+    DirectDecoupling: undefined,
+    routingStatus: "routed" as const,
+    createRoutingState: createDdrFanoutState,
+  },
 ] as const
 
 export const ddrSourceFilenames = [
@@ -44,6 +55,7 @@ export const ddrSourceFilenames = [
   "src/ddr/am62l__mt53e1g16d1zw__right.circuit.tsx",
   "src/ddr/am62l__mt53e1g16d1zw__top.circuit.tsx",
   "src/ddr/am62l__mt53e1g16d1zw__left.circuit.tsx",
+  "src/ddr/am62l__mt53e1g16d1zw__bottom.circuit.tsx",
   "src/ddr/configurations.ts",
   "src/ddr/direct-ddr-autorouter.ts",
   "src/ddr/latest-fanout-autorouter.ts",

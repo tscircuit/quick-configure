@@ -1,4 +1,9 @@
-import { rotateDdrRouting, rotateDdrExitDirections } from "./rotate-ddr-routing"
+import {
+  rotateDdrRouting,
+  rotateDdrExitDirections,
+  inverseDdrRotation,
+  type DdrReferenceRotation,
+} from "./rotate-ddr-routing"
 import {
   FanoutSolver,
   type FanoutDirection,
@@ -149,7 +154,7 @@ export function createDdrFanoutAutorouter(
   busDirections: Readonly<Record<string, FanoutExitPosition>>,
   options: Partial<FanoutSolverOptions> & {
     matchLengths?: boolean
-    referenceRotation?: 90 | 180
+    referenceRotation?: DdrReferenceRotation
     referenceFramePrecision?: number
   } = {},
   state = createDdrFanoutState(),
@@ -164,7 +169,7 @@ export function createDdrFanoutAutorouter(
     const phaseInput = referenceRotation
       ? rotateDdrRouting(
           input,
-          referenceRotation === 90 ? -90 : -180,
+          inverseDdrRotation(referenceRotation),
           referenceFramePrecision,
         )
       : input

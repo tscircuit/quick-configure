@@ -8,7 +8,7 @@ import type { ImplicitBreakoutPointSolverInput } from "@tscircuit/props"
 import { applyToPoint, rotateDEG } from "transformation-matrix"
 import { createRotatedDdrWindingSolver } from "../src/ddr/rotated-ddr-winding-solver"
 
-test.each([90, 180] as const)(
+test.each([90, 180, 270] as const)(
   "A %d degree layout preserves Right winding order, layers, and paired identities",
   async (degrees) => {
     const connections: ConnectionInput[] = [
@@ -79,13 +79,9 @@ test.each([90, 180] as const)(
         return {
           regionId: r.id,
           edge:
-            degrees === 90
-              ? r.edge === "right"
-                ? "top"
-                : "bottom"
-              : r.edge === "right"
-                ? "left"
-                : "right",
+            r.edge === "right"
+              ? ({ 90: "top", 180: "left", 270: "bottom" } as const)[degrees]
+              : ({ 90: "bottom", 180: "right", 270: "top" } as const)[degrees],
           bounds: {
             minX: Math.min(...corners.map((p) => p.x)),
             maxX: Math.max(...corners.map((p) => p.x)),
@@ -113,7 +109,7 @@ test.each([90, 180] as const)(
       boundaryPointSpacing: input.boundaryPointSpacing,
     }
     const rotatedInput =
-      degrees === 180 ? { ...top, regions: [...top.regions].reverse() } : top
+      degrees !== 90 ? { ...top, regions: [...top.regions].reverse() } : top
     const before = structuredClone(rotatedInput)
     const actual = await createRotatedDdrWindingSolver(degrees)(rotatedInput)
     expect(rotatedInput).toEqual(before)
