@@ -2,12 +2,14 @@ import { type Board, Circuit, orderedRenderPhases } from "@tscircuit/core"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
+import { createAutoroutingPhaseIoStack } from "./capture-ddr-routing-phases"
 import { writeDdrSource } from "./write-ddr-source"
 import { ddrConfigurations } from "../src/ddr/configurations"
 import {
   validateDdrCircuit,
   validateTopDdrCircuit,
   validateTopDdrGlobalRouting,
+  validateTopDdrViaLocations,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -25,6 +27,7 @@ for (const configuration of configurations) {
   const circuit = new Circuit({
     platform: { placementDrcChecksDisabled: true },
   })
+  const phases = createAutoroutingPhaseIoStack(circuit)
   const routingState =
     "createRoutingState" in configuration
       ? configuration.createRoutingState()
@@ -60,7 +63,7 @@ for (const configuration of configurations) {
   const routingErrors = circuit.db.pcb_autorouting_error.list()
   if (routingErrors.length)
     throw new Error(routingErrors.map((error) => error.message).join("\n"))
-  if (configuration.routingStatus === "routed") validateDdrCircuit(circuitJson)
+  if (configuration.position === "right") validateDdrCircuit(circuitJson)
   else {
     const fanouts = routingState?.fanouts.map((fanout) => fanout.validation)
     if (
@@ -68,9 +71,9 @@ for (const configuration of configurations) {
       fanouts.length !== 2 ||
       !fanouts.every((fanout) => fanout.valid) ||
       fanouts[0]!.brokenOutConnectionCount !== 135 ||
-      fanouts[1]!.brokenOutConnectionCount !== 33 ||
+      fanouts[1]!.brokenOutConnectionCount !== 143 ||
       routingState?.globalValidation?.connectedSignalCount !== 33 ||
-      routingState.globalValidation.checkedTraceCount !== 201 ||
+      routingState.globalValidation.checkedTraceCount !== 327 ||
       routingState.globalValidation.copperErrorCount !== 0
     )
       throw new Error(
@@ -78,7 +81,15 @@ for (const configuration of configurations) {
       )
     validateTopDdrCircuit(circuitJson)
     validateTopDdrGlobalRouting(circuitJson)
+    validateTopDdrViaLocations(circuitJson)
   }
+  if (
+    phases.length !== 3 ||
+    phases.some(
+      (phase) => !phase.startSimpleRouteJson || !phase.endSimpleRouteJson,
+    )
+  )
+    throw new Error("Expected completed CPU, RAM, and global routing phases")
   const outputDir = join(projectRoot, "dist", configuration.id)
   await mkdir(outputDir, { recursive: true })
   await Bun.write(
@@ -88,7 +99,7 @@ for (const configuration of configurations) {
   await Bun.write(
     join(outputDir, "pcb.svg"),
     convertCircuitJsonToPcbSvg(circuitJson, {
-      showDebugObjects: configuration.routingStatus === "routed",
+      showDebugObjects: true,
       shouldDrawRatsNest: false,
       // Match the reference: translucent power planes leave signal copper clear.
       colorOverrides: {
@@ -101,6 +112,22 @@ for (const configuration of configurations) {
     }),
   )
 
+  await Bun.write(
+    join(outputDir, "routing-phases.json"),
+    JSON.stringify(
+      phases.map((phase, index) => ({
+        phase: ["CPU fanout", "RAM fanout", "Global routing"][index],
+        bounds: phase.startSimpleRouteJson!.bounds,
+        connectionCount: phase.startSimpleRouteJson!.connections.length,
+        inputConnections: phase.startSimpleRouteJson!.connections,
+        outputConnections: phase.endSimpleRouteJson!.connections,
+        inputTraces: phase.startSimpleRouteJson!.traces ?? [],
+        outputTraces: phase.endSimpleRouteJson!.traces ?? [],
+      })),
+      null,
+      2,
+    ),
+  )
   await writeDdrSource(projectRoot, outputDir, configuration)
 
   console.log(

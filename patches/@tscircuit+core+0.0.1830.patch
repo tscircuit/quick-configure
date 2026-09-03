@@ -1,8 +1,8 @@
 diff --git a/node_modules/@tscircuit/core/dist/index.js b/node_modules/@tscircuit/core/dist/index.js
-index bb61689..fe58e07 100644
+index d794593..34b26fe 100644
 --- a/node_modules/@tscircuit/core/dist/index.js
 +++ b/node_modules/@tscircuit/core/dist/index.js
-@@ -31892,12 +31892,14 @@ function getPresetAutoroutingConfig(autorouterConfig, platformConfig) {
+@@ -33567,12 +33567,14 @@ function getPresetAutoroutingConfig(autorouterConfig, platformConfig) {
        };
      case "single-layer-fanout":
        return {
@@ -17,7 +17,7 @@ index bb61689..fe58e07 100644
          local: true,
          groupMode: "subcircuit",
          preset: "fanout"
-@@ -45939,7 +45941,8 @@ var Group5 = class extends NormalComponent3 {
+@@ -47617,7 +47619,8 @@ var Group5 = class extends NormalComponent3 {
              if (!breakoutPoint) continue;
              db.pcb_breakout_point.update(breakoutPoint.pcb_breakout_point_id, {
                x: synchronizedPoint.fanoutExitPoint.x,

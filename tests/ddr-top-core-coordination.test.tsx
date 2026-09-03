@@ -1,3 +1,4 @@
+import { topDdrWindingSolver } from "../src/ddr/top-ddr-winding-solver"
 import { expect, test } from "bun:test"
 import { Circuit } from "@tscircuit/core"
 import { Fragment } from "react"
@@ -44,9 +45,14 @@ test("Top uses core's paired exits without global layer changes", async () => {
             busFanoutDirections={directions}
             autorouter={{
               preset: "fanout",
+              implicitBreakoutPointSolverFn: topDdrWindingSolver,
               algorithmFn: createDdrFanoutAutorouter(
                 directions,
-                { matchLengths: false },
+                {
+                  matchLengths: false,
+                  useHorizontalReferenceFrame: true,
+                  referenceFramePrecision: 12,
+                },
                 state,
               ),
             }}

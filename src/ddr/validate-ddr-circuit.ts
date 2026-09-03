@@ -45,8 +45,10 @@ export function validateTopDdrCircuit(circuitJson: AnyCircuitElement[]) {
   )
   const pcbTraces = circuitJson.filter((record) => record.type === "pcb_trace")
   const ports = circuitJson.filter((record) => record.type === "pcb_port")
-  if (sourceTraces.length !== 135 || pcbTraces.length !== 201)
-    throw new Error("Expected 135 CPU, 33 RAM, and 33 global DDR traces")
+  if (sourceTraces.length !== 261 || pcbTraces.length !== 327)
+    throw new Error(
+      "Expected 135 CPU, 143 RAM, 33 global DDR traces and 16 capacitor drops",
+    )
   const connections = DDR_SIGNAL_CONNECTIONS.map((signal) => {
     const source = sourceTraces.find((trace) => trace.name === signal.traceName)
     if (
@@ -139,6 +141,37 @@ export function validateTopDdrGlobalRouting(circuitJson: AnyCircuitElement[]) {
     )
       throw new Error(
         `Top global routing must connect ${signal.traceName} without vias`,
+      )
+  }
+}
+
+// Use the actual phase regions exported by core, in board coordinates (mm,
+// +X right, +Y up). Every via pad must remain inside one of the two fanouts.
+export function validateTopDdrViaLocations(circuitJson: AnyCircuitElement[]) {
+  const regions = circuitJson.filter(
+    (record) =>
+      record.type === "pcb_debug_object" &&
+      record.shape === "rect" &&
+      ["autorouting phase 0", "autorouting phase 1"].includes(
+        record.label ?? "",
+      ),
+  )
+  if (regions.length !== 2)
+    throw new Error("Missing CPU/RAM routing phase regions")
+  for (const via of circuitJson.filter((record) => record.type === "pcb_via")) {
+    if (
+      !regions.some(
+        (region) =>
+          region.type === "pcb_debug_object" &&
+          region.shape === "rect" &&
+          Math.abs(via.x - region.center.x) + via.outer_diameter / 2 <=
+            region.size.width / 2 + 1e-6 &&
+          Math.abs(via.y - region.center.y) + via.outer_diameter / 2 <=
+            region.size.height / 2 + 1e-6,
+      )
+    )
+      throw new Error(
+        `Via ${via.pcb_via_id} is outside the fanouts at (${via.x}, ${via.y})`,
       )
   }
 }

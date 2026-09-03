@@ -11,7 +11,9 @@ import { AM62L_DDR_DECOUPLING_CAPACITORS } from "./am62l-lpddr4"
 // The Right configuration's paired fanouts are aligned for straight global
 // connections, as in core's progressive-fanout fixture. The eight DDR capacitors
 // have authored bottom-layer legs to their power/ground plane vias.
-function routeConnections(input: SimpleRouteJson): SimplifiedPcbTrace[] {
+export function routeDirectDdrConnections(
+  input: SimpleRouteJson,
+): SimplifiedPcbTrace[] {
   return input.connections.map((connection, index) => {
     const startPoint = connection.pointsToConnect[0]!
     const capacitor = AM62L_DDR_DECOUPLING_CAPACITORS.find((capacitor) =>
@@ -77,7 +79,7 @@ export async function directDdrAutorouter(
       queueMicrotask(() => {
         if (!this.isRouting) return
         try {
-          const traces = routeConnections(input)
+          const traces = routeDirectDdrConnections(input)
           this.isRouting = false
           for (const handler of handlers.complete)
             handler({ type: "complete", traces })
@@ -107,7 +109,7 @@ export async function directDdrAutorouter(
         )
     },
     solveSync() {
-      return routeConnections(input)
+      return routeDirectDdrConnections(input)
     },
   }
   return autorouter

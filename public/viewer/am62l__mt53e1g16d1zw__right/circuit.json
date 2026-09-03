@@ -2,7 +2,7 @@
   {
     "type": "source_project_metadata",
     "source_project_metadata_id": "source_project_metadata_0",
-    "software_used_string": "@tscircuit/core@0.0.1826"
+    "software_used_string": "@tscircuit/core@0.0.1830"
   },
   {
     "type": "source_group",
@@ -39300,7 +39300,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_172",
     "source_trace_id": "source_trace_238",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.8719199999999994,
     "y": -4.79596
   },
@@ -39311,7 +39311,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_174",
     "source_trace_id": "source_trace_239",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.8719199999999994,
     "y": -4.47468
   },
@@ -39322,7 +39322,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_176",
     "source_trace_id": "source_trace_240",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.8719199999999994,
     "y": -3.83212
   },
@@ -39333,7 +39333,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_177",
     "source_trace_id": "source_trace_236",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.8719199999999994,
     "y": -3.18956
   },
@@ -39509,7 +39509,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_167",
     "source_trace_id": "source_trace_228",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.8719199999999994,
     "y": 2.7076400000000005
   },
@@ -39520,7 +39520,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_164",
     "source_trace_id": "source_trace_231",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.8719199999999994,
     "y": 3.6714800000000003
   },
@@ -39531,7 +39531,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_165",
     "source_trace_id": "source_trace_230",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.8719199999999994,
     "y": 3.9927600000000005
   },
@@ -39542,7 +39542,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_170",
     "source_trace_id": "source_trace_235",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.8719199999999994,
     "y": 4.63532
   },
@@ -39663,7 +39663,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_511",
     "source_trace_id": "source_trace_238",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.3680829999999986,
     "y": -4.79596
   },
@@ -39674,7 +39674,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_515",
     "source_trace_id": "source_trace_239",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.3680829999999986,
     "y": -4.47468
   },
@@ -39685,7 +39685,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_514",
     "source_trace_id": "source_trace_240",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.3680829999999986,
     "y": -3.83212
   },
@@ -39696,7 +39696,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_503",
     "source_trace_id": "source_trace_236",
-    "layer": "inner5",
+    "layer": "bottom",
     "x": -0.3680829999999986,
     "y": -3.18956
   },
@@ -39872,7 +39872,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_500",
     "source_trace_id": "source_trace_228",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.3680829999999986,
     "y": 2.7076400000000005
   },
@@ -39883,7 +39883,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_512",
     "source_trace_id": "source_trace_231",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.3680829999999986,
     "y": 3.6714800000000003
   },
@@ -39894,7 +39894,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_508",
     "source_trace_id": "source_trace_230",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.3680829999999986,
     "y": 3.9927600000000005
   },
@@ -39905,7 +39905,7 @@
     "subcircuit_id": "subcircuit_source_group_2",
     "source_port_id": "source_port_501",
     "source_trace_id": "source_trace_235",
-    "layer": "top",
+    "layer": "inner4",
     "x": -0.3680829999999986,
     "y": 4.63532
   },

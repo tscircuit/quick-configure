@@ -16,7 +16,20 @@ export async function writeDdrSource(
   }
   await Bun.write(
     join(sourceDir, "README.md"),
-    `# DDR Breakouts · ${configuration.position}\n\nEntry point: src/ddr/${configuration.id}.circuit.tsx\n\nInstall with npm ci --force, then run bun scripts/build-ddr-artifacts.ts ${configuration.position}.\n\nRouting status: ${configuration.routingStatus}.\n\nRight preserves the routed core reference. Top uses core fanout coordination with the explicit @tscircuit/fanout-solver 0.0.53. npm ci applies the unreleased core fix from patches/. The current full Top build fails at RAM fanout (18/33); the page still shows the previous preview, which contains global vias. New builds require all 33 signals and zero global vias. Length matching remains pending. Its capacitor footprints only reserve placement space.\n`,
+    `# DDR Breakouts · ${configuration.position}
+
+Entry point: src/ddr/${configuration.id}.circuit.tsx
+
+Install with npm ci --force, then run bun scripts/build-ddr-artifacts.ts ${configuration.position}.
+
+Both previews are generated from TSX. Top rotates the core Right reference's package placements and bus exit directions by 90 degrees, with CPU at (0, -9.5) and RAM at (-1.81916, 9.616917). It includes RAM power/ground fanout and eight DDR capacitors. Right additionally includes the reference's 60 direct processor decouplers.
+
+Top explicitly uses @tscircuit/fanout-solver 0.0.54 and core's paired fanout handoff. Winding and fanout planning use the horizontal reference frame; core receives the solved copper and endpoints in board coordinates. npm ci applies the unreleased core handoff fix from patches/.
+
+All 33 DDR signals must connect without global layer changes, and every Top via must fit inside a CPU or RAM fanout region. Both SVGs show the three actual routing regions. ../routing-phases.json contains the captured phase connections and bounds.
+
+No circuit JSON or SVG is used as a routing input.
+`,
   )
   const files = ["README.md", ...ddrSourceFilenames]
   const entry = `src/ddr/${configuration.id}.circuit.tsx`

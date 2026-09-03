@@ -1,3 +1,5 @@
+import { rotateDdrRouting } from "./rotate-ddr-routing"
+import { routeDirectDdrConnections } from "./direct-ddr-autorouter"
 import {
   validateOriginalEndpointConnectivity,
   validateRoutedCopperDrc,
@@ -46,7 +48,28 @@ export function createTopDdrGlobalAutorouter(state: DdrFanoutState) {
     if (state.fanouts.length !== 2)
       throw new Error("Both fanouts must complete before global routing")
     const solve = () => {
-      const traces = routeCoordinatedExits(input)
+      const capacitorConnections = input.connections.filter(
+        (connection) => connection.pointsToConnect.length === 1,
+      )
+      const signalInput = {
+        ...input,
+        connections: input.connections.filter(
+          (connection) => !capacitorConnections.includes(connection),
+        ),
+      }
+      const capacitorInput = rotateDdrRouting(
+        { ...input, connections: capacitorConnections },
+        -90,
+      )
+      const capacitorTraces =
+        rotateDdrRouting(
+          {
+            ...capacitorInput,
+            traces: routeDirectDdrConnections(capacitorInput),
+          },
+          90,
+        ).traces ?? []
+      const traces = [...routeCoordinatedExits(signalInput), ...capacitorTraces]
       const { connectivity, drc } = validateCompleteRouting(
         state,
         input,
@@ -57,12 +80,12 @@ export function createTopDdrGlobalAutorouter(state: DdrFanoutState) {
           `Invalid DDR routing: ${JSON.stringify({ connectivity, drc })}`,
         )
       state.globalValidation = {
-        connectedSignalCount: input.connections.length,
+        connectedSignalCount: signalInput.connections.length,
         checkedTraceCount: drc.checkedTraceCount,
         copperErrorCount: drc.issues.length,
       }
       console.log(
-        `Global DDR: ${input.connections.length}/${input.connections.length} signals connected; ${drc.checkedTraceCount} board traces checked, ${drc.issues.length} copper errors`,
+        `Global DDR: ${signalInput.connections.length}/${signalInput.connections.length} signals connected; ${drc.checkedTraceCount} board traces checked, ${drc.issues.length} copper errors`,
       )
       return traces
     }
@@ -136,6 +159,10 @@ function validateCompleteRouting(
       )
       connections.set(name, combined)
     }
+  for (const connection of globalInput.connections) {
+    const name = connection.source_trace_id ?? connection.name
+    if (!connections.has(name)) connections.set(name, { ...connection, name })
+  }
   const original = {
     ...state.fanouts[0]!.input,
     bounds: { minX: -16, maxX: 16, minY: -27, maxY: 27 },
@@ -160,7 +187,7 @@ function validateCompleteRouting(
         connection_name:
           globalInput.connections.find(
             (connection) => connection.name === trace.connection_name,
-          )!.source_trace_id ?? trace.connection_name,
+          )?.source_trace_id ?? trace.connection_name,
       })),
     ],
   } as unknown as SolverInput

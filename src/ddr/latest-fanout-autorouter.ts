@@ -1,3 +1,4 @@
+import { rotateDdrRouting, rotateDdrExitDirections } from "./rotate-ddr-routing"
 import {
   FanoutSolver,
   type FanoutDirection,
@@ -148,20 +149,35 @@ export function createDdrFanoutAutorouter(
   busDirections: Readonly<Record<string, FanoutExitPosition>>,
   options: Partial<FanoutSolverOptions> & {
     matchLengths?: boolean
+    useHorizontalReferenceFrame?: boolean
+    referenceFramePrecision?: number
   } = {},
   state = createDdrFanoutState(),
 ) {
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
-    const { matchLengths = true, ...solverOptions } = options
-    const phaseOptions = createFanoutOptions(input, busDirections)
+    const {
+      matchLengths = true,
+      useHorizontalReferenceFrame = false,
+      referenceFramePrecision,
+      ...solverOptions
+    } = options
+    const phaseInput = useHorizontalReferenceFrame
+      ? rotateDdrRouting(input, -90, referenceFramePrecision)
+      : input
+    const phaseOptions = createFanoutOptions(
+      phaseInput,
+      useHorizontalReferenceFrame
+        ? rotateDdrExitDirections(busDirections)
+        : busDirections,
+    )
     if (!matchLengths)
       phaseOptions.buses = phaseOptions.buses?.map((bus) => ({
         ...bus,
         maxLengthSkew: undefined,
       }))
     const solverInput = {
-      ...input,
-      differentialPairs: matchLengths ? input.differentialPairs : [],
+      ...phaseInput,
+      differentialPairs: matchLengths ? phaseInput.differentialPairs : [],
     }
     const solver = new FanoutSolver(
       solverInput as unknown as ConstructorParameters<typeof FanoutSolver>[0],
@@ -175,9 +191,58 @@ export function createDdrFanoutAutorouter(
       error: [] as Array<(event: AutorouterErrorEvent) => void>,
       progress: [] as Array<(event: AutorouterProgressEvent) => void>,
     }
+    const outputInBoardFrame = (fanoutOnly = false) => {
+      const output = solver.getOutput()
+      const sourceComponentIds = new Set(
+        solver.preparedBuses.map((bus) => bus.componentId),
+      )
+      const source = output.simpleRouteJson as unknown as SimpleRouteJson
+      const keepouts = [...sourceComponentIds].map((componentId) => {
+        const pads = source.obstacles.filter(
+          (obstacle) => obstacle.componentId === componentId,
+        )
+        const minX = Math.min(...pads.map((p) => p.center.x - p.width / 2)),
+          maxX = Math.max(...pads.map((p) => p.center.x + p.width / 2))
+        const minY = Math.min(...pads.map((p) => p.center.y - p.height / 2)),
+          maxY = Math.max(...pads.map((p) => p.center.y + p.height / 2))
+        return {
+          obstacleId: `fanout-source-keepout:${componentId}`,
+          componentId,
+          isFanoutSourceKeepout: true,
+          type: "rect" as const,
+          layers: [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "inner5",
+            "inner6",
+            "bottom",
+          ],
+          center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+          width: maxX - minX,
+          height: maxY - minY,
+          connectedTo: [],
+        }
+      })
+      const srj = {
+        ...source,
+        obstacles: [
+          ...source.obstacles.filter(
+            (o) => !o.componentId || !sourceComponentIds.has(o.componentId),
+          ),
+          ...keepouts,
+        ],
+        ...(fanoutOnly ? { traces: output.fanoutTraces } : {}),
+      } as unknown as SimpleRouteJson
+      return useHorizontalReferenceFrame
+        ? rotateDdrRouting(srj, 90, referenceFramePrecision)
+        : srj
+    }
     const solve = () => {
       const start = Date.now()
-      console.log(`Fanout 0.0.53: ${input.connections.length} connections`)
+      console.log(`Fanout 0.0.54: ${input.connections.length} connections`)
       while (!solver.solved && !solver.failed && Date.now() - start < 120_000)
         solver.step()
       if (!solver.solved)
@@ -195,14 +260,14 @@ export function createDdrFanoutAutorouter(
         )
       state.fanouts.push({
         input,
-        traces: output.fanoutTraces as unknown as SimplifiedPcbTrace[],
+        traces: outputInBoardFrame(true).traces!,
         validation: output.validation,
       })
       state.validation = output.validation
       console.log(
         `Fanout solved: ${output.fanoutTraces.length} traces in ${Date.now() - start}ms`,
       )
-      return output.fanoutTraces as unknown as SimplifiedPcbTrace[]
+      return outputInBoardFrame(true).traces!
     }
     const autorouter: GenericLocalAutorouter = {
       input,
@@ -235,9 +300,7 @@ export function createDdrFanoutAutorouter(
       },
       solveSync: solve,
       getOutputSimpleRouteJson() {
-        return solver.solved
-          ? (solver.getOutput().simpleRouteJson as unknown as SimpleRouteJson)
-          : undefined
+        return solver.solved ? outputInBoardFrame() : undefined
       },
     }
     return autorouter

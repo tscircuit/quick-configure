@@ -5,30 +5,24 @@ the two fanouts on different copper layers. The custom global channel router
 made those disconnected layer assignments physically connect, but that does
 not meet the intended no-via routing between coordinated fanouts.
 
-## Core coordination integration
+## Current integration
 
-Both Top breakouts now use `autorouter={{ preset: "fanout", algorithmFn }}`.
-The explicit solver adapter preserves core's paired `connectionExitTargets`.
-The independent RAM bus-layer override, source-projected exits, metadata-only
-phase, manual breakout-marker updates, and layer-changing A* global router
-have been removed. Global routing uses core's actual endpoints and refuses
-layer mismatches. `npm ci --force` applies the unreleased core fix from
-`patches/@tscircuit+core+0.0.1826.patch`.
+This directory retains the earlier **unrotated-CPU dataset layout** as a
+solver investigation. It is not the configuration now displayed by the page.
+The current Top TSX reproduces the working Right topology with the packages
+and bus directions rotated 90 degrees. Run `npm run build:ddr -- top` for the
+current complete CPU, RAM and global routing pipeline. The new preview has
+no global DDR vias and its build rejects vias outside either fanout.
 
-The full build currently stops with `best layer assignment routed 18/33
-connections` in the RAM solver. The CPU fanout completed 135/135 first. Run
-`npm run build:ddr -- top` for the full integration. No incomplete artifacts
-are written. The small vertical regression in
-`tests/ddr-top-core-coordination.test.tsx` verifies the real adapter's handoff,
-matching exported layers, zero global vias, and rejection of layer mismatches.
-It fails without the core patch and passes after applying it.
+The earlier integration discarded paired targets and selected RAM layers
+independently, then used an A* global router to repair the mismatches with
+59 vias. Subsequent attempts kept the old preview after the coordinated build
+failed. Those artifacts have now been replaced by a fresh TSX render.
 
-The previous implementation had independent RAM bus layers and discarded
-`connectionExitTargets` in `projectSourceExits`. Its A* global router then
-added layer transitions to repair mismatched exits. That caused the 59-via
-preview; its connectivity checks did not enforce the no-global-via requirement.
-The build now checks emitted global copper separately and rejects that preview
-as the result of a coordinated build.
+The current adapter preserves core's solved exit layers and completed-source
+footprint keepouts. It normalizes winding planning into the reference frame;
+the earlier direct world-angle ordering changed when the board was rotated.
+Both fanouts run the explicit 0.0.54 solver with length constraints enabled.
 
 ## Core integration defects
 

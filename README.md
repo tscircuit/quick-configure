@@ -19,62 +19,51 @@ It preserves the complete DDR routing, 373 CPU / 200 RAM pads, nine buses,
 The 45 non-DDR processor power balls retain logical PDN membership; the
 builder checks their expected connectivity diagnostics individually.
 
-**Top now uses core's paired fanout coordination.** Both breakouts declare
-`preset: "fanout"` with an explicit `algorithmFn`, and the adapter retains
-core's `connectionExitTargets`. Core propagates the CPU's actual exit positions
-and layers to RAM and then to the global phase. The global phase joins those
-exits directly on one layer and rejects mismatches; it no longer has an A*
-router, layer changes, or an exit-coordinate repair pass.
+Top is rebuilt from its own TSX using the Right reference's topology, rotated
+90 degrees: CPU at (0, -9.5), rotation 90; RAM at (-1.81916, 9.616917), rotation
+180. The board is 32 × 54 mm. Top includes both packages' power/ground fanout
+and eight DDR capacitors; Right additionally stages the reference's 60 direct
+processor decouplers after routing.
 
-The core fix is not released yet. `npm ci --force` applies the committed
-[core patch](patches/README.md) from
-[core PR #3610](https://github.com/tscircuit/core/pull/3610). Top explicitly uses
-**@tscircuit/fanout-solver 0.0.53** for both fanouts. Each position retains its
-own TSX file.
+Both fanouts explicitly use **@tscircuit/fanout-solver 0.0.54**. Core coordinates
+the solved CPU exits with RAM and supplies the global phase's endpoints.
+Winding and fanout planning use the horizontal reference frame, then return
+copper in board coordinates. This preserves the reference's winding order
+when the packages are rotated. CPU coordinates are normalized to its original
+half-millimeter grid at 12 decimal places; RAM retains its native rotation
+precision because the current solver's tied track ordering is numerically
+sensitive. No saved SVG or circuit JSON is used as a routing input.
 
-**The full Top build is still blocked at RAM fanout.** The CPU solves 135/135
-connections (33 DDR signals and 102 power/ground drops). With the coordinated
-targets, the current RAM configuration solves only 18/33. The build refuses to
-publish an incomplete circuit or add global vias to compensate. The small
-vertical integration regression passes with matching exit layers and no global
-vias; it does not claim that the full AM62L board is solved.
+`npm ci --force` applies the [core handoff patch](patches/README.md) from
+[core PR #3610](https://github.com/tscircuit/core/pull/3610) to core 0.0.1830.
+The adapter also preserves core's completed-footprint keepouts and routed
+copper for subsequent phases.
 
-The PCB currently shown for Top is explicitly labelled as the **previous
-preview**. It is the last connected artifact and still has 59 global vias;
-it has not been replaced with a partial or falsely successful build. See the
-[diagnosis and reproducer](repros/ddr-top-coordination/README.md).
+The builder requires all 33 DDR signals to connect on matching exit layers,
+zero vias in their global segments, and every Top via pad to fit inside a
+fanout region. It independently audits the routed copper and physical
+pad-to-pad connectivity. Fanout skew constraints are enabled. Both previews
+show the three real routing regions; **Routing Phase Data** exports the
+captured phase inputs and outputs (135 CPU, 143 RAM, 49 global connections,
+including the 16 capacitor connections).
 
-Top starts from the [fanout31 Top sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx)
-and uses the CPU signal layers and dense-plane hints from the
-[fanout-solver Top regression](https://github.com/tscircuit/fanout-solver/blob/70a2fe5/tests/am62l-top-edge-breakout-solved-repro.test.ts).
-Its board is 32 × 54 mm with the CPU at (0, -11), RAM at (0, 17.5), and eight
-bottom-side capacitor footprints reserving decoupling space. Both fanouts use
-`matchLengths: false`; length matching remains pending. The bus and
-pair limits in TSX are design targets. The capacitor footprints reserve space;
-their connections remain outside this signal-routing reference.
-
-A successful Top build must pass physical pad-to-pad connectivity, independent
-copper checks, and the emitted-copper check requiring a single layer and zero
-vias for every global DDR connection.
-
-The **Browse TSX Source** resource opens an unzipped file browser for each
-configuration. The `source/` directory contains the entry TSX, shared files,
-build scripts, package manifest, lockfile, and build instructions. Files can
-be read in the browser or downloaded individually; no ZIP is required.
-
-To rebuild the DDR references and the site using the checked-in sensor/display
-artifacts:
+**Browse TSX Source** opens the unzipped source, build scripts, pinned
+manifest/lockfile and core patch. To reproduce both boards and the site:
 
 ```sh
+npm ci --force
 npm run build:ddr
 npm run assemble-site -- --from-public
 npm test
 npm run typecheck
 ```
 
-Use `npm run build:ddr -- top` to rebuild only Top. The full `npm run build`
-also generates DDR artifacts. DDR circuits live under `src/ddr/`, keeping the
-existing sensor/display batch and schematic-placement gate at 72 configurations.
+`npm run build:ddr -- top` rebuilds just Top. The DDR GitHub Actions workflow
+rebuilds both TSX configurations before testing. The original core regression
+is `tests/repros/repro-am62l-lpddr4-progressive-fanout.test.tsx`, backed by
+`tests/fixtures/create-am62l-lpddr4-fanout.tsx`; its exact test and snapshot were
+also verified with fanout solver 0.0.54. The [earlier dataset investigation](repros/ddr-top-coordination/README.md)
+records the superseded unrotated-CPU layout and why its preview had global vias.
 
 ## Configuration catalog
 

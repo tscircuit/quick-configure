@@ -10,6 +10,7 @@ import {
   validateDdrCircuit,
   validateTopDdrCircuit,
   validateTopDdrGlobalRouting,
+  validateTopDdrViaLocations,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -141,12 +142,12 @@ describe("DDR breakout artifacts", () => {
     expect(page).toContain(
       'value="top" data-board-id="am62l__mt53e1g16d1zw__top"',
     )
-    expect(page).toContain('data-routing-status="coordination-pending"')
-    expect(page).toContain("Top shows the previous preview")
+    expect(page).toContain('data-routing-status="routed"')
+    expect(page).toContain("Right and Top are routed")
   })
 })
 
-describe("Previous Top DDR preview", () => {
+describe("Top DDR reference", () => {
   const configuration = ddrConfigurations.find(
     (config) => config.position === "top",
   )!
@@ -158,14 +159,15 @@ describe("Previous Top DDR preview", () => {
     ).json()
     const board = top.find((record) => record.type === "pcb_board")!
     expect([board.width, board.height, board.num_layers]).toEqual([32, 54, 8])
-    expect(board.min_via_hole_diameter).toBe(0.1)
+    expect(board.min_via_hole_diameter).toBe(0.15)
     const parts = top.filter((record) => record.type === "pcb_component")
     expect(parts).toHaveLength(10)
-    const cpu = parts.find((part) => part.center.y === -11)!
-    const ram = parts.find((part) => part.center.y === 17.5)!
-    expect(cpu.center).toEqual({ x: 0, y: -11 })
-    expect(ram.center).toEqual({ x: 0, y: 17.5 })
-    expect(ram.rotation).toBe(90)
+    const cpu = parts.find((part) => part.center.y === -9.5)!
+    const ram = parts.find((part) => part.center.y === 9.616917)!
+    expect(cpu.center).toEqual({ x: 0, y: -9.5 })
+    expect(ram.center).toEqual({ x: -1.81916, y: 9.616917 })
+    expect(cpu.rotation).toBe(90)
+    expect(ram.rotation).toBe(180)
     const pads = top.filter((record) => record.type === "pcb_smtpad")
     expect(
       pads.filter((pad) => pad.pcb_component_id === cpu.pcb_component_id),
@@ -175,7 +177,7 @@ describe("Previous Top DDR preview", () => {
     ).toHaveLength(200)
 
     const traces = top.filter((record) => record.type === "source_trace")
-    expect(traces).toHaveLength(135)
+    expect(traces).toHaveLength(261)
     expect(
       traces.filter((trace) => trace.name?.startsWith("U1_VSS_")),
     ).toHaveLength(97)
@@ -211,13 +213,21 @@ describe("Previous Top DDR preview", () => {
       ).toBeLessThan(ram.center.y - ram.height / 2)
     }
     expect(() => validateTopDdrCircuit(top)).not.toThrow()
-    // The previous preview is electrically connected but must not be accepted
-    // as the output of the coordinated build, which forbids global layer changes.
-    expect(() => validateTopDdrGlobalRouting(top)).toThrow(
-      "Top fanout exits must use one layer",
+    expect(() => validateTopDdrGlobalRouting(top)).not.toThrow()
+    expect(() => validateTopDdrViaLocations(top)).not.toThrow()
+    const withOutsideVia = structuredClone(top)
+    const displacedVia = withOutsideVia.find(
+      (record) => record.type === "pcb_via",
+    )!
+    displacedVia.x = 14
+    displacedVia.y = 0
+    expect(() => validateTopDdrViaLocations(withOutsideVia)).toThrow(
+      "outside the fanouts",
     )
+    const phases = top.filter((record) => record.type === "pcb_debug_object")
+    expect(phases).toHaveLength(3)
     const pcbTraces = top.filter((record) => record.type === "pcb_trace")
-    expect(pcbTraces).toHaveLength(201)
+    expect(pcbTraces).toHaveLength(327)
     for (const signal of signals) {
       const routes = pcbTraces.filter(
         (trace) => trace.source_trace_id === signal.source_trace_id,
@@ -252,7 +262,7 @@ describe("Previous Top DDR preview", () => {
     )
     expect(
       top.find((record) => record.type === "pcb_note_text")!.text,
-    ).toContain("Length matching pending")
+    ).toContain("Coordinated fanouts")
     const withBrokenJoin = structuredClone(top)
     const globalTrace =
       withBrokenJoin.find(
@@ -293,4 +303,28 @@ describe("Previous Top DDR preview", () => {
       false,
     )
   })
+})
+
+test("both references publish the three captured routing phases", async () => {
+  for (const configuration of ddrConfigurations) {
+    const phases = await Bun.file(
+      join(
+        projectRoot,
+        "public",
+        "viewer",
+        configuration.id,
+        "routing-phases.json",
+      ),
+    ).json()
+    expect(
+      phases.map((phase: { connectionCount: number }) => phase.connectionCount),
+    ).toEqual([135, 143, 49])
+    for (const phase of phases) {
+      expect(phase.outputTraces.length).toBeGreaterThanOrEqual(
+        phase.connectionCount,
+      )
+      expect(phase.bounds.maxX).toBeGreaterThan(phase.bounds.minX)
+      expect(phase.bounds.maxY).toBeGreaterThan(phase.bounds.minY)
+    }
+  }
 })

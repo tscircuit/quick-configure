@@ -23,7 +23,7 @@ export const ddrConfigurations = [
     position: "top",
     Board: Am62lLpddr4Top,
     DirectDecoupling: undefined,
-    routingStatus: "coordination-pending" as const,
+    routingStatus: "routed" as const,
     createRoutingState: createDdrFanoutState,
   },
 ] as const
@@ -36,18 +36,22 @@ export const ddrSourceFilenames = [
   "src/ddr/direct-ddr-autorouter.ts",
   "src/ddr/latest-fanout-autorouter.ts",
   "src/ddr/top-ddr-global-autorouter.ts",
+  "src/ddr/top-ddr-winding-solver.ts",
+  "src/ddr/rotate-ddr-routing.ts",
   "src/ddr/validate-ddr-circuit.ts",
   "scripts/build-ddr-artifacts.ts",
+  "scripts/capture-ddr-routing-phases.ts",
   "scripts/write-ddr-source.ts",
   "package.json",
   "package-lock.json",
-  "patches/@tscircuit+core+0.0.1826.patch",
+  "patches/@tscircuit+core+0.0.1830.patch",
   "patches/README.md",
 ] as const
 
 export const ddrAssetFilenames = [
   "pcb.svg",
   "circuit.json",
+  "routing-phases.json",
   "source/index.html",
   "source/README.md",
   ...ddrSourceFilenames.map((filename) => `source/${filename}`),
