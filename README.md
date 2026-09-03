@@ -19,6 +19,11 @@ It preserves the complete DDR routing, 373 CPU / 200 RAM pads, nine buses,
 The 45 non-DDR processor power balls retain logical PDN membership; the
 builder checks their expected connectivity diagnostics individually.
 
+**Top routing quality is under investigation:** its current global connections
+contain 59 vias caused by incompatible fanout exits. It does not yet meet the
+required no-via connection between fanouts. See the
+[diagnosis and reproducer](repros/ddr-top-coordination/README.md).
+
 Top starts from the [fanout31 Top sample](https://github.com/tscircuit/dataset-fanout31-am62l/blob/8c73befb36b125c84651c07454a9b940b3c6500a/samples/02-top-center.tsx)
 and uses the CPU signal layers and dense-plane hints from the
 [fanout-solver Top regression](https://github.com/tscircuit/fanout-solver/blob/70a2fe5/tests/am62l-top-edge-breakout-solved-repro.test.ts).
