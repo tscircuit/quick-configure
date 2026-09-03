@@ -7,9 +7,9 @@ import { writeDdrSource } from "./write-ddr-source"
 import { ddrConfigurations } from "../src/ddr/configurations"
 import {
   validateDdrCircuit,
-  validateTopDdrCircuit,
-  validateTopDdrGlobalRouting,
-  validateTopDdrViaLocations,
+  validateCoordinatedDdrCircuit,
+  validateDdrGlobalRouting,
+  validateDdrViaLocations,
 } from "../src/ddr/validate-ddr-circuit"
 
 const projectRoot = join(import.meta.dir, "..")
@@ -77,11 +77,11 @@ for (const configuration of configurations) {
       routingState.globalValidation.copperErrorCount !== 0
     )
       throw new Error(
-        "Top must route both fanouts and all 33 global connections without copper errors",
+        `${configuration.position} must route both fanouts and all 33 global connections without copper errors`,
       )
-    validateTopDdrCircuit(circuitJson)
-    validateTopDdrGlobalRouting(circuitJson)
-    validateTopDdrViaLocations(circuitJson)
+    validateCoordinatedDdrCircuit(circuitJson)
+    validateDdrGlobalRouting(circuitJson)
+    validateDdrViaLocations(circuitJson)
   }
   if (
     phases.length !== 3 ||

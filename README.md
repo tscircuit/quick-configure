@@ -8,8 +8,8 @@ routed PCB, schematic, and downloadable fabrication/EDA resources.
 ## DDR Breakouts
 
 The header links to `/ddr-breakouts/`, a three-dropdown selector for CPU, RAM,
-and RAM Position. AM62L + MT53E1G16D1ZW (LPDDR4) supports **Right** and **Top**.
-Left and Bottom remain disabled. The selector updates the PCB preview,
+and RAM Position. AM62L + MT53E1G16D1ZW (LPDDR4) supports **Right**, **Top**, and **Left**.
+Bottom remains disabled. The selector updates the PCB preview,
 dimensions, routing status, and resources.
 
 Right is the 40 × 20 mm, eight-layer
@@ -25,7 +25,15 @@ Top is rebuilt from its own TSX using the Right reference's topology, rotated
 and eight DDR capacitors; Right additionally stages the reference's 60 direct
 processor decouplers after routing.
 
-Both fanouts explicitly use **@tscircuit/fanout-solver 0.0.54**. Core coordinates
+Left has its own TSX with CPU at (9.5, 0), rotation 180, and RAM at
+(-9.616917, -1.81916), rotation 270, on a 54 × 32 mm board. All nine CPU buses
+exit left and all nine RAM buses exit right. The half turn swaps each edge's
+top/bottom track order as well as its side. It includes the same power/ground
+fanout and eight DDR capacitors as Top. Winding restores CPU-first region
+ordering after normalization because core's board-space ordering puts RAM
+first for Left.
+
+Top and Left explicitly use **@tscircuit/fanout-solver 0.0.54**. Core coordinates
 the solved CPU exits with RAM and supplies the global phase's endpoints.
 Winding and fanout planning use the horizontal reference frame, then return
 copper in board coordinates. This preserves the reference's winding order
@@ -40,15 +48,15 @@ The adapter also preserves core's completed-footprint keepouts and routed
 copper for subsequent phases.
 
 The builder requires all 33 DDR signals to connect on matching exit layers,
-zero vias in their global segments, and every Top via pad to fit inside a
+zero vias in their global segments, and every Top/Left via pad to fit inside a
 fanout region. It independently audits the routed copper and physical
-pad-to-pad connectivity. Fanout skew constraints are enabled. Both previews
+pad-to-pad connectivity. Fanout skew constraints are enabled. All previews
 show the three real routing regions; **Routing Phase Data** exports the
 captured phase inputs and outputs (135 CPU, 143 RAM, 49 global connections,
 including the 16 capacitor connections).
 
 **Browse TSX Source** opens the unzipped source, build scripts, pinned
-manifest/lockfile and core patch. To reproduce both boards and the site:
+manifest/lockfile and core patch. To reproduce all three boards and the site:
 
 ```sh
 npm ci --force
@@ -58,8 +66,8 @@ npm test
 npm run typecheck
 ```
 
-`npm run build:ddr -- top` rebuilds just Top. The DDR GitHub Actions workflow
-rebuilds both TSX configurations before testing. The original core regression
+`npm run build:ddr -- left` rebuilds just Left; use `-- top` for Top. The DDR GitHub Actions workflow
+rebuilds all three TSX configurations before testing. The original core regression
 is `tests/repros/repro-am62l-lpddr4-progressive-fanout.test.tsx`, backed by
 `tests/fixtures/create-am62l-lpddr4-fanout.tsx`; its exact test and snapshot were
 also verified with fanout solver 0.0.54. The [earlier dataset investigation](repros/ddr-top-coordination/README.md)

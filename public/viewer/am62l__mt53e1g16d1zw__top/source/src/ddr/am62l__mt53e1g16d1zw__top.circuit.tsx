@@ -1,9 +1,9 @@
-import { topDdrWindingSolver } from "./top-ddr-winding-solver"
+import { topDdrWindingSolver } from "./rotated-ddr-winding-solver"
 // Top reproduces the core progressive-fanout topology with package placement
 // and bus directions rotated 90 degrees. Both fanouts are solved from this TSX;
 // core coordinates the actual exits before the global DDR connections are joined.
 import { Fragment } from "react"
-import { createTopDdrGlobalAutorouter } from "./top-ddr-global-autorouter"
+import { createCoordinatedDdrGlobalAutorouter } from "./coordinated-ddr-global-autorouter"
 import {
   createDdrFanoutAutorouter,
   createDdrFanoutState,
@@ -225,7 +225,9 @@ export default function Am62lLpddr4Top({
         </Fragment>
       ))}
       <autoroutingphase
-        autorouter={{ algorithmFn: createTopDdrGlobalAutorouter(routingState) }}
+        autorouter={{
+          algorithmFn: createCoordinatedDdrGlobalAutorouter(routingState),
+        }}
       />
       <copperpour layer={GROUND_PLANE_LAYER} connectsTo="net.GND" />
       <copperpour
@@ -248,7 +250,7 @@ export default function Am62lLpddr4Top({
           algorithmFn: createDdrFanoutAutorouter(
             socBusFanoutDirections,
             {
-              useHorizontalReferenceFrame: true,
+              referenceRotation: 90,
               referenceFramePrecision: 12,
               maxLayerCombinations: 1,
             },
@@ -279,7 +281,7 @@ export default function Am62lLpddr4Top({
           implicitBreakoutPointSolverFn: topDdrWindingSolver,
           algorithmFn: createDdrFanoutAutorouter(
             dramBusFanoutDirections,
-            { useHorizontalReferenceFrame: true, maxLayerCombinations: 1 },
+            { referenceRotation: 90, maxLayerCombinations: 1 },
             routingState,
           ),
         }}

@@ -149,7 +149,7 @@ export function createDdrFanoutAutorouter(
   busDirections: Readonly<Record<string, FanoutExitPosition>>,
   options: Partial<FanoutSolverOptions> & {
     matchLengths?: boolean
-    useHorizontalReferenceFrame?: boolean
+    referenceRotation?: 90 | 180
     referenceFramePrecision?: number
   } = {},
   state = createDdrFanoutState(),
@@ -157,17 +157,21 @@ export function createDdrFanoutAutorouter(
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
     const {
       matchLengths = true,
-      useHorizontalReferenceFrame = false,
+      referenceRotation,
       referenceFramePrecision,
       ...solverOptions
     } = options
-    const phaseInput = useHorizontalReferenceFrame
-      ? rotateDdrRouting(input, -90, referenceFramePrecision)
+    const phaseInput = referenceRotation
+      ? rotateDdrRouting(
+          input,
+          referenceRotation === 90 ? -90 : -180,
+          referenceFramePrecision,
+        )
       : input
     const phaseOptions = createFanoutOptions(
       phaseInput,
-      useHorizontalReferenceFrame
-        ? rotateDdrExitDirections(busDirections)
+      referenceRotation
+        ? rotateDdrExitDirections(busDirections, referenceRotation)
         : busDirections,
     )
     if (!matchLengths)
@@ -236,8 +240,8 @@ export function createDdrFanoutAutorouter(
         ],
         ...(fanoutOnly ? { traces: output.fanoutTraces } : {}),
       } as unknown as SimpleRouteJson
-      return useHorizontalReferenceFrame
-        ? rotateDdrRouting(srj, 90, referenceFramePrecision)
+      return referenceRotation
+        ? rotateDdrRouting(srj, referenceRotation, referenceFramePrecision)
         : srj
     }
     const solve = () => {

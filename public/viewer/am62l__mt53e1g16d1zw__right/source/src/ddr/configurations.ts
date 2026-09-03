@@ -3,6 +3,7 @@ import Am62lLpddr4Right, {
 } from "./am62l__mt53e1g16d1zw__right.circuit"
 
 import { createDdrFanoutState } from "./latest-fanout-autorouter"
+import Am62lLpddr4Left from "./am62l__mt53e1g16d1zw__left.circuit"
 import Am62lLpddr4Top from "./am62l__mt53e1g16d1zw__top.circuit"
 
 // Each position owns its placement and fanout configuration in a dedicated TSX.
@@ -26,17 +27,28 @@ export const ddrConfigurations = [
     routingStatus: "routed" as const,
     createRoutingState: createDdrFanoutState,
   },
+  {
+    id: "am62l__mt53e1g16d1zw__left",
+    cpu: "AM62L",
+    ram: "MT53E1G16D1ZW",
+    position: "left",
+    Board: Am62lLpddr4Left,
+    DirectDecoupling: undefined,
+    routingStatus: "routed" as const,
+    createRoutingState: createDdrFanoutState,
+  },
 ] as const
 
 export const ddrSourceFilenames = [
   "src/ddr/am62l-lpddr4.tsx",
   "src/ddr/am62l__mt53e1g16d1zw__right.circuit.tsx",
   "src/ddr/am62l__mt53e1g16d1zw__top.circuit.tsx",
+  "src/ddr/am62l__mt53e1g16d1zw__left.circuit.tsx",
   "src/ddr/configurations.ts",
   "src/ddr/direct-ddr-autorouter.ts",
   "src/ddr/latest-fanout-autorouter.ts",
-  "src/ddr/top-ddr-global-autorouter.ts",
-  "src/ddr/top-ddr-winding-solver.ts",
+  "src/ddr/coordinated-ddr-global-autorouter.ts",
+  "src/ddr/rotated-ddr-winding-solver.ts",
   "src/ddr/rotate-ddr-routing.ts",
   "src/ddr/validate-ddr-circuit.ts",
   "scripts/build-ddr-artifacts.ts",

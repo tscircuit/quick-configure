@@ -30,7 +30,7 @@ function routeCoordinatedExits(input: SimpleRouteJson): SimplifiedPcbTrace[] {
       )
     return {
       type: "pcb_trace",
-      pcb_trace_id: `ddr_top_global_${index}`,
+      pcb_trace_id: `ddr_coordinated_global_${index}`,
       connection_name: connection.name,
       route: connection.pointsToConnect.map((point) => ({
         route_type: "wire",
@@ -43,7 +43,10 @@ function routeCoordinatedExits(input: SimpleRouteJson): SimplifiedPcbTrace[] {
   })
 }
 
-export function createTopDdrGlobalAutorouter(state: DdrFanoutState) {
+export function createCoordinatedDdrGlobalAutorouter(
+  state: DdrFanoutState,
+  referenceRotation: 90 | 180 = 90,
+) {
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
     if (state.fanouts.length !== 2)
       throw new Error("Both fanouts must complete before global routing")
@@ -59,7 +62,7 @@ export function createTopDdrGlobalAutorouter(state: DdrFanoutState) {
       }
       const capacitorInput = rotateDdrRouting(
         { ...input, connections: capacitorConnections },
-        -90,
+        referenceRotation === 90 ? -90 : -180,
       )
       const capacitorTraces =
         rotateDdrRouting(
@@ -67,7 +70,7 @@ export function createTopDdrGlobalAutorouter(state: DdrFanoutState) {
             ...capacitorInput,
             traces: routeDirectDdrConnections(capacitorInput),
           },
-          90,
+          referenceRotation,
         ).traces ?? []
       const traces = [...routeCoordinatedExits(signalInput), ...capacitorTraces]
       const { connectivity, drc } = validateCompleteRouting(
@@ -165,7 +168,7 @@ function validateCompleteRouting(
   }
   const original = {
     ...state.fanouts[0]!.input,
-    bounds: { minX: -16, maxX: 16, minY: -27, maxY: 27 },
+    bounds: globalInput.bounds,
     connections: [...connections.values()],
     obstacles: state.fanouts[0]!.input.obstacles.map((obstacle) => ({
       ...obstacle,
