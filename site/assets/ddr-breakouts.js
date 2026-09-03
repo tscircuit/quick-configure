@@ -1,6 +1,31 @@
 const drawing = document.querySelector("#drawing")
 const svgCanvas = document.querySelector("#svg-canvas")
 const drawingLoading = document.querySelector("#drawing-loading")
+const positionSelect = document.querySelector("#ram-position")
+const boardFileLinks = [...document.querySelectorAll("[data-board-file]")]
+function loadBoard() {
+  const option = positionSelect.selectedOptions[0]
+  if (option.disabled || !option.dataset.boardId) return
+  const boardId = option.dataset.boardId
+  const base = `../viewer/${boardId}`
+  drawingLoading.hidden = false
+  drawingLoading.querySelector("span").textContent = "Loading PCB"
+  const status = document.querySelector("#routing-status")
+  status.textContent = "Routed reference"
+  drawing.alt = `Routed AM62L DDR breakout with MT53E1G16D1ZW LPDDR4 RAM ${option.value === "top" ? "above" : "to the right of"} the CPU`
+  drawing.src = `${base}/pcb.svg?v=coordinated-top-54`
+  document.querySelector("#caption-title").textContent =
+    `AM62L · MT53E1G16D1ZW · ${option.text}`
+  document.querySelector("#caption-dimensions").textContent =
+    option.dataset.dimensions
+  for (const link of boardFileLinks) {
+    link.href = `${base}/${link.dataset.boardFile}`
+    if (link.hasAttribute("download"))
+      link.download = `${boardId}-${link.dataset.boardFile}`
+  }
+  resetDrawing()
+}
+positionSelect.addEventListener("change", loadBoard)
 let transform = { x: 0, y: 0, scale: 1 },
   drag = null
 function applyTransform() {
@@ -80,9 +105,10 @@ function markLoaded() {
   drawingLoading.hidden = true
 }
 function markFailed() {
+  drawingLoading.hidden = false
   drawingLoading.querySelector("span").textContent = "PCB drawing unavailable"
 }
 drawing.addEventListener("load", markLoaded)
 drawing.addEventListener("error", markFailed)
+loadBoard()
 if (drawing.complete) drawing.naturalWidth ? markLoaded() : markFailed()
-resetDrawing()
