@@ -60,6 +60,8 @@ export const ddrSourceFilenames = [
   "src/ddr/direct-ddr-autorouter.ts",
   "src/ddr/latest-fanout-autorouter.ts",
   "src/ddr/coordinated-ddr-global-autorouter.ts",
+  "src/ddr/aligned-ddr-breakout-point-solver.ts",
+  "src/ddr/fixed-orientation-fanout-autorouter.ts",
   "src/ddr/rotated-ddr-winding-solver.ts",
   "src/ddr/rotate-ddr-routing.ts",
   "src/ddr/validate-ddr-circuit.ts",
@@ -69,6 +71,7 @@ export const ddrSourceFilenames = [
   "package.json",
   "package-lock.json",
   "patches/@tscircuit+core+0.0.1830.patch",
+  "patches/@tscircuit+fanout-solver+0.0.54.patch",
   "patches/README.md",
 ] as const
 

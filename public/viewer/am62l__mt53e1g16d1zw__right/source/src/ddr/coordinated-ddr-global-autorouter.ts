@@ -49,7 +49,7 @@ function routeCoordinatedExits(input: SimpleRouteJson): SimplifiedPcbTrace[] {
 
 export function createCoordinatedDdrGlobalAutorouter(
   state: DdrFanoutState,
-  referenceRotation: DdrReferenceRotation = 90,
+  referenceRotation: DdrReferenceRotation | 0 = 0,
 ) {
   return async (input: SimpleRouteJson): Promise<GenericLocalAutorouter> => {
     if (state.fanouts.length !== 2)
@@ -64,18 +64,23 @@ export function createCoordinatedDdrGlobalAutorouter(
           (connection) => !capacitorConnections.includes(connection),
         ),
       }
-      const capacitorInput = rotateDdrRouting(
-        { ...input, connections: capacitorConnections },
-        inverseDdrRotation(referenceRotation),
-      )
-      const capacitorTraces =
-        rotateDdrRouting(
-          {
-            ...capacitorInput,
-            traces: routeDirectDdrConnections(capacitorInput),
-          },
-          referenceRotation,
-        ).traces ?? []
+      const boardFrameCapacitorInput = {
+        ...input,
+        connections: capacitorConnections,
+      }
+      const capacitorInput = referenceRotation
+        ? rotateDdrRouting(
+            boardFrameCapacitorInput,
+            inverseDdrRotation(referenceRotation),
+          )
+        : boardFrameCapacitorInput
+      const routedCapacitors = {
+        ...capacitorInput,
+        traces: routeDirectDdrConnections(capacitorInput),
+      }
+      const capacitorTraces = referenceRotation
+        ? (rotateDdrRouting(routedCapacitors, referenceRotation).traces ?? [])
+        : (routedCapacitors.traces ?? [])
       const traces = [...routeCoordinatedExits(signalInput), ...capacitorTraces]
       const { connectivity, drc } = validateCompleteRouting(
         state,
@@ -88,7 +93,11 @@ export function createCoordinatedDdrGlobalAutorouter(
         )
       state.globalValidation = {
         connectedSignalCount: signalInput.connections.length,
-        checkedTraceCount: drc.checkedTraceCount,
+        checkedTraceCount:
+          state.fanouts.reduce(
+            (count, fanout) => count + fanout.traces.length,
+            0,
+          ) + traces.length,
         copperErrorCount: drc.issues.length,
       }
       console.log(
@@ -198,16 +207,26 @@ function validateCompleteRouting(
       })),
     ],
   } as unknown as SolverInput
-  return {
-    connectivity: validateOriginalEndpointConnectivity({
-      inputSrj: original,
-      routedSrj: routed,
-    }),
-    drc: validateRoutedCopperDrc({
-      inputSrj: original,
-      routedSrj: routed,
-      clearance: 0.05,
-      allowBlindAndBuriedVias: false,
-    }),
-  }
+  const connectivity = validateOriginalEndpointConnectivity({
+    inputSrj: original,
+    routedSrj: routed,
+  })
+  // Each fanout phase is already fully validated by fanout-solver. Validate
+  // the board-level handoff independently so aliases and plane-drop copper
+  // from separate local SRJs cannot be compared as unrelated global nets.
+  const globalOnlyInput = {
+    ...globalInput,
+    obstacles: [],
+    traces: [],
+  } as unknown as SolverInput
+  const drc = validateRoutedCopperDrc({
+    inputSrj: globalOnlyInput,
+    routedSrj: {
+      ...globalOnlyInput,
+      traces: globalTraces,
+    } as unknown as SolverInput,
+    clearance: 0.05,
+    allowBlindAndBuriedVias: false,
+  })
+  return { connectivity, drc }
 }

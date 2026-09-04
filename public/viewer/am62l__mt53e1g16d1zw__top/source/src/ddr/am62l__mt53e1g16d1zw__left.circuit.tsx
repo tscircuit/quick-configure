@@ -1,14 +1,14 @@
-import { leftDdrWindingSolver } from "./rotated-ddr-winding-solver"
-// Left reproduces the core progressive-fanout topology with package placement
-// and bus directions rotated 180 degrees. Both fanouts are solved from this TSX;
-// core coordinates the actual exits before the global DDR connections are joined.
+import { alignedDdrBreakoutPointSolver } from "./aligned-ddr-breakout-point-solver"
+// The packages keep the same orientation as Right. Each local fanout turns its
+// signal lanes toward the facing left/right edge, where core coordinates the
+// exact handoff points before the global DDR connections are joined.
 import { Fragment } from "react"
 import { createCoordinatedDdrGlobalAutorouter } from "./coordinated-ddr-global-autorouter"
 import {
-  createDdrFanoutAutorouter,
   createDdrFanoutState,
   type DdrFanoutState,
 } from "./latest-fanout-autorouter"
+import { createFixedOrientationFanoutAutorouter } from "./fixed-orientation-fanout-autorouter"
 import {
   DDR_SIGNAL_CONNECTIONS,
   Am62l32,
@@ -26,7 +26,7 @@ const LPDDR4_POWER_PLANE_LAYER = "inner2"
 const LPDDR4_VDD1_PLANE_LAYER = "inner3"
 const LPDDR4_POWER_NET = "VDD_LPDDR4"
 const LPDDR4_VDD1_NET = "SOC_DVDD1V8"
-const SOC_PCB_X = 9.5
+const SOC_PCB_X = 70
 const POWER_FANOUT_SIGNAL_LAYERS = [
   "top",
   "inner4",
@@ -204,8 +204,8 @@ export default function Am62lLpddr4Left({
   return (
     <board
       name="AM62L_LPDDR4_LEFT"
-      width="54mm"
-      height="32mm"
+      width="220mm"
+      height="70mm"
       layers={8}
       defaultTraceWidth="0.08128mm"
       minTraceWidth="0.08128mm"
@@ -215,7 +215,7 @@ export default function Am62lLpddr4Left({
       minViaHoleDiameter="0.15mm"
       minViaPadDiameter="0.24mm"
       pcbStyle={{ viaHoleDiameter: "0.15mm", viaPadDiameter: "0.24mm" }}
-      allowBlindAndBuriedVias={false}
+      allowBlindAndBuriedVias
       isViaInPadAllowed={false}
       autorouter="default"
       schematicDisabled
@@ -227,7 +227,7 @@ export default function Am62lLpddr4Left({
       ))}
       <autoroutingphase
         autorouter={{
-          algorithmFn: createCoordinatedDdrGlobalAutorouter(routingState, 180),
+          algorithmFn: createCoordinatedDdrGlobalAutorouter(routingState),
         }}
       />
       <copperpour layer={GROUND_PLANE_LAYER} connectsTo="net.GND" />
@@ -244,24 +244,22 @@ export default function Am62lLpddr4Left({
         pcbX={SOC_PCB_X}
         pcbY={0}
         padding="3mm"
+        paddingY="18mm"
+        paddingLeft="60mm"
         pcbGap="0.2mm"
         autorouter={{
           preset: "fanout",
-          implicitBreakoutPointSolverFn: leftDdrWindingSolver,
-          algorithmFn: createDdrFanoutAutorouter(
-            socBusFanoutDirections,
-            {
-              referenceRotation: 180,
-              referenceFramePrecision: 12,
-              maxLayerCombinations: 1,
-            },
+          implicitBreakoutPointSolverFn: alignedDdrBreakoutPointSolver,
+          algorithmFn: createFixedOrientationFanoutAutorouter(
+            "left",
             routingState,
+            true,
           ),
         }}
         fanoutRoutingLayers={[...POWER_FANOUT_SIGNAL_LAYERS]}
         busFanoutDirections={socBusFanoutDirections}
       >
-        <Am62l32 name="U1" pcbRotation={180} noSchematicRepresentation />
+        <Am62l32 name="U1" pcbRotation={0} noSchematicRepresentation />
         {SOC_PLANE_DROPS.map((drop) => (
           <trace
             key={drop.traceName}
@@ -273,23 +271,25 @@ export default function Am62lLpddr4Left({
       </breakout>
       <breakout
         name="DRAM_FANOUT"
-        pcbX={-9.616917}
+        pcbX={-70}
         pcbY={-1.81916}
         padding="3mm"
+        paddingY="18mm"
+        paddingRight="60mm"
         pcbGap="0.2mm"
         autorouter={{
           preset: "fanout",
-          implicitBreakoutPointSolverFn: leftDdrWindingSolver,
-          algorithmFn: createDdrFanoutAutorouter(
-            dramBusFanoutDirections,
-            { referenceRotation: 180, maxLayerCombinations: 1 },
+          implicitBreakoutPointSolverFn: alignedDdrBreakoutPointSolver,
+          algorithmFn: createFixedOrientationFanoutAutorouter(
+            "right",
             routingState,
+            true,
           ),
         }}
         fanoutRoutingLayers={[...POWER_FANOUT_SIGNAL_LAYERS]}
         busFanoutDirections={dramBusFanoutDirections}
       >
-        <Mt53e1g16d1zw name="U2" pcbRotation={270} noSchematicRepresentation />
+        <Mt53e1g16d1zw name="U2" pcbRotation={90} noSchematicRepresentation />
         {DRAM_PLANE_DROPS.map((drop) => (
           <trace
             key={drop.traceName}
@@ -307,9 +307,9 @@ export default function Am62lLpddr4Left({
             footprint="cap0201_nosilkscreen"
             layer="bottom"
             maxDecouplingTraceLength={`${AM62L_DDR_MAX_DECOUPLING_DISTANCE}mm`}
-            pcbX={SOC_PCB_X - capacitor.pcbX}
-            pcbY={-capacitor.pcbY}
-            pcbRotation={180 + capacitor.pcbRotation}
+            pcbX={SOC_PCB_X + capacitor.pcbX}
+            pcbY={capacitor.pcbY}
+            pcbRotation={capacitor.pcbRotation}
           />
           <trace
             name={`${capacitor.name}_VDD_DROP`}

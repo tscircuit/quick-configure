@@ -32,7 +32,7 @@ export function validateDdrCircuit(circuitJson: AnyCircuitElement[]) {
   }
 }
 
-// The rotated layouts' 33 DDR signals must each have CPU, RAM, and global copper, with a
+// The alternate layouts' 33 DDR signals must each have CPU, RAM, and global copper, with a
 // physical path all the way between package pads. Reject all DRC errors.
 export function validateCoordinatedDdrCircuit(
   circuitJson: AnyCircuitElement[],

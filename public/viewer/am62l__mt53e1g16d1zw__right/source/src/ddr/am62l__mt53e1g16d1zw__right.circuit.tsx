@@ -239,6 +239,7 @@ export default function Am62lLpddr4Right() {
       >
         <Am62l32
           name="U1"
+          pcbRotation={0}
           noSchematicRepresentation
           pinAttributes={AM62L_PIN_ATTRIBUTES}
         />

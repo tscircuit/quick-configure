@@ -90,7 +90,7 @@ const inferPlaneBusDirection = (
   return "right"
 }
 
-const createFanoutOptions = (
+export const createFanoutOptions = (
   input: SimpleRouteJson,
   busDirections: Readonly<Record<string, FanoutExitPosition>>,
 ): FanoutSolverOptions => {
