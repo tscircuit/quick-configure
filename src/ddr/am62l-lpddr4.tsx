@@ -1047,8 +1047,7 @@ const getPerimeterViaOffsets = (
         powerViaOffset: { x: 0.33, y: 0.45 },
       }
 
-interface PlacedAm62lDecouplingCapacitor
-  extends UnplacedAm62lDecouplingCapacitor {
+interface PlacedAm62lDecouplingCapacitor extends UnplacedAm62lDecouplingCapacitor {
   groundViaOffset: { x: number; y: number }
   maxDecouplingTraceLength: number
   pcbRotation: number
@@ -1301,7 +1300,7 @@ export const Am62l32 = (props: ChipProps<typeof AM62L_PIN_LABELS>) => (
               portHints={[`pin${pinNumber}`, ballName]}
               pcbX={x}
               pcbY={y}
-              radius="0.12808mm"
+              radius="0.127mm"
               shape="circle"
             />
           </Fragment>

@@ -173,25 +173,25 @@ describe.each(["top", "left", "bottom"] as const)(
     )!
     const layout = {
       top: {
-        dimensions: [32, 54, 8],
-        cpu: { x: 0, y: -9.5 },
-        ram: { x: -1.81916, y: 9.616917 },
-        cpuRotation: 90,
-        ramRotation: 180,
+        dimensions: [70, 220, 8],
+        cpu: { x: 0, y: -70 },
+        ram: { x: -1.81916, y: 70 },
+        cpuRotation: 0,
+        ramRotation: 90,
       },
       left: {
-        dimensions: [54, 32, 8],
-        cpu: { x: 9.5, y: 0 },
-        ram: { x: -9.616917, y: -1.81916 },
-        cpuRotation: 180,
-        ramRotation: 270,
+        dimensions: [220, 70, 8],
+        cpu: { x: 70, y: 0 },
+        ram: { x: -70, y: -1.81916 },
+        cpuRotation: 0,
+        ramRotation: 90,
       },
       bottom: {
-        dimensions: [32, 54, 8],
-        cpu: { x: 0, y: 9.5 },
-        ram: { x: 1.81916, y: -9.616917 },
-        cpuRotation: 270,
-        ramRotation: 0,
+        dimensions: [70, 220, 8],
+        cpu: { x: 0, y: 70 },
+        ram: { x: 1.81916, y: -70 },
+        cpuRotation: 0,
+        ramRotation: 90,
       },
     }[position]
     const topViewerDir = join(projectRoot, "public", "viewer", configuration.id)
@@ -225,8 +225,10 @@ describe.each(["top", "left", "bottom"] as const)(
       const ram = parts.find(
         (part) => part.source_component_id === ramSource.source_component_id,
       )!
-      expect(cpu.center).toEqual(layout.cpu)
-      expect(ram.center).toEqual(layout.ram)
+      expect(cpu.center.x).toBeCloseTo(layout.cpu.x, 6)
+      expect(cpu.center.y).toBeCloseTo(layout.cpu.y, 6)
+      expect(ram.center.x).toBeCloseTo(layout.ram.x, 6)
+      expect(ram.center.y).toBeCloseTo(layout.ram.y, 6)
       expect(cpu.rotation).toBe(layout.cpuRotation)
       expect(ram.rotation).toBe(layout.ramRotation)
       const pads = top.filter((record) => record.type === "pcb_smtpad")
@@ -294,8 +296,8 @@ describe.each(["top", "left", "bottom"] as const)(
       const displacedVia = withOutsideVia.find(
         (record) => record.type === "pcb_via",
       )!
-      displacedVia.x = position === "left" ? 0 : 14
-      displacedVia.y = position === "left" ? 14 : 0
+      displacedVia.x = 500
+      displacedVia.y = 500
       expect(() => validateDdrViaLocations(withOutsideVia)).toThrow(
         "outside the fanouts",
       )

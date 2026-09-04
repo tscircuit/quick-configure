@@ -1,14 +1,14 @@
-import { topDdrWindingSolver } from "./rotated-ddr-winding-solver"
-// Top reproduces the core progressive-fanout topology with package placement
-// and bus directions rotated 90 degrees. Both fanouts are solved from this TSX;
-// core coordinates the actual exits before the global DDR connections are joined.
+// The packages keep the same orientation as Right. Each local fanout turns its
+// signal lanes toward the facing top/bottom edge, where core coordinates the
+// exact handoff points before the global DDR connections are joined.
 import { Fragment } from "react"
+import { alignedDdrBreakoutPointSolver } from "./aligned-ddr-breakout-point-solver"
 import { createCoordinatedDdrGlobalAutorouter } from "./coordinated-ddr-global-autorouter"
 import {
-  createDdrFanoutAutorouter,
   createDdrFanoutState,
   type DdrFanoutState,
 } from "./latest-fanout-autorouter"
+import { createFixedOrientationFanoutAutorouter } from "./fixed-orientation-fanout-autorouter"
 import {
   DDR_SIGNAL_CONNECTIONS,
   Am62l32,
@@ -26,7 +26,7 @@ const LPDDR4_POWER_PLANE_LAYER = "inner2"
 const LPDDR4_VDD1_PLANE_LAYER = "inner3"
 const LPDDR4_POWER_NET = "VDD_LPDDR4"
 const LPDDR4_VDD1_NET = "SOC_DVDD1V8"
-const SOC_PCB_Y = -9.5
+const SOC_PCB_Y = -70
 const POWER_FANOUT_SIGNAL_LAYERS = [
   "top",
   "inner4",
@@ -203,8 +203,8 @@ export default function Am62lLpddr4Top({
   return (
     <board
       name="AM62L_LPDDR4_TOP"
-      width="32mm"
-      height="54mm"
+      width="70mm"
+      height="220mm"
       layers={8}
       defaultTraceWidth="0.08128mm"
       minTraceWidth="0.08128mm"
@@ -214,7 +214,7 @@ export default function Am62lLpddr4Top({
       minViaHoleDiameter="0.15mm"
       minViaPadDiameter="0.24mm"
       pcbStyle={{ viaHoleDiameter: "0.15mm", viaPadDiameter: "0.24mm" }}
-      allowBlindAndBuriedVias={false}
+      allowBlindAndBuriedVias
       isViaInPadAllowed={false}
       autorouter="default"
       schematicDisabled
@@ -243,24 +243,22 @@ export default function Am62lLpddr4Top({
         pcbX={0}
         pcbY={SOC_PCB_Y}
         padding="3mm"
+        paddingX="18mm"
+        paddingTop="60mm"
         pcbGap="0.2mm"
         autorouter={{
           preset: "fanout",
-          implicitBreakoutPointSolverFn: topDdrWindingSolver,
-          algorithmFn: createDdrFanoutAutorouter(
-            socBusFanoutDirections,
-            {
-              referenceRotation: 90,
-              referenceFramePrecision: 12,
-              maxLayerCombinations: 1,
-            },
+          implicitBreakoutPointSolverFn: alignedDdrBreakoutPointSolver,
+          algorithmFn: createFixedOrientationFanoutAutorouter(
+            "top",
             routingState,
+            true,
           ),
         }}
         fanoutRoutingLayers={[...POWER_FANOUT_SIGNAL_LAYERS]}
         busFanoutDirections={socBusFanoutDirections}
       >
-        <Am62l32 name="U1" pcbRotation={90} noSchematicRepresentation />
+        <Am62l32 name="U1" pcbRotation={0} noSchematicRepresentation />
         {SOC_PLANE_DROPS.map((drop) => (
           <trace
             key={drop.traceName}
@@ -273,22 +271,24 @@ export default function Am62lLpddr4Top({
       <breakout
         name="DRAM_FANOUT"
         pcbX={-1.81916}
-        pcbY={9.616917}
+        pcbY={70}
         padding="3mm"
+        paddingX="18mm"
+        paddingBottom="60mm"
         pcbGap="0.2mm"
         autorouter={{
           preset: "fanout",
-          implicitBreakoutPointSolverFn: topDdrWindingSolver,
-          algorithmFn: createDdrFanoutAutorouter(
-            dramBusFanoutDirections,
-            { referenceRotation: 90, maxLayerCombinations: 1 },
+          implicitBreakoutPointSolverFn: alignedDdrBreakoutPointSolver,
+          algorithmFn: createFixedOrientationFanoutAutorouter(
+            "bottom",
             routingState,
+            true,
           ),
         }}
         fanoutRoutingLayers={[...POWER_FANOUT_SIGNAL_LAYERS]}
         busFanoutDirections={dramBusFanoutDirections}
       >
-        <Mt53e1g16d1zw name="U2" pcbRotation={180} noSchematicRepresentation />
+        <Mt53e1g16d1zw name="U2" pcbRotation={90} noSchematicRepresentation />
         {DRAM_PLANE_DROPS.map((drop) => (
           <trace
             key={drop.traceName}
