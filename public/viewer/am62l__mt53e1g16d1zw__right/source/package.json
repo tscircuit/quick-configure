@@ -31,7 +31,7 @@
     "circuit-json-to-gerber": "^0.0.96",
     "circuit-json-to-kicad": "^0.0.174",
     "circuit-to-svg": "0.0.410",
-    "jscad-electronics": "0.0.159",
+    "jscad-electronics": "https://pkg.pr.new/tscircuit/jscad-electronics@05b82f6930ae5e00ea04c67ca01164b1b73d8665",
     "jscad-to-gltf": "0.0.8",
     "jszip": "^3.10.1",
     "patch-package": "8.0.1",
